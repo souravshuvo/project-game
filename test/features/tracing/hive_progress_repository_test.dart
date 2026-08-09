@@ -48,15 +48,57 @@ void main() {
     expect(repository.soundEnabled, isFalse);
   });
 
+  test('persists dew bubble unlocks, best scores, and best stars', () async {
+    var repository = await HiveProgressRepository.create(box);
+
+    await repository.recordDewBubbleLevelWin(
+      levelIndex: 0,
+      levelId: 'dew-1',
+      score: 320,
+      stars: 2,
+    );
+    await repository.recordDewBubbleLevelWin(
+      levelIndex: 0,
+      levelId: 'dew-1',
+      score: 280,
+      stars: 1,
+    );
+    await repository.recordDewBubbleLevelWin(
+      levelIndex: 1,
+      levelId: 'dew-2',
+      score: 410,
+      stars: 3,
+    );
+    await box.close();
+
+    box = await Hive.openBox<dynamic>('progress_test');
+    repository = await HiveProgressRepository.create(box);
+
+    expect(repository.dewBubbleHighestUnlockedLevelIndex, 2);
+    expect(repository.dewBubbleBestScore('dew-1'), 320);
+    expect(repository.dewBubbleBestStars('dew-1'), 2);
+    expect(repository.dewBubbleBestScore('dew-2'), 410);
+    expect(repository.dewBubbleBestStars('dew-2'), 3);
+  });
+
   test('reset removes progress and restores defaults', () async {
     final repository = await HiveProgressRepository.create(box);
     await repository.markLetterAComplete();
     await repository.setSoundEnabled(false);
+    await repository.recordDewBubbleLevelWin(
+      levelIndex: 0,
+      levelId: 'dew-1',
+      score: 320,
+      stars: 2,
+    );
 
     await repository.reset();
 
     expect(repository.isLetterAComplete, isFalse);
     expect(repository.soundEnabled, isTrue);
+    expect(repository.dewBubbleHighestUnlockedLevelIndex, 0);
+    expect(repository.dewBubbleBestScore('dew-1'), 0);
+    expect(repository.dewBubbleBestStars('dew-1'), 0);
     expect(
       box.get('schemaVersion'),
       HiveProgressRepository.currentSchemaVersion,

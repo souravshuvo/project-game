@@ -286,21 +286,40 @@ class RecordingProgressRepository implements ProgressRepository {
   RecordingProgressRepository({
     bool isLetterAComplete = false,
     bool soundEnabled = true,
+    int dewBubbleHighestUnlockedLevelIndex = 0,
   }) : _completedGameIds = <String>{if (isLetterAComplete) letterTracingGameId},
-       _soundEnabled = soundEnabled;
+       _soundEnabled = soundEnabled,
+       _dewBubbleHighestUnlockedLevelIndex = dewBubbleHighestUnlockedLevelIndex;
 
   final Set<String> _completedGameIds;
+  final Map<String, int> _dewBubbleBestScores = <String, int>{};
+  final Map<String, int> _dewBubbleBestStars = <String, int>{};
   bool _soundEnabled;
+  int _dewBubbleHighestUnlockedLevelIndex;
   int markCompleteCalls = 0;
 
   @override
   Set<String> get completedGameIds => Set.unmodifiable(_completedGameIds);
 
   @override
+  int get dewBubbleHighestUnlockedLevelIndex =>
+      _dewBubbleHighestUnlockedLevelIndex;
+
+  @override
   bool get isLetterAComplete => isGameComplete(letterTracingGameId);
 
   @override
   bool get soundEnabled => _soundEnabled;
+
+  @override
+  int dewBubbleBestScore(String levelId) {
+    return _dewBubbleBestScores[levelId] ?? 0;
+  }
+
+  @override
+  int dewBubbleBestStars(String levelId) {
+    return _dewBubbleBestStars[levelId] ?? 0;
+  }
 
   @override
   Future<void> markLetterAComplete() async {
@@ -314,6 +333,28 @@ class RecordingProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<void> recordDewBubbleLevelWin({
+    required int levelIndex,
+    required String levelId,
+    required int score,
+    required int stars,
+  }) async {
+    if (levelId.trim().isEmpty) {
+      return;
+    }
+    final nextUnlockedIndex = levelIndex + 1;
+    if (nextUnlockedIndex > _dewBubbleHighestUnlockedLevelIndex) {
+      _dewBubbleHighestUnlockedLevelIndex = nextUnlockedIndex;
+    }
+    if (score > dewBubbleBestScore(levelId)) {
+      _dewBubbleBestScores[levelId] = score;
+    }
+    if (stars > dewBubbleBestStars(levelId)) {
+      _dewBubbleBestStars[levelId] = stars;
+    }
+  }
+
+  @override
   bool isGameComplete(String gameId) {
     return _completedGameIds.contains(gameId);
   }
@@ -321,6 +362,9 @@ class RecordingProgressRepository implements ProgressRepository {
   @override
   Future<void> reset() async {
     _completedGameIds.clear();
+    _dewBubbleBestScores.clear();
+    _dewBubbleBestStars.clear();
+    _dewBubbleHighestUnlockedLevelIndex = 0;
     _soundEnabled = true;
   }
 

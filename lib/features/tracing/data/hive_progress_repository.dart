@@ -5,13 +5,17 @@ import 'progress_repository.dart';
 class HiveProgressRepository implements ProgressRepository {
   HiveProgressRepository._(this._box);
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
   static const String boxName = 'kidsland_progress';
 
   static const String _schemaVersionKey = 'schemaVersion';
   static const String _letterACompleteKey = 'letterAComplete';
   static const String _completedGameIdsKey = 'completedGameIds';
   static const String _soundEnabledKey = 'soundEnabled';
+  static const String _dewBubbleHighestUnlockedLevelIndexKey =
+      'dewBubbleHighestUnlockedLevelIndex';
+  static const String _dewBubbleBestScoresKey = 'dewBubbleBestScores';
+  static const String _dewBubbleBestStarsKey = 'dewBubbleBestStars';
 
   final Box<dynamic> _box;
 
@@ -40,11 +44,30 @@ class HiveProgressRepository implements ProgressRepository {
   }
 
   @override
+  int get dewBubbleHighestUnlockedLevelIndex {
+    final raw = _box.get(
+      _dewBubbleHighestUnlockedLevelIndexKey,
+      defaultValue: 0,
+    );
+    return raw is int && raw > 0 ? raw : 0;
+  }
+
+  @override
   bool get isLetterAComplete => isGameComplete(letterTracingGameId);
 
   @override
   bool get soundEnabled =>
       _box.get(_soundEnabledKey, defaultValue: true) as bool;
+
+  @override
+  int dewBubbleBestScore(String levelId) {
+    return _readIntMap(_dewBubbleBestScoresKey)[levelId] ?? 0;
+  }
+
+  @override
+  int dewBubbleBestStars(String levelId) {
+    return _readIntMap(_dewBubbleBestStarsKey)[levelId] ?? 0;
+  }
 
   @override
   Future<void> markLetterAComplete() async {
@@ -58,6 +81,32 @@ class HiveProgressRepository implements ProgressRepository {
     }
     final updatedIds = <String>{...completedGameIds, gameId}.toList()..sort();
     await _box.put(_completedGameIdsKey, updatedIds);
+  }
+
+  @override
+  Future<void> recordDewBubbleLevelWin({
+    required int levelIndex,
+    required String levelId,
+    required int score,
+    required int stars,
+  }) async {
+    if (levelId.trim().isEmpty) {
+      return;
+    }
+
+    final highestUnlocked = _maxInt(
+      dewBubbleHighestUnlockedLevelIndex,
+      levelIndex + 1,
+    );
+    await _box.put(_dewBubbleHighestUnlockedLevelIndexKey, highestUnlocked);
+
+    final bestScores = _readIntMap(_dewBubbleBestScoresKey);
+    bestScores[levelId] = _maxInt(bestScores[levelId] ?? 0, score);
+    await _box.put(_dewBubbleBestScoresKey, bestScores);
+
+    final bestStars = _readIntMap(_dewBubbleBestStarsKey);
+    bestStars[levelId] = _maxInt(bestStars[levelId] ?? 0, stars);
+    await _box.put(_dewBubbleBestStarsKey, bestStars);
   }
 
   @override
@@ -96,6 +145,16 @@ class HiveProgressRepository implements ProgressRepository {
       return;
     }
 
+    if (storedVersion == 2) {
+      final completedIds = completedGameIds.toList()..sort();
+      final soundEnabled = this.soundEnabled;
+      await _box.clear();
+      await _writeDefaults();
+      await _box.put(_completedGameIdsKey, completedIds);
+      await _box.put(_soundEnabledKey, soundEnabled);
+      return;
+    }
+
     // This is the first schema. Unknown data is safer to discard than to
     // interpret as a child's progress under the wrong format.
     await _box.clear();
@@ -106,7 +165,25 @@ class HiveProgressRepository implements ProgressRepository {
     return _box.putAll(<String, Object>{
       _schemaVersionKey: currentSchemaVersion,
       _completedGameIdsKey: <String>[],
+      _dewBubbleHighestUnlockedLevelIndexKey: 0,
+      _dewBubbleBestScoresKey: <String, int>{},
+      _dewBubbleBestStarsKey: <String, int>{},
       _soundEnabledKey: true,
     });
   }
+
+  Map<String, int> _readIntMap(String key) {
+    final raw = _box.get(key, defaultValue: const <String, int>{});
+    if (raw is! Map) {
+      return <String, int>{};
+    }
+
+    return <String, int>{
+      for (final entry in raw.entries)
+        if (entry.key is String && entry.value is int)
+          entry.key as String: entry.value as int,
+    };
+  }
 }
+
+int _maxInt(int a, int b) => a > b ? a : b;

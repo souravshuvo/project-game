@@ -38,8 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: '/games/${game.id}'),
-        builder: (context) =>
-            game.builder(context, markCompleted, widget.audioCue),
+        builder: (context) => game.builder(
+          context,
+          markCompleted,
+          widget.audioCue,
+          widget.progressRepository,
+        ),
       ),
     );
 
