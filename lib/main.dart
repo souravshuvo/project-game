@@ -1,92 +1,111 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'features/arrow_puzzle/application/puzzle_controller.dart';
+import 'features/arrow_puzzle/application/game_telemetry.dart';
+import 'features/arrow_puzzle/data/local_level_pack.dart';
+import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
+import 'features/arrow_puzzle/domain/player_progress.dart';
+import 'features/arrow_puzzle/domain/board_position.dart';
+import 'features/arrow_puzzle/domain/puzzle_cell.dart';
+import 'features/arrow_puzzle/domain/puzzle_engine.dart';
+import 'features/arrow_puzzle/presentation/pages/home_page.dart';
+import 'features/arrow_puzzle/presentation/pages/level_select_page.dart';
+import 'features/arrow_puzzle/presentation/pages/level_complete_page.dart';
+import 'features/arrow_puzzle/presentation/pages/puzzle_page.dart';
+import 'features/arrow_puzzle/presentation/pages/settings_page.dart';
+import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final progressStore = SharedPreferencesPuzzleProgressStore();
+  final initialProgress = await progressStore.load();
+
+  runApp(
+    ArrowPuzzleApp(
+      progressStore: progressStore,
+      initialProgress: initialProgress,
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ArrowPuzzleApp extends StatefulWidget {
+  const ArrowPuzzleApp({
+    super.key,
+    required this.progressStore,
+    required this.initialProgress,
+  });
 
-  // This widget is the root of your application.
+  final PuzzleProgressStore progressStore;
+  final PlayerProgress initialProgress;
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
+}
+
+class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
+  late final PuzzleController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PuzzleController(
+      engine: const PuzzleEngine(),
+      levels: localLevelPack,
+      progressStore: widget.progressStore,
+      initialProgress: widget.initialProgress,
+      telemetry: const NoOpGameTelemetry(),
     );
   }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-    });
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Arrow Puzzle',
+          debugShowCheckedModeBanner: false,
+          theme: ArrowPuzzleTheme.light(),
+          home: _buildHome(),
+        );
+      },
     );
   }
+
+  Widget _buildHome() {
+    return switch (_controller.screen) {
+      PuzzleScreen.home => HomePage(controller: _controller),
+      PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
+      PuzzleScreen.settings => SettingsPage(controller: _controller),
+      PuzzleScreen.playing => PuzzlePage(controller: _controller),
+      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
+    };
+  }
+}
+
+IconData arrowIcon(PuzzleCell cell) {
+  return switch (cell) {
+    PuzzleCell.up => Icons.arrow_upward_rounded,
+    PuzzleCell.down => Icons.arrow_downward_rounded,
+    PuzzleCell.left => Icons.arrow_back_rounded,
+    PuzzleCell.right => Icons.arrow_forward_rounded,
+    PuzzleCell.empty => Icons.circle_outlined,
+  };
+}
+
+Alignment exitAlignment(BoardPosition _, PuzzleCell cell) {
+  return switch (cell) {
+    PuzzleCell.up => const Alignment(0, -6),
+    PuzzleCell.down => const Alignment(0, 6),
+    PuzzleCell.left => const Alignment(-6, 0),
+    PuzzleCell.right => const Alignment(6, 0),
+    PuzzleCell.empty => Alignment.center,
+  };
 }

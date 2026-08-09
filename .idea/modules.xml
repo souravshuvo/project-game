@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/rapid_jump.iml" filepath="$PROJECT_DIR$/rapid_jump.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/rapid_jump_android.iml" filepath="$PROJECT_DIR$/android/rapid_jump_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/arrow_puzzle_tap_puzzle_games.iml" filepath="$PROJECT_DIR$/arrow_puzzle_tap_puzzle_games.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/arrow_puzzle_tap_puzzle_games_android.iml" filepath="$PROJECT_DIR$/android/arrow_puzzle_tap_puzzle_games_android.iml" />
     </modules>
   </component>
 </project>
