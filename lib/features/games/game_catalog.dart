@@ -9,6 +9,7 @@ import 'logic/animal_finder_game_screen.dart';
 import 'logic/color_sort_game_screen.dart';
 import 'logic/counting_game_screen.dart';
 import 'logic/pattern_puzzle_game_screen.dart';
+import 'pulse_parade/presentation/pulse_parade_game_screen.dart';
 import 'tracing/letter_tracing_game_screen.dart';
 import 'tracing/number_tracing_game_screen.dart';
 
@@ -18,8 +19,6 @@ typedef GameScreenBuilder =
       VoidCallback onCompleted,
       LetterAudioCue audioCue,
     );
-
-
 
 @immutable
 class KidsGame {
@@ -42,15 +41,22 @@ class KidsGame {
 
 final List<KidsGame> kidsGameCatalog = List.unmodifiable(<KidsGame>[
   KidsGame(
+    id: 'pulse-parade',
+    title: 'Pulse Parade',
+    subtitle: 'Guide sparks through circuit gates',
+    icon: Icons.offline_bolt_rounded,
+    colors: const [Color(0xFF129C8A), Color(0xFF286EE8)],
+    builder: (context, onCompleted, audioCue) =>
+        PulseParadeGameScreen(onCompleted: onCompleted),
+  ),
+  KidsGame(
     id: 'letter-tracing',
     title: 'Letter Tracing',
     subtitle: 'Follow the path from A to C',
     icon: Icons.gesture_rounded,
     colors: const [Color(0xFF7658E8), Color(0xFF9A7CF6)],
-    builder: (context, onCompleted, audioCue) => LetterTracingGameScreen(
-      onCompleted: onCompleted,
-      audioCue: audioCue,
-    ),
+    builder: (context, onCompleted, audioCue) =>
+        LetterTracingGameScreen(onCompleted: onCompleted, audioCue: audioCue),
   ),
   KidsGame(
     id: 'number-tracing',
@@ -58,10 +64,8 @@ final List<KidsGame> kidsGameCatalog = List.unmodifiable(<KidsGame>[
     subtitle: 'Draw numbers 1, 2, and 3',
     icon: Icons.looks_3_rounded,
     colors: const [Color(0xFFEC6F66), Color(0xFFFF9B72)],
-    builder: (context, onCompleted, audioCue) => NumberTracingGameScreen(
-      onCompleted: onCompleted,
-      audioCue: audioCue,
-    ),
+    builder: (context, onCompleted, audioCue) =>
+        NumberTracingGameScreen(onCompleted: onCompleted, audioCue: audioCue),
   ),
   KidsGame(
     id: 'magic-drawing',

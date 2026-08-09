@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Ten little adventures for curious minds',
+                          'Offline little adventures for curious minds',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: const Color(0xFF686078),
