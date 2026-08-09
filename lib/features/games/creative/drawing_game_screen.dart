@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../shared/kid_celebration.dart';
+
 /// A cheerful, offline finger-painting activity.
 class DrawingGameScreen extends StatefulWidget {
   const DrawingGameScreen({this.onCompleted, super.key});
@@ -100,10 +102,7 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFFEFB),
                             borderRadius: BorderRadius.circular(32),
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 5,
-                            ),
+                            border: Border.all(color: Colors.white, width: 5),
                             boxShadow: const <BoxShadow>[
                               BoxShadow(
                                 color: Color(0x247257E8),
@@ -129,8 +128,16 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                       ),
                       if (!_hasDrawing)
                         const IgnorePointer(
-                          child: Center(
-                            child: _CanvasHint(),
+                          child: Center(child: _CanvasHint()),
+                        ),
+                      if (_isComplete)
+                        const Positioned.fill(
+                          child: IgnorePointer(
+                            child: KidConfettiOverlay(
+                              active: true,
+                              density: 42,
+                              child: SizedBox.expand(),
+                            ),
                           ),
                         ),
                       if (_isComplete)
@@ -242,7 +249,10 @@ class _DrawingHeader extends StatelessWidget {
               ),
               label: Text(
                 isComplete ? 'New' : 'Done',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -355,7 +365,9 @@ class _PaletteButton extends StatelessWidget {
           height: 64,
           padding: EdgeInsets.all(selected ? 5 : 10),
           decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.18) : Colors.transparent,
+            color: selected
+                ? color.withValues(alpha: 0.18)
+                : Colors.transparent,
             shape: BoxShape.circle,
             border: selected ? Border.all(color: color, width: 3) : null,
           ),
@@ -404,9 +416,7 @@ class _BrushButton extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: selected
-                ? const Color(0xFFEDE8FF)
-                : const Color(0xFFF6F3FA),
+            color: selected ? const Color(0xFFEDE8FF) : const Color(0xFFF6F3FA),
             borderRadius: BorderRadius.circular(20),
             border: selected
                 ? Border.all(color: const Color(0xFF7257E8), width: 2)
@@ -488,34 +498,41 @@ class _DrawingCompleteBanner extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       label: 'Picture complete. Wonderful drawing!',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: <Color>[Color(0xFF2DBE88), Color(0xFF43C8D9)],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(color: Color(0x332DBE88), blurRadius: 12),
-          ],
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
-            SizedBox(width: 9),
-            Flexible(
-              child: Text(
-                'Wonderful drawing!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: KidConfettiOverlay(
+          active: true,
+          density: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: <Color>[Color(0xFF2DBE88), Color(0xFF43C8D9)],
               ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(color: Color(0x332DBE88), blurRadius: 12),
+              ],
             ),
-          ],
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+                SizedBox(width: 9),
+                Flexible(
+                  child: Text(
+                    'Wonderful drawing!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -566,7 +583,8 @@ class _DrawingPainter extends CustomPainter {
         continue;
       }
 
-      final path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
+      final path = Path()
+        ..moveTo(stroke.points.first.dx, stroke.points.first.dy);
       for (var index = 1; index < stroke.points.length; index++) {
         final previous = stroke.points[index - 1];
         final current = stroke.points[index];

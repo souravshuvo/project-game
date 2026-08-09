@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../shared/kid_celebration.dart';
+
 enum LogicFeedbackTone { neutral, success, encouragement }
 
 class LogicGameScaffold extends StatelessWidget {
@@ -74,7 +76,9 @@ class LogicGameScaffold extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   title,
-                                  style: Theme.of(context).textTheme.headlineSmall
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
                                       ?.copyWith(
                                         color: const Color(0xFF352D58),
                                         fontWeight: FontWeight.w900,
@@ -96,7 +100,9 @@ class LogicGameScaffold extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: accentColor.withValues(alpha: 0.25),
+                                      color: accentColor.withValues(
+                                        alpha: 0.25,
+                                      ),
                                       offset: const Offset(0, 4),
                                       blurRadius: 10,
                                     ),
@@ -191,34 +197,45 @@ class LogicFeedbackBanner extends StatelessWidget {
       ),
     };
 
+    final borderRadius = BorderRadius.circular(22);
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
-      child: Container(
+      child: ClipRRect(
         key: ValueKey('$tone$message'),
-        width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 64),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: foreground, size: 30),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+        borderRadius: borderRadius,
+        child: KidConfettiOverlay(
+          active: tone == LogicFeedbackTone.success,
+          density: 18,
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(color: background),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedScale(
+                  scale: tone == LogicFeedbackTone.success ? 1.12 : 1,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutBack,
+                  child: Icon(icon, color: foreground, size: 30),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: foreground,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -243,23 +260,30 @@ class LogicRoundButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      child: FilledButton.icon(
-        onPressed: onPressed,
-        iconAlignment: IconAlignment.end,
-        icon: Icon(icon, size: 30),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-        ),
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(double.infinity, 64),
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.96, end: 1),
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.elasticOut,
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child),
+        child: FilledButton.icon(
+          onPressed: onPressed,
+          iconAlignment: IconAlignment.end,
+          icon: Icon(icon, size: 30),
+          label: Text(
+            label,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
-          elevation: 4,
-          shadowColor: color.withValues(alpha: 0.3),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, 64),
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            elevation: 4,
+            shadowColor: color.withValues(alpha: 0.3),
+          ),
         ),
       ),
     );

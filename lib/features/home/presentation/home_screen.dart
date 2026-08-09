@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/audio/letter_audio_cue.dart';
 import '../../games/game_catalog.dart';
+import '../../games/shared/kid_celebration.dart';
 import '../../parent/presentation/parent_corner_screen.dart';
 import '../../parent/presentation/parent_gate_dialog.dart';
 import '../../tracing/data/progress_repository.dart';
@@ -98,8 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Row(
                           children: [
-                            const _BrandMark(),
-                            const Spacer(),
+                            const Expanded(child: _BrandMark()),
+                            const SizedBox(width: 12),
                             Semantics(
                               button: true,
                               label: 'Open parent settings',
@@ -147,16 +148,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 26),
                         Row(
                           children: [
-                            Text(
-                              'Games',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    color: const Color(0xFF35275F),
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                            Expanded(
+                              child: Text(
+                                'Games',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: const Color(0xFF35275F),
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
                             ),
-                            const Spacer(),
-                            const _OfflineBadge(),
+                            const SizedBox(width: 12),
+                            const Flexible(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: _OfflineBadge(),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -167,13 +177,12 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
                 sliver: SliverGrid(
-                  gridDelegate:
-                      const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 300,
-                        mainAxisExtent: 224,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                      ),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 300,
+                    mainAxisExtent: 224,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final game = kidsGameCatalog[index];
                     return _GameCard(
@@ -200,6 +209,7 @@ class _BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         const DecoratedBox(
           decoration: BoxDecoration(
@@ -218,11 +228,15 @@ class _BrandMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          'KidsLand',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: const Color(0xFF35275F),
-            fontWeight: FontWeight.w900,
+        Flexible(
+          child: Text(
+            'KidsLand',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: const Color(0xFF35275F),
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
       ],
@@ -312,6 +326,7 @@ class _OfflineBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      constraints: const BoxConstraints(maxWidth: 178, minHeight: 36),
       decoration: BoxDecoration(
         color: const Color(0xFFDFF7EC),
         borderRadius: BorderRadius.circular(24),
@@ -321,11 +336,15 @@ class _OfflineBadge extends StatelessWidget {
         children: [
           Icon(Icons.offline_bolt_rounded, size: 18, color: Color(0xFF237A59)),
           SizedBox(width: 5),
-          Text(
-            'Offline • Ad-free',
-            style: TextStyle(
-              color: Color(0xFF237A59),
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              'Offline • Ad-free',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Color(0xFF237A59),
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -381,14 +400,23 @@ class _GameCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.24),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(game.icon, color: Colors.white, size: 36),
+                      KidFloaty(
+                        phase: game.id.length * 0.05,
+                        amplitude: 2,
+                        sway: 1.5,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.24),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              game.icon,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
                         ),
                       ),
                       const Spacer(),
@@ -412,6 +440,7 @@ class _GameCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     game.title,
+                    textScaler: TextScaler.noScaling,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -424,6 +453,7 @@ class _GameCard extends StatelessWidget {
                   const SizedBox(height: 7),
                   Text(
                     game.subtitle,
+                    textScaler: TextScaler.noScaling,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

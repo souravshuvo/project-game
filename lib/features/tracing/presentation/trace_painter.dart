@@ -4,16 +4,20 @@ import '../application/trace_controller.dart';
 import '../domain/trace_definition.dart';
 
 class TracePainter extends CustomPainter {
-  TracePainter({required this.state, required this.pulse})
-    : super(repaint: pulse);
+  TracePainter({
+    required this.state,
+    required this.pulse,
+    this.activeColor = const Color(0xFF7257E8),
+    this.hintColor = const Color(0xFFFFA62B),
+  }) : super(repaint: pulse);
 
   final TraceState state;
   final Animation<double> pulse;
+  final Color activeColor;
+  final Color hintColor;
 
   static const Color _guideColor = Color(0xFFD8D2E8);
   static const Color _tracedColor = Color(0xFF25A97A);
-  static const Color _activeColor = Color(0xFF7257E8);
-  static const Color _hintColor = Color(0xFFFFA62B);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -68,7 +72,7 @@ class TracePainter extends CustomPainter {
       ];
       if (acceptedPoints.length > 1) {
         final activePaint = Paint()
-          ..color = _activeColor
+          ..color = activeColor
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round
@@ -86,9 +90,9 @@ class TracePainter extends CustomPainter {
           : 0;
       final target = currentStroke.checkpoints[targetIndex].point;
       final center = _offset(target, size);
-      final hintColor = state.status == TraceStatus.offPath
-          ? _hintColor
-          : _activeColor;
+      final pulseColor = state.status == TraceStatus.offPath
+          ? hintColor
+          : activeColor;
       final baseRadius = size.shortestSide * 0.032;
       final pulseRadius =
           baseRadius + (size.shortestSide * 0.018 * pulse.value);
@@ -96,9 +100,9 @@ class TracePainter extends CustomPainter {
       canvas.drawCircle(
         center,
         pulseRadius * 1.8,
-        Paint()..color = hintColor.withValues(alpha: 0.16),
+        Paint()..color = pulseColor.withValues(alpha: 0.16),
       );
-      canvas.drawCircle(center, pulseRadius, Paint()..color = hintColor);
+      canvas.drawCircle(center, pulseRadius, Paint()..color = pulseColor);
       canvas.drawCircle(
         center,
         pulseRadius * 0.38,
@@ -129,6 +133,8 @@ class TracePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant TracePainter oldDelegate) {
-    return oldDelegate.state != state;
+    return oldDelegate.state != state ||
+        oldDelegate.activeColor != activeColor ||
+        oldDelegate.hintColor != hintColor;
   }
 }

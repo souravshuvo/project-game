@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../core/audio/letter_audio_cue.dart';
+import '../../games/shared/kid_celebration.dart';
 import '../application/trace_controller.dart';
 import '../data/progress_repository.dart';
 import '../domain/trace_definition.dart';
@@ -249,7 +250,7 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
     return switch (_traceState.status) {
       TraceStatus.ready => 'Start at the glowing dot',
       TraceStatus.tracing => 'Keep following the path',
-      TraceStatus.offPath => 'Nice try â€” find the glowing dot',
+      TraceStatus.offPath => 'Nice try - find the glowing dot',
       TraceStatus.completed => 'You traced $_symbol!',
     };
   }
@@ -599,107 +600,123 @@ class _CelebrationOverlay extends StatelessWidget {
       key: const ValueKey('celebration-overlay'),
       child: ColoredBox(
         color: const Color(0xB33A2A66),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: 44,
-              left: 34,
-              child: Icon(Icons.star_rounded, color: Color(0xFFFFD45C), size: 46),
-            ),
-            const Positioned(
-              top: 110,
-              right: 38,
-              child: Icon(Icons.star_rounded, color: Color(0xFF8DE0CD), size: 34),
-            ),
-            Center(
-              child: Semantics(
-                container: true,
-                liveRegion: true,
-                label: 'Great tracing. You completed $symbolKind $symbol.',
-                child: Card(
-                  margin: const EdgeInsets.all(28),
-                  elevation: 16,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(36),
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          DecoratedBox(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF25A97A),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Icon(
-                                Icons.check_rounded,
-                                size: 64,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'You traced $symbol!',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  color: const Color(0xFF392C68),
-                                  fontWeight: FontWeight.w900,
+        child: KidConfettiOverlay(
+          active: true,
+          density: 48,
+          child: Stack(
+            children: [
+              const Positioned(
+                top: 44,
+                left: 34,
+                child: Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFD45C),
+                  size: 46,
+                ),
+              ),
+              const Positioned(
+                top: 110,
+                right: 38,
+                child: Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFF8DE0CD),
+                  size: 34,
+                ),
+              ),
+              Center(
+                child: Semantics(
+                  container: true,
+                  liveRegion: true,
+                  label: 'Great tracing. You completed $symbolKind $symbol.',
+                  child: Card(
+                    margin: const EdgeInsets.all(28),
+                    elevation: 16,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(36),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            KidFloaty(
+                              amplitude: 3,
+                              sway: 2,
+                              child: DecoratedBox(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF25A97A),
+                                  shape: BoxShape.circle,
                                 ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Amazing finger work!',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: const Color(0xFF6D6380),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  key: const ValueKey('celebration-home'),
-                                  onPressed: onHome,
-                                  icon: const Icon(Icons.home_rounded),
-                                  label: const Text('Home'),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size(0, 60),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Icon(
+                                    Icons.check_rounded,
+                                    size: 64,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: FilledButton.icon(
-                                  key: const ValueKey('celebration-again'),
-                                  onPressed: onAgain,
-                                  icon: const Icon(Icons.replay_rounded),
-                                  label: const Text('Again'),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: accentColor,
-                                    minimumSize: const Size(0, 60),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'You traced $symbol!',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: const Color(0xFF392C68),
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Amazing finger work!',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: const Color(0xFF6D6380),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    key: const ValueKey('celebration-home'),
+                                    onPressed: onHome,
+                                    icon: const Icon(Icons.home_rounded),
+                                    label: const Text('Home'),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 60),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    key: const ValueKey('celebration-again'),
+                                    onPressed: onAgain,
+                                    icon: const Icon(Icons.replay_rounded),
+                                    label: const Text('Again'),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: accentColor,
+                                      minimumSize: const Size(0, 60),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

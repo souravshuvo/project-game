@@ -6,14 +6,17 @@ import 'package:rapid_jump/features/tracing/data/progress_repository.dart';
 import 'package:rapid_jump/features/tracing/domain/trace_definition.dart';
 
 void main() {
-  testWidgets('home opens the single letter-A tracing activity', (
+  testWidgets('home opens letter tracing and the letter-A activity', (
     tester,
   ) async {
     final repository = RecordingProgressRepository();
     await tester.pumpWidget(_app(repository: repository));
 
-    expect(find.byKey(const ValueKey('trace-a-button')), findsOneWidget);
-    expect(find.text('Trace A'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('game-card-letter-tracing')),
+      findsOneWidget,
+    );
+    expect(find.text('Letter Tracing'), findsOneWidget);
     expect(find.byKey(const ValueKey('trace-canvas')), findsNothing);
 
     await _openTrace(tester);
@@ -22,14 +25,35 @@ void main() {
     expect(find.text('Start at the glowing dot'), findsOneWidget);
   });
 
-  testWidgets('valid three-stroke gesture saves once and celebrates', (
+  testWidgets('letter tracing saves once after A through C and celebrates', (
     tester,
   ) async {
     final repository = RecordingProgressRepository();
     await tester.pumpWidget(_app(repository: repository));
-    await _openTrace(tester);
 
-    await _traceUppercaseA(tester);
+    await _openLetterTracingMenu(tester);
+    await _openTraceEntry(tester, 'letter-a');
+    await _traceDefinition(tester, TraceDefinition.uppercaseA());
+
+    expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
+    expect(repository.markCompleteCalls, 0);
+
+    await _returnToTraceMenu(tester);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('trace-entry-letter-a')),
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
+
+    await _openTraceEntry(tester, 'letter-b');
+    await _traceDefinition(tester, TraceDefinition.uppercaseB());
+    await _returnToTraceMenu(tester);
+    expect(repository.markCompleteCalls, 0);
+
+    await _openTraceEntry(tester, 'letter-c');
+    await _traceDefinition(tester, TraceDefinition.uppercaseC());
 
     expect(repository.markCompleteCalls, 1);
     expect(repository.isLetterAComplete, isTrue);
@@ -54,7 +78,7 @@ void main() {
     await tester.tapAt(canvas.center);
     await tester.pump();
 
-    expect(find.text('Nice try — find the glowing dot'), findsOneWidget);
+    expect(find.text('Nice try - find the glowing dot'), findsOneWidget);
     expect(repository.isLetterAComplete, isFalse);
     expect(repository.markCompleteCalls, 0);
   });
@@ -104,7 +128,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byKey(const ValueKey('trace-a-button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('trace-entry-grid')), findsOneWidget);
     expect(repository.markCompleteCalls, 0);
     expect(repository.isLetterAComplete, isFalse);
   });
@@ -124,7 +148,7 @@ void main() {
     await _traceUppercaseA(tester);
 
     expect(tester.takeException(), isNull);
-    expect(repository.isLetterAComplete, isTrue);
+    expect(repository.markCompleteCalls, 0);
     expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
   });
 
@@ -132,8 +156,17 @@ void main() {
     final repository = RecordingProgressRepository(isLetterAComplete: true);
     await tester.pumpWidget(_app(repository: repository));
 
-    expect(find.bySemanticsLabel('Trace letter A. Completed.'), findsOneWidget);
-    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('game-card-letter-tracing')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('game-card-letter-tracing')),
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('small high-text-scale layout keeps child controls usable', (
@@ -149,14 +182,22 @@ void main() {
     final repository = RecordingProgressRepository();
     await tester.pumpWidget(_app(repository: repository));
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('game-card-letter-tracing')),
+      300,
+    );
+    await tester.pump();
+
     final homeAction = tester.getSize(
-      find.byKey(const ValueKey('trace-a-button')),
+      find.byKey(const ValueKey('game-card-letter-tracing')),
     );
     expect(homeAction.width, greaterThanOrEqualTo(64));
     expect(homeAction.height, greaterThanOrEqualTo(64));
     expect(tester.takeException(), isNull);
 
-    await tester.ensureVisible(find.byKey(const ValueKey('trace-a-button')));
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('game-card-letter-tracing')),
+    );
     await tester.pump();
     await _openTrace(tester);
 
@@ -184,13 +225,36 @@ Widget _app({
 }
 
 Future<void> _openTrace(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('trace-a-button')));
+  await _openLetterTracingMenu(tester);
+  await _openTraceEntry(tester, 'letter-a');
+}
+
+Future<void> _openLetterTracingMenu(WidgetTester tester) async {
+  await tester.ensureVisible(
+    find.byKey(const ValueKey('game-card-letter-tracing')),
+  );
+  await tester.pump();
+  await tester.tap(find.byKey(const ValueKey('game-card-letter-tracing')));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
+Future<void> _openTraceEntry(WidgetTester tester, String entryId) async {
+  await tester.ensureVisible(find.byKey(ValueKey('trace-entry-$entryId')));
+  await tester.pump();
+  await tester.tap(find.byKey(ValueKey('trace-entry-$entryId')));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
 }
 
 Future<void> _traceUppercaseA(WidgetTester tester) async {
-  final definition = TraceDefinition.uppercaseA();
+  await _traceDefinition(tester, TraceDefinition.uppercaseA());
+}
+
+Future<void> _traceDefinition(
+  WidgetTester tester,
+  TraceDefinition definition,
+) async {
   final canvas = tester.getRect(find.byKey(const ValueKey('trace-canvas')));
 
   for (final stroke in definition.strokes) {
@@ -205,6 +269,12 @@ Future<void> _traceUppercaseA(WidgetTester tester) async {
   await tester.pump();
 }
 
+Future<void> _returnToTraceMenu(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('celebration-home')));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
 Offset _onCanvas(Rect canvas, TracePoint point) {
   return Offset(
     canvas.left + (point.x * canvas.width),
@@ -216,28 +286,41 @@ class RecordingProgressRepository implements ProgressRepository {
   RecordingProgressRepository({
     bool isLetterAComplete = false,
     bool soundEnabled = true,
-  }) : _isLetterAComplete = isLetterAComplete,
+  }) : _completedGameIds = <String>{if (isLetterAComplete) letterTracingGameId},
        _soundEnabled = soundEnabled;
 
-  bool _isLetterAComplete;
+  final Set<String> _completedGameIds;
   bool _soundEnabled;
   int markCompleteCalls = 0;
 
   @override
-  bool get isLetterAComplete => _isLetterAComplete;
+  Set<String> get completedGameIds => Set.unmodifiable(_completedGameIds);
+
+  @override
+  bool get isLetterAComplete => isGameComplete(letterTracingGameId);
 
   @override
   bool get soundEnabled => _soundEnabled;
 
   @override
   Future<void> markLetterAComplete() async {
+    await markGameComplete(letterTracingGameId);
+  }
+
+  @override
+  Future<void> markGameComplete(String gameId) async {
     markCompleteCalls++;
-    _isLetterAComplete = true;
+    _completedGameIds.add(gameId);
+  }
+
+  @override
+  bool isGameComplete(String gameId) {
+    return _completedGameIds.contains(gameId);
   }
 
   @override
   Future<void> reset() async {
-    _isLetterAComplete = false;
+    _completedGameIds.clear();
     _soundEnabled = true;
   }
 

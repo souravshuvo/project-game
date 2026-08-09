@@ -1,4 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+import '../shared/kid_celebration.dart';
 
 /// A deterministic six-pair emoji memory game that works fully offline.
 class MemoryMatchGameScreen extends StatefulWidget {
@@ -361,10 +365,11 @@ class _MemoryCard extends StatelessWidget {
               ),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: (faceUp
-                          ? const Color(0xFFFFA928)
-                          : const Color(0xFF7257E8))
-                      .withValues(alpha: 0.24),
+                  color:
+                      (faceUp
+                              ? const Color(0xFFFFA928)
+                              : const Color(0xFF7257E8))
+                          .withValues(alpha: 0.24),
                   blurRadius: 13,
                   offset: const Offset(0, 6),
                 ),
@@ -375,10 +380,29 @@ class _MemoryCard extends StatelessWidget {
               children: <Widget>[
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
-                  transitionBuilder: (child, animation) => ScaleTransition(
-                    scale: animation,
-                    child: FadeTransition(opacity: animation, child: child),
-                  ),
+                  transitionBuilder: (child, animation) {
+                    final rotate = Tween<double>(begin: math.pi / 2, end: 0)
+                        .animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        );
+
+                    return AnimatedBuilder(
+                      animation: rotate,
+                      child: FadeTransition(opacity: animation, child: child),
+                      builder: (context, child) {
+                        return Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(rotate.value),
+                          child: child,
+                        );
+                      },
+                    );
+                  },
                   child: faceUp
                       ? FittedBox(
                           key: ValueKey<String>('face-${card.id}'),
@@ -438,50 +462,61 @@ class _MemoryCompletePanel extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       label: 'All pairs found in $moves moves',
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: <Color>[Color(0xFF2DBE88), Color(0xFF35A7FF)],
-          ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(color: Color(0x332DBE88), blurRadius: 15),
-          ],
-        ),
-        child: Row(
-          children: <Widget>[
-            const SizedBox(width: 8),
-            const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 38),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'You found them all!\n$moves moves',
-                style: const TextStyle(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: KidConfettiOverlay(
+          active: true,
+          density: 30,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: <Color>[Color(0xFF2DBE88), Color(0xFF35A7FF)],
+              ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(color: Color(0x332DBE88), blurRadius: 15),
+              ],
+            ),
+            child: Row(
+              children: <Widget>[
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.emoji_events_rounded,
                   color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
+                  size: 38,
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'You found them all!\n$moves moves',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 64,
+                  child: FilledButton.icon(
+                    onPressed: onReplay,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF17835F),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    icon: const Icon(Icons.replay_rounded, size: 27),
+                    label: const Text(
+                      'Play again',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              height: 64,
-              child: FilledButton.icon(
-                onPressed: onReplay,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF17835F),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                icon: const Icon(Icons.replay_rounded, size: 27),
-                label: const Text(
-                  'Play again',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
