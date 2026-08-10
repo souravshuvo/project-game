@@ -1,44 +1,37 @@
 # Android Release Signing
 
-Last updated: 2026-08-02
+Rooftop Rain Garden must not ship with debug signing. The Gradle release block
+now uses a release signing config only when `android/key.properties` exists.
 
-## Current Status
+## Required Local Files
 
-Release signing is not configured yet.
+Create these locally and do not commit them:
 
-The repository includes `android/key.properties.example`, but the real `android/key.properties` and keystore file must stay local and uncommitted.
+- `android/key.properties`
+- `android/upload-keystore.jks`
 
-## One-Time Setup
+`android/key.properties` should match this shape:
 
-1. Create an upload keystore.
-
-```powershell
-keytool -genkey -v -keystore android/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias arrow-puzzle
+```properties
+storePassword=your-keystore-password
+keyPassword=your-key-password
+keyAlias=rooftop-rain-garden-upload
+storeFile=../upload-keystore.jks
 ```
 
-2. Copy the example config.
+The root `.gitignore` and `android/.gitignore` already ignore key properties
+and keystore files.
 
-```powershell
-Copy-Item android/key.properties.example android/key.properties
-```
+## Before First Play Upload
 
-3. Update `android/key.properties` with the real passwords and keystore path.
+- Confirm the final application id is `com.rooftopraingarden.app`.
+- Enroll in Play App Signing and keep the upload key private.
+- Keep a secure backup of the upload keystore and passwords.
+- Do not reuse debug keys or sample credentials.
+- Do not commit signing secrets, generated app bundles, or release APKs.
 
-4. Update `android/app/build.gradle.kts` to use the release signing config before building a production `.aab`.
+## Verification Required Later
 
-## Before First Upload
-
-- Keep the upload keystore backed up in a private password manager or secure drive.
-- Do not commit `android/key.properties`, `.jks`, or `.keystore` files.
-- Build and upload an Android App Bundle, not only an APK.
-- Confirm the Play Console package name is `com.childhood.arrowpuzzle`.
-
-## Build Command
-
-```powershell
-flutter build appbundle --release
-```
-
-## Official Reference
-
-- Android app signing: https://developer.android.com/studio/publish/app-signing
+This document does not prove release readiness by itself. A signed release
+artifact still needs to be built, installed, opened, and manually tested before
+internal, closed, or production release.

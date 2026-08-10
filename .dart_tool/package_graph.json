@@ -1,10 +1,10 @@
 {
   "roots": [
-    "arrow_puzzle_tap_puzzle_games"
+    "farm_loop_prototype"
   ],
   "packages": [
     {
-      "name": "arrow_puzzle_tap_puzzle_games",
+      "name": "farm_loop_prototype",
       "version": "1.0.0+1",
       "dependencies": [
         "cupertino_icons",

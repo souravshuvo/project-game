@@ -1,4 +1,4 @@
 storePassword=replace-with-keystore-password
 keyPassword=replace-with-key-password
-keyAlias=arrow-puzzle
+keyAlias=rooftop-rain-garden-upload
 storeFile=../upload-keystore.jks

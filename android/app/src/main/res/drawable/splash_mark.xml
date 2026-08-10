@@ -5,18 +5,33 @@
     android:viewportWidth="120"
     android:viewportHeight="120">
     <path
-        android:fillColor="#4B68A5"
-        android:pathData="M60,6 C30.2,6 6,30.2 6,60 C6,89.8 30.2,114 60,114 C89.8,114 114,89.8 114,60 C114,30.2 89.8,6 60,6 Z" />
+        android:fillColor="#406B36"
+        android:pathData="M60,8 C31.3,8 8,31.3 8,60 C8,88.7 31.3,112 60,112 C88.7,112 112,88.7 112,60 C112,31.3 88.7,8 60,8 Z" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M28,28 H52 V52 H28 Z M68,68 H92 V92 H68 Z" />
+        android:fillColor="#F6F0E7"
+        android:pathData="M23,73 C29,64 91,64 97,73 L91,91 C85,96 35,96 29,91 Z" />
     <path
-        android:fillColor="#FFC531"
-        android:pathData="M68,28 H92 V52 H68 Z M28,68 H52 V92 H28 Z" />
+        android:fillColor="#8A5C38"
+        android:pathData="M29,76 H91 L86,88 H34 Z" />
     <path
-        android:fillColor="#4B68A5"
-        android:pathData="M35,38 H44 L44,34 L52,40 L44,46 L44,42 H35 Z M85,82 H76 L76,86 L68,80 L76,74 L76,78 H85 Z" />
+        android:strokeColor="#F6D37B"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M38,81 H82 M43,88 H77" />
     <path
-        android:fillColor="#2E477C"
-        android:pathData="M80,35 V44 H84 L78,52 L72,44 H76 V35 Z M40,85 V76 H36 L42,68 L48,76 H44 V85 Z" />
+        android:strokeColor="#F6F0E7"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M60,72 C60,60 60,50 60,39" />
+    <path
+        android:fillColor="#CBE7A2"
+        android:pathData="M58,48 C42,44 37,31 40,22 C55,23 64,33 58,48 Z" />
+    <path
+        android:fillColor="#9DCD72"
+        android:pathData="M62,49 C78,45 86,33 82,23 C67,24 57,34 62,49 Z" />
+    <path
+        android:fillColor="#7CC6D8"
+        android:pathData="M88,38 C82,29 82,29 76,38 C72,45 76,53 82,53 C88,53 92,45 88,38 Z" />
 </vector>

@@ -1,64 +1,72 @@
 # Play Store Metadata Draft
 
-Last updated: 2026-08-02
+Use actual gameplay from the current build. Do not fake future systems.
 
-## App Identity
+## Title Ideas
 
-- App title: Arrow Puzzle
-- Package name: `com.childhood.arrowpuzzle`
-- Category: Game / Puzzle
-- Default language: English (United States)
-- Current version: `1.0.0+1`
-- Developer name: Childhood
-- Target audience draft: General puzzle-game audience. Do not mark as child-directed unless the full Families/children policy review is completed.
+- Rooftop Rain Garden
+- Rain Garden
+- Rooftop Rain Garden: Cozy Farm
 
-## Short Description
+Recommended: Rooftop Rain Garden.
 
-Tap arrows in the right order and clear every puzzle board.
+## Short Description Ideas
 
-Character count: 60 / 80
+- Grow tiny rooftop crops in a calm offline garden.
+- Plant, water, harvest, sell, and upgrade a cozy rooftop garden.
+- A small offline farming loop for quick, gentle play sessions.
 
-## Full Description
+## Full Description Outline
 
-Arrow Puzzle is a calm, focused tap puzzle game where every arrow needs a clear path off the board.
+Rooftop Rain Garden is a small offline farming game about restoring a tiny
+rooftop garden one crop at a time.
 
-Study the lanes, choose the arrows that can escape, and clear each board in the right order. Early levels teach the basics, while later boards add wider grids, chained dependencies, and trickier paths.
+Version 1 focuses on a simple loop:
 
-Features:
+- plant original seeds
+- water crops
+- wait for short growth timers
+- harvest into your crate
+- sell crops for coins
+- buy seeds
+- upgrade the garden
+- save and return later for offline progress
 
-- Simple one-touch puzzle controls
-- 20 handcrafted prototype levels
-- Level unlock progression
-- Best-move tracking for replay goals
-- Daily level and daily hint loop
-- Sound and haptic settings
-- Clean, lightweight gameplay with no login required
+Keep the description honest. Do not mention animals, crafting, a town, quests,
+social play, leaderboards, live events, cloud sync, purchases, or ad rewards
+until those features exist in the shipping app.
 
-Arrow Puzzle is designed for quick puzzle sessions, careful scanning, and satisfying board-clearing moments.
+## Screenshot Storyboard
 
-## Keywords To Use Carefully
+1. Fresh garden with the HUD, seed picker, and 3x3 plot grid.
+2. A selected empty plot with the Plant action available.
+3. A watered crop showing its short growth timer.
+4. A ready crop with Harvest available.
+5. Crate selling and seed buying in the market panel.
+6. Garden upgrade available or completed.
+7. Returning after time away with the offline progress panel.
 
-- arrow puzzle
-- tap puzzle
-- logic puzzle
-- board puzzle
-- casual puzzle
+## Feature Graphic Brief
 
-Avoid keyword stuffing or repeating phrases unnaturally in the title or description.
+Show an original rooftop garden scene inspired by the real UI: compact plots,
+sprouts, a water icon, a crop crate, and coins. Keep the design quiet, cozy, and
+honest to the one-screen MVP. Do not show animals, buildings, towns, characters,
+large maps, events, or crops that are not in the app.
 
-## Graphics Checklist
+## App Icon Brief
 
-- App icon: generated in Android and iOS launcher assets.
-- Feature graphic needed: 1024 x 500 PNG/JPEG, no alpha.
-- Phone screenshots needed: at least 2 required; 3+ portrait screenshots recommended for games.
-- Current screenshot capture script: `tool/capture_store_screenshots.ps1`
-- Screenshot source folder after capture: `store_assets/screenshots/phone/`
+Use a simple original mark: a small rooftop planter with one sprout and one rain
+drop. Avoid copied farm-game silhouettes, mascots, badges, or brand-like marks
+from other games.
 
-## Review Notes Draft
+## Preview Video Script
 
-No login is required. All current content is available through normal gameplay progression. The game stores progress locally on-device and does not currently include ads, analytics, account creation, purchases, or external network features.
+- 0-3s: Open the real farm screen.
+- 3-8s: Select Sun Sprouts and plant an empty plot.
+- 8-13s: Water the crop and show the timer.
+- 13-18s: Harvest a ready crop into the crate.
+- 18-23s: Sell the crate, buy seeds, and show coins changing.
+- 23-28s: Show the upgrade panel or return-progress panel.
 
-## Official References
-
-- Google Play store listing best practices: https://support.google.com/googleplay/android-developer/answer/13393723
-- Google Play preview asset requirements: https://support.google.com/googleplay/android-developer/answer/9866151
+Only record real gameplay. Do not add fake rewards, fake rankings, fake modes,
+or unavailable features.
