@@ -24,60 +24,68 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
 
   @override
   Future<PlayerProgress> load() async {
-    final preferences = await SharedPreferences.getInstance();
-    final bestMovesJson = preferences.getString(_bestMovesKey);
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final bestMovesJson = preferences.getString(_bestMovesKey);
 
-    return PlayerProgress(
-      currentLevelIndex: preferences.getInt(_currentLevelKey) ?? 0,
-      unlockedLevelIndex: preferences.getInt(_unlockedLevelKey) ?? 0,
-      completedLevelIds:
-          preferences
-              .getStringList(_completedLevelsKey)
-              ?.map(int.tryParse)
-              .nonNulls
-              .toSet() ??
-          const {},
-      bestMovesByLevel: _decodeBestMoves(bestMovesJson),
-      streakDays: preferences.getInt(_streakDaysKey) ?? 0,
-      hintCount: preferences.getInt(_hintCountKey) ?? 1,
-      soundEnabled: preferences.getBool(_soundEnabledKey) ?? true,
-      hapticsEnabled: preferences.getBool(_hapticsEnabledKey) ?? true,
-      lastCompletionDate: preferences.getString(_lastCompletionDateKey),
-      lastHintClaimDate: preferences.getString(_lastHintClaimDateKey),
-    );
+      return PlayerProgress(
+        currentLevelIndex: preferences.getInt(_currentLevelKey) ?? 0,
+        unlockedLevelIndex: preferences.getInt(_unlockedLevelKey) ?? 0,
+        completedLevelIds:
+            preferences
+                .getStringList(_completedLevelsKey)
+                ?.map(int.tryParse)
+                .nonNulls
+                .toSet() ??
+            const {},
+        bestMovesByLevel: _decodeBestMoves(bestMovesJson),
+        streakDays: preferences.getInt(_streakDaysKey) ?? 0,
+        hintCount: preferences.getInt(_hintCountKey) ?? 1,
+        soundEnabled: preferences.getBool(_soundEnabledKey) ?? true,
+        hapticsEnabled: preferences.getBool(_hapticsEnabledKey) ?? true,
+        lastCompletionDate: preferences.getString(_lastCompletionDateKey),
+        lastHintClaimDate: preferences.getString(_lastHintClaimDateKey),
+      );
+    } on Object {
+      return PlayerProgress.initial();
+    }
   }
 
   @override
   Future<void> save(PlayerProgress progress) async {
-    final preferences = await SharedPreferences.getInstance();
+    try {
+      final preferences = await SharedPreferences.getInstance();
 
-    await preferences.setInt(_currentLevelKey, progress.currentLevelIndex);
-    await preferences.setInt(_unlockedLevelKey, progress.unlockedLevelIndex);
-    await preferences.setStringList(
-      _completedLevelsKey,
-      progress.completedLevelIds.map((levelId) => '$levelId').toList(),
-    );
-    await preferences.setString(
-      _bestMovesKey,
-      jsonEncode(_encodeBestMoves(progress.bestMovesByLevel)),
-    );
-    await preferences.setInt(_streakDaysKey, progress.streakDays);
-    await preferences.setInt(_hintCountKey, progress.hintCount);
-    await preferences.setBool(_soundEnabledKey, progress.soundEnabled);
-    await preferences.setBool(_hapticsEnabledKey, progress.hapticsEnabled);
+      await preferences.setInt(_currentLevelKey, progress.currentLevelIndex);
+      await preferences.setInt(_unlockedLevelKey, progress.unlockedLevelIndex);
+      await preferences.setStringList(
+        _completedLevelsKey,
+        progress.completedLevelIds.map((levelId) => '$levelId').toList(),
+      );
+      await preferences.setString(
+        _bestMovesKey,
+        jsonEncode(_encodeBestMoves(progress.bestMovesByLevel)),
+      );
+      await preferences.setInt(_streakDaysKey, progress.streakDays);
+      await preferences.setInt(_hintCountKey, progress.hintCount);
+      await preferences.setBool(_soundEnabledKey, progress.soundEnabled);
+      await preferences.setBool(_hapticsEnabledKey, progress.hapticsEnabled);
 
-    final lastCompletionDate = progress.lastCompletionDate;
-    if (lastCompletionDate == null) {
-      await preferences.remove(_lastCompletionDateKey);
-    } else {
-      await preferences.setString(_lastCompletionDateKey, lastCompletionDate);
-    }
+      final lastCompletionDate = progress.lastCompletionDate;
+      if (lastCompletionDate == null) {
+        await preferences.remove(_lastCompletionDateKey);
+      } else {
+        await preferences.setString(_lastCompletionDateKey, lastCompletionDate);
+      }
 
-    final lastHintClaimDate = progress.lastHintClaimDate;
-    if (lastHintClaimDate == null) {
-      await preferences.remove(_lastHintClaimDateKey);
-    } else {
-      await preferences.setString(_lastHintClaimDateKey, lastHintClaimDate);
+      final lastHintClaimDate = progress.lastHintClaimDate;
+      if (lastHintClaimDate == null) {
+        await preferences.remove(_lastHintClaimDateKey);
+      } else {
+        await preferences.setString(_lastHintClaimDateKey, lastHintClaimDate);
+      }
+    } on Object {
+      return;
     }
   }
 
