@@ -1,57 +1,54 @@
 import 'package:flutter/material.dart';
 
-import 'features/arrow_puzzle/application/puzzle_controller.dart';
-import 'features/arrow_puzzle/application/game_telemetry.dart';
-import 'features/arrow_puzzle/data/local_level_pack.dart';
-import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'features/arrow_puzzle/domain/player_progress.dart';
 import 'features/arrow_puzzle/domain/board_position.dart';
 import 'features/arrow_puzzle/domain/puzzle_cell.dart';
-import 'features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'features/arrow_puzzle/presentation/pages/home_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_select_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_complete_page.dart';
-import 'features/arrow_puzzle/presentation/pages/puzzle_page.dart';
-import 'features/arrow_puzzle/presentation/pages/settings_page.dart';
-import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
+import 'features/weather_sort/application/game_telemetry.dart';
+import 'features/weather_sort/application/water_sort_controller.dart';
+import 'features/weather_sort/data/local_water_level_pack.dart';
+import 'features/weather_sort/data/water_progress_store.dart';
+import 'features/weather_sort/domain/water_player_progress.dart';
+import 'features/weather_sort/domain/water_sort_engine.dart';
+import 'features/weather_sort/presentation/pages/level_complete_page.dart';
+import 'features/weather_sort/presentation/pages/puzzle_page.dart';
+import 'features/weather_sort/presentation/theme/weather_sort_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final progressStore = SharedPreferencesPuzzleProgressStore();
+  final progressStore = SharedPreferencesWaterProgressStore();
   final initialProgress = await progressStore.load();
 
   runApp(
-    ArrowPuzzleApp(
+    WeatherSortApp(
       progressStore: progressStore,
       initialProgress: initialProgress,
     ),
   );
 }
 
-class ArrowPuzzleApp extends StatefulWidget {
-  const ArrowPuzzleApp({
+class WeatherSortApp extends StatefulWidget {
+  const WeatherSortApp({
     super.key,
     required this.progressStore,
     required this.initialProgress,
   });
 
-  final PuzzleProgressStore progressStore;
-  final PlayerProgress initialProgress;
+  final WaterProgressStore progressStore;
+  final WaterPlayerProgress initialProgress;
 
   @override
-  State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
+  State<WeatherSortApp> createState() => _WeatherSortAppState();
 }
 
-class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
-  late final PuzzleController _controller;
+class _WeatherSortAppState extends State<WeatherSortApp> {
+  late final WaterSortController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = PuzzleController(
-      engine: const PuzzleEngine(),
-      levels: localLevelPack,
+    _controller = WaterSortController(
+      engine: const WaterSortEngine(),
+      levels: localWaterLevelPack,
       progressStore: widget.progressStore,
       initialProgress: widget.initialProgress,
       telemetry: const NoOpGameTelemetry(),
@@ -70,9 +67,9 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
       animation: _controller,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Arrow Puzzle',
+          title: 'Weather Lab Sort',
           debugShowCheckedModeBanner: false,
-          theme: ArrowPuzzleTheme.light(),
+          theme: WeatherSortTheme.light(),
           home: _buildHome(),
         );
       },
@@ -81,11 +78,10 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
 
   Widget _buildHome() {
     return switch (_controller.screen) {
-      PuzzleScreen.home => HomePage(controller: _controller),
-      PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
-      PuzzleScreen.settings => SettingsPage(controller: _controller),
-      PuzzleScreen.playing => PuzzlePage(controller: _controller),
-      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
+      WaterSortScreen.playing => WaterPuzzlePage(controller: _controller),
+      WaterSortScreen.complete => WaterLevelCompletePage(
+        controller: _controller,
+      ),
     };
   }
 }
