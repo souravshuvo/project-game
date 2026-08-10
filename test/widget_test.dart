@@ -1,30 +1,43 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:rapid_jump/main.dart';
+import 'package:rapid_jump/features/game/presentation/emoji_chor_police_app.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('main menu shows prototype modes', (WidgetTester tester) async {
+    await tester.pumpWidget(const EmojiChorPoliceApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Emoji Chor-Police'), findsOneWidget);
+    expect(find.text('Single Player'), findsOneWidget);
+    expect(find.text('Pass & Play'), findsOneWidget);
+    expect(find.text('Offline secret-role party game'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('pass-and-play uses a handoff gate before each reveal', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const EmojiChorPoliceApp());
+
+    await tester.tap(find.text('Pass & Play'));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Pass to Player 1'), findsOneWidget);
+    expect(find.text('Reveal card'), findsNothing);
+
+    await tester.tap(find.text('I am Player 1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Player 1's private card"), findsOneWidget);
+    expect(find.text('Reveal card'), findsOneWidget);
+
+    await tester.tap(find.text('Reveal card'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hide and continue'), findsOneWidget);
+
+    await tester.tap(find.text('Hide and continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pass to Player 2'), findsOneWidget);
+    expect(find.text('Reveal card'), findsNothing);
   });
 }
