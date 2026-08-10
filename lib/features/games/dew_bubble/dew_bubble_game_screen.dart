@@ -642,6 +642,9 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
   }
 
   void _playDewCue(SystemSoundType type) {
+    if (!widget.progressRepository.soundEnabled) {
+      return;
+    }
     unawaited(SystemSound.play(type));
   }
 

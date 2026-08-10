@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../core/audio/letter_audio_cue.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/tracing/data/progress_repository.dart';
 
 class KidsLandApp extends StatelessWidget {
-  const KidsLandApp({
-    required this.progressRepository,
-    required this.audioCue,
-    super.key,
-  });
+  const KidsLandApp({required this.progressRepository, super.key});
 
   final ProgressRepository progressRepository;
-  final LetterAudioCue audioCue;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +31,7 @@ class KidsLandApp extends StatelessWidget {
           ),
         ),
       ),
-      home: HomeScreen(
-        progressRepository: progressRepository,
-        audioCue: audioCue,
-      ),
+      home: HomeScreen(progressRepository: progressRepository),
     );
   }
 }

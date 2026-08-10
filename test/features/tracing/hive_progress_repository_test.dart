@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:rapid_jump/features/tracing/data/hive_progress_repository.dart';
+import 'package:rapid_jump/features/tracing/data/progress_repository.dart';
 
 void main() {
   late Directory tempDirectory;
@@ -30,21 +31,22 @@ void main() {
       box.get('schemaVersion'),
       HiveProgressRepository.currentSchemaVersion,
     );
-    expect(repository.isLetterAComplete, isFalse);
+    expect(repository.completedGameIds, isEmpty);
+    expect(repository.dewBubbleHighestUnlockedLevelIndex, 0);
+    expect(repository.dewBubbleBestScore('dew-1'), 0);
+    expect(repository.dewBubbleBestStars('dew-1'), 0);
     expect(repository.soundEnabled, isTrue);
   });
 
-  test('persists letter A completion and sound preference', () async {
+  test('persists sound preference', () async {
     var repository = await HiveProgressRepository.create(box);
 
-    await repository.markLetterAComplete();
     await repository.setSoundEnabled(false);
     await box.close();
 
     box = await Hive.openBox<dynamic>('progress_test');
     repository = await HiveProgressRepository.create(box);
 
-    expect(repository.isLetterAComplete, isTrue);
     expect(repository.soundEnabled, isFalse);
   });
 
@@ -69,11 +71,13 @@ void main() {
       score: 410,
       stars: 3,
     );
+    await repository.markGameComplete(dewBubbleGameId);
     await box.close();
 
     box = await Hive.openBox<dynamic>('progress_test');
     repository = await HiveProgressRepository.create(box);
 
+    expect(repository.completedGameIds, {dewBubbleGameId});
     expect(repository.dewBubbleHighestUnlockedLevelIndex, 2);
     expect(repository.dewBubbleBestScore('dew-1'), 320);
     expect(repository.dewBubbleBestStars('dew-1'), 2);
@@ -81,9 +85,36 @@ void main() {
     expect(repository.dewBubbleBestStars('dew-2'), 3);
   });
 
+  test('migration removes completed games that are no longer active', () async {
+    await box.putAll(<String, Object>{
+      'schemaVersion': 3,
+      'completedGameIds': <String>[
+        'letter-tracing',
+        dewBubbleGameId,
+        'memory-match',
+      ],
+      'dewBubbleHighestUnlockedLevelIndex': 2,
+      'dewBubbleBestScores': <String, int>{'dew-1': 320},
+      'dewBubbleBestStars': <String, int>{'dew-1': 3},
+      'soundEnabled': false,
+    });
+
+    final repository = await HiveProgressRepository.create(box);
+
+    expect(
+      box.get('schemaVersion'),
+      HiveProgressRepository.currentSchemaVersion,
+    );
+    expect(repository.completedGameIds, {dewBubbleGameId});
+    expect(repository.dewBubbleHighestUnlockedLevelIndex, 2);
+    expect(repository.dewBubbleBestScore('dew-1'), 320);
+    expect(repository.dewBubbleBestStars('dew-1'), 3);
+    expect(repository.soundEnabled, isFalse);
+  });
+
   test('reset removes progress and restores defaults', () async {
     final repository = await HiveProgressRepository.create(box);
-    await repository.markLetterAComplete();
+    await repository.markGameComplete(dewBubbleGameId);
     await repository.setSoundEnabled(false);
     await repository.recordDewBubbleLevelWin(
       levelIndex: 0,
@@ -94,7 +125,7 @@ void main() {
 
     await repository.reset();
 
-    expect(repository.isLetterAComplete, isFalse);
+    expect(repository.completedGameIds, isEmpty);
     expect(repository.soundEnabled, isTrue);
     expect(repository.dewBubbleHighestUnlockedLevelIndex, 0);
     expect(repository.dewBubbleBestScore('dew-1'), 0);
@@ -108,13 +139,13 @@ void main() {
   test('unknown schema data is discarded instead of reinterpreted', () async {
     await box.putAll(<String, Object>{
       'schemaVersion': 999,
-      'letterAComplete': true,
+      'completedGameIds': <String>['letter-tracing'],
       'unrecognizedChildData': 'discard me',
     });
 
     final repository = await HiveProgressRepository.create(box);
 
-    expect(repository.isLetterAComplete, isFalse);
+    expect(repository.completedGameIds, isEmpty);
     expect(box.containsKey('unrecognizedChildData'), isFalse);
   });
 }

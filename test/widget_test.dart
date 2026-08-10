@@ -1,175 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rapid_jump/app/kids_land_app.dart';
-import 'package:rapid_jump/core/audio/letter_audio_cue.dart';
+import 'package:rapid_jump/features/games/game_catalog.dart';
 import 'package:rapid_jump/features/tracing/data/progress_repository.dart';
-import 'package:rapid_jump/features/tracing/domain/trace_definition.dart';
 
 void main() {
-  testWidgets('home opens letter tracing and the letter-A activity', (
-    tester,
-  ) async {
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(_app(repository: repository));
+  testWidgets('home shows only Dew Bubble Garden', (tester) async {
+    await tester.pumpWidget(_app(repository: MemoryProgressRepository()));
 
-    expect(
-      find.byKey(const ValueKey('game-card-letter-tracing')),
-      findsOneWidget,
-    );
-    expect(find.text('Letter Tracing'), findsOneWidget);
-    expect(find.byKey(const ValueKey('trace-canvas')), findsNothing);
-
-    await _openTrace(tester);
-
-    expect(find.byKey(const ValueKey('trace-canvas')), findsOneWidget);
-    expect(find.text('Start at the glowing dot'), findsOneWidget);
+    expect(kidsGameCatalog, hasLength(1));
+    expect(find.byKey(const ValueKey('game-card-dew-bubble')), findsOneWidget);
+    expect(find.text('Dew Bubble Garden'), findsOneWidget);
+    expect(find.text('Letter Tracing'), findsNothing);
+    expect(find.text('Memory Match'), findsNothing);
+    expect(find.text('Play'), findsOneWidget);
   });
 
-  testWidgets('letter tracing saves once after A through C and celebrates', (
-    tester,
-  ) async {
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(_app(repository: repository));
+  testWidgets('home opens the Dew Bubble level select', (tester) async {
+    await tester.pumpWidget(_app(repository: MemoryProgressRepository()));
 
-    await _openLetterTracingMenu(tester);
-    await _openTraceEntry(tester, 'letter-a');
-    await _traceDefinition(tester, TraceDefinition.uppercaseA());
-
-    expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
-    expect(repository.markCompleteCalls, 0);
-
-    await _returnToTraceMenu(tester);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('trace-entry-letter-a')),
-        matching: find.byIcon(Icons.check_rounded),
-      ),
-      findsOneWidget,
-    );
-
-    await _openTraceEntry(tester, 'letter-b');
-    await _traceDefinition(tester, TraceDefinition.uppercaseB());
-    await _returnToTraceMenu(tester);
-    expect(repository.markCompleteCalls, 0);
-
-    await _openTraceEntry(tester, 'letter-c');
-    await _traceDefinition(tester, TraceDefinition.uppercaseC());
-
-    expect(repository.markCompleteCalls, 1);
-    expect(repository.isLetterAComplete, isTrue);
-    expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
-
-    // Extra pointer input cannot duplicate completion persistence.
-    await tester.tapAt(
-      tester.getCenter(find.byKey(const ValueKey('trace-canvas'))),
-    );
-    await tester.pump();
-    expect(repository.markCompleteCalls, 1);
-  });
-
-  testWidgets('off-path touch gives a gentle hint and cannot complete', (
-    tester,
-  ) async {
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(_app(repository: repository));
-    await _openTrace(tester);
-
-    final canvas = tester.getRect(find.byKey(const ValueKey('trace-canvas')));
-    await tester.tapAt(canvas.center);
-    await tester.pump();
-
-    expect(find.text('Nice try - find the glowing dot'), findsOneWidget);
-    expect(repository.isLetterAComplete, isFalse);
-    expect(repository.markCompleteCalls, 0);
-  });
-
-  testWidgets('reset clears only the partial attempt', (tester) async {
-    final repository = RecordingProgressRepository(isLetterAComplete: true);
-    await tester.pumpWidget(_app(repository: repository));
-    await _openTrace(tester);
-
-    final definition = TraceDefinition.uppercaseA();
-    final canvas = tester.getRect(find.byKey(const ValueKey('trace-canvas')));
-    final partial = await tester.startGesture(
-      _onCanvas(canvas, definition.strokes.first.start),
-    );
-    await partial.moveTo(
-      _onCanvas(canvas, definition.strokes.first.checkpoints[1].point),
-    );
-    await partial.up();
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('reset-trace-control')));
-    await tester.pump();
-
-    expect(find.text('Start at the glowing dot'), findsOneWidget);
-    expect(repository.isLetterAComplete, isTrue);
-    expect(repository.markCompleteCalls, 0);
-  });
-
-  testWidgets('back during a partial trace does not save completion', (
-    tester,
-  ) async {
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(_app(repository: repository));
-    await _openTrace(tester);
-
-    final definition = TraceDefinition.uppercaseA();
-    final canvas = tester.getRect(find.byKey(const ValueKey('trace-canvas')));
-    final partial = await tester.startGesture(
-      _onCanvas(canvas, definition.strokes.first.start),
-    );
-    await partial.moveTo(
-      _onCanvas(canvas, definition.strokes.first.checkpoints[1].point),
-    );
-    await partial.up();
-
-    await tester.tap(find.byKey(const ValueKey('home-control')));
+    await tester.tap(find.byKey(const ValueKey('game-card-dew-bubble')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byKey(const ValueKey('trace-entry-grid')), findsOneWidget);
-    expect(repository.markCompleteCalls, 0);
-    expect(repository.isLetterAComplete, isFalse);
+    expect(find.text('Dew Bubble Garden'), findsOneWidget);
+    expect(find.text('Choose an unlocked garden'), findsOneWidget);
+    expect(find.text('Sprout Steps'), findsOneWidget);
+    expect(find.byKey(const ValueKey('dew-bubble-playfield')), findsNothing);
   });
 
-  testWidgets('audio hook failure never blocks tracing completion', (
-    tester,
-  ) async {
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(
-      _app(
-        repository: repository,
-        audioCue: RecordingAudioCue(shouldFail: true),
-      ),
+  testWidgets('saved Dew Bubble completion is visible on home', (tester) async {
+    final repository = MemoryProgressRepository(
+      completedGameIds: const {dewBubbleGameId},
     );
-    await _openTrace(tester);
 
-    await _traceUppercaseA(tester);
-
-    expect(tester.takeException(), isNull);
-    expect(repository.markCompleteCalls, 0);
-    expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
-  });
-
-  testWidgets('saved completion is visible after relaunch', (tester) async {
-    final repository = RecordingProgressRepository(isLetterAComplete: true);
     await tester.pumpWidget(_app(repository: repository));
 
     expect(
-      find.byKey(const ValueKey('game-card-letter-tracing')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('game-card-letter-tracing')),
-        matching: find.byIcon(Icons.check_rounded),
-      ),
+      find.byKey(const ValueKey('dew-bubble-complete-check')),
       findsOneWidget,
     );
   });
 
-  testWidgets('small high-text-scale layout keeps child controls usable', (
+  testWidgets('small high-text-scale layout keeps game card usable', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 640);
@@ -179,217 +52,23 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-    final repository = RecordingProgressRepository();
-    await tester.pumpWidget(_app(repository: repository));
+    await tester.pumpWidget(_app(repository: MemoryProgressRepository()));
 
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('game-card-letter-tracing')),
+      find.byKey(const ValueKey('game-card-dew-bubble')),
       300,
     );
     await tester.pump();
 
-    final homeAction = tester.getSize(
-      find.byKey(const ValueKey('game-card-letter-tracing')),
+    final gameCardSize = tester.getSize(
+      find.byKey(const ValueKey('game-card-dew-bubble')),
     );
-    expect(homeAction.width, greaterThanOrEqualTo(64));
-    expect(homeAction.height, greaterThanOrEqualTo(64));
-    expect(tester.takeException(), isNull);
-
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('game-card-letter-tracing')),
-    );
-    await tester.pump();
-    await _openTrace(tester);
-
-    for (final key in const [
-      ValueKey('home-control'),
-      ValueKey('replay-audio-control'),
-      ValueKey('reset-trace-control'),
-    ]) {
-      final size = tester.getSize(find.byKey(key));
-      expect(size.width, greaterThanOrEqualTo(64));
-      expect(size.height, greaterThanOrEqualTo(64));
-    }
+    expect(gameCardSize.width, greaterThanOrEqualTo(64));
+    expect(gameCardSize.height, greaterThanOrEqualTo(64));
     expect(tester.takeException(), isNull);
   });
 }
 
-Widget _app({
-  required RecordingProgressRepository repository,
-  LetterAudioCue? audioCue,
-}) {
-  return KidsLandApp(
-    progressRepository: repository,
-    audioCue: audioCue ?? RecordingAudioCue(),
-  );
-}
-
-Future<void> _openTrace(WidgetTester tester) async {
-  await _openLetterTracingMenu(tester);
-  await _openTraceEntry(tester, 'letter-a');
-}
-
-Future<void> _openLetterTracingMenu(WidgetTester tester) async {
-  await tester.ensureVisible(
-    find.byKey(const ValueKey('game-card-letter-tracing')),
-  );
-  await tester.pump();
-  await tester.tap(find.byKey(const ValueKey('game-card-letter-tracing')));
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 500));
-}
-
-Future<void> _openTraceEntry(WidgetTester tester, String entryId) async {
-  await tester.ensureVisible(find.byKey(ValueKey('trace-entry-$entryId')));
-  await tester.pump();
-  await tester.tap(find.byKey(ValueKey('trace-entry-$entryId')));
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 500));
-}
-
-Future<void> _traceUppercaseA(WidgetTester tester) async {
-  await _traceDefinition(tester, TraceDefinition.uppercaseA());
-}
-
-Future<void> _traceDefinition(
-  WidgetTester tester,
-  TraceDefinition definition,
-) async {
-  final canvas = tester.getRect(find.byKey(const ValueKey('trace-canvas')));
-
-  for (final stroke in definition.strokes) {
-    final gesture = await tester.startGesture(_onCanvas(canvas, stroke.start));
-    for (final checkpoint in stroke.checkpoints.skip(1)) {
-      await gesture.moveTo(_onCanvas(canvas, checkpoint.point));
-    }
-    await gesture.up();
-    await tester.pump();
-  }
-
-  await tester.pump();
-}
-
-Future<void> _returnToTraceMenu(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('celebration-home')));
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 500));
-}
-
-Offset _onCanvas(Rect canvas, TracePoint point) {
-  return Offset(
-    canvas.left + (point.x * canvas.width),
-    canvas.top + (point.y * canvas.height),
-  );
-}
-
-class RecordingProgressRepository implements ProgressRepository {
-  RecordingProgressRepository({
-    bool isLetterAComplete = false,
-    bool soundEnabled = true,
-    int dewBubbleHighestUnlockedLevelIndex = 0,
-  }) : _completedGameIds = <String>{if (isLetterAComplete) letterTracingGameId},
-       _soundEnabled = soundEnabled,
-       _dewBubbleHighestUnlockedLevelIndex = dewBubbleHighestUnlockedLevelIndex;
-
-  final Set<String> _completedGameIds;
-  final Map<String, int> _dewBubbleBestScores = <String, int>{};
-  final Map<String, int> _dewBubbleBestStars = <String, int>{};
-  bool _soundEnabled;
-  int _dewBubbleHighestUnlockedLevelIndex;
-  int markCompleteCalls = 0;
-
-  @override
-  Set<String> get completedGameIds => Set.unmodifiable(_completedGameIds);
-
-  @override
-  int get dewBubbleHighestUnlockedLevelIndex =>
-      _dewBubbleHighestUnlockedLevelIndex;
-
-  @override
-  bool get isLetterAComplete => isGameComplete(letterTracingGameId);
-
-  @override
-  bool get soundEnabled => _soundEnabled;
-
-  @override
-  int dewBubbleBestScore(String levelId) {
-    return _dewBubbleBestScores[levelId] ?? 0;
-  }
-
-  @override
-  int dewBubbleBestStars(String levelId) {
-    return _dewBubbleBestStars[levelId] ?? 0;
-  }
-
-  @override
-  Future<void> markLetterAComplete() async {
-    await markGameComplete(letterTracingGameId);
-  }
-
-  @override
-  Future<void> markGameComplete(String gameId) async {
-    markCompleteCalls++;
-    _completedGameIds.add(gameId);
-  }
-
-  @override
-  Future<void> recordDewBubbleLevelWin({
-    required int levelIndex,
-    required String levelId,
-    required int score,
-    required int stars,
-  }) async {
-    if (levelId.trim().isEmpty) {
-      return;
-    }
-    final nextUnlockedIndex = levelIndex + 1;
-    if (nextUnlockedIndex > _dewBubbleHighestUnlockedLevelIndex) {
-      _dewBubbleHighestUnlockedLevelIndex = nextUnlockedIndex;
-    }
-    if (score > dewBubbleBestScore(levelId)) {
-      _dewBubbleBestScores[levelId] = score;
-    }
-    if (stars > dewBubbleBestStars(levelId)) {
-      _dewBubbleBestStars[levelId] = stars;
-    }
-  }
-
-  @override
-  bool isGameComplete(String gameId) {
-    return _completedGameIds.contains(gameId);
-  }
-
-  @override
-  Future<void> reset() async {
-    _completedGameIds.clear();
-    _dewBubbleBestScores.clear();
-    _dewBubbleBestStars.clear();
-    _dewBubbleHighestUnlockedLevelIndex = 0;
-    _soundEnabled = true;
-  }
-
-  @override
-  Future<void> setSoundEnabled(bool enabled) async {
-    _soundEnabled = enabled;
-  }
-}
-
-class RecordingAudioCue implements LetterAudioCue {
-  RecordingAudioCue({this.shouldFail = false});
-
-  final bool shouldFail;
-
-  @override
-  Future<void> playLetterA() async {
-    if (shouldFail) {
-      throw StateError('Test audio failure');
-    }
-  }
-
-  @override
-  Future<void> playSuccess() async {
-    if (shouldFail) {
-      throw StateError('Test audio failure');
-    }
-  }
+Widget _app({required ProgressRepository repository}) {
+  return KidsLandApp(progressRepository: repository);
 }

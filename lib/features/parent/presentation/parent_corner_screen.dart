@@ -5,12 +5,12 @@ import '../../tracing/data/progress_repository.dart';
 class ParentCornerScreen extends StatefulWidget {
   const ParentCornerScreen({
     required this.progressRepository,
-    required this.totalGames,
+    required this.gameIds,
     super.key,
   });
 
   final ProgressRepository progressRepository;
-  final int totalGames;
+  final List<String> gameIds;
 
   @override
   State<ParentCornerScreen> createState() => _ParentCornerScreenState();
@@ -60,7 +60,10 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final completed = widget.progressRepository.completedGameIds.length;
+    final completed = widget.gameIds
+        .where(widget.progressRepository.isGameComplete)
+        .length;
+    final totalGames = widget.gameIds.length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F5FF),
@@ -80,16 +83,14 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$completed of ${widget.totalGames} games explored',
+                    '$completed of $totalGames game explored',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
-                    value: widget.totalGames == 0
-                        ? 0
-                        : completed / widget.totalGames,
+                    value: totalGames == 0 ? 0 : completed / totalGames,
                     minHeight: 12,
                     borderRadius: BorderRadius.circular(12),
                   ),

@@ -5,11 +5,10 @@ import 'progress_repository.dart';
 class HiveProgressRepository implements ProgressRepository {
   HiveProgressRepository._(this._box);
 
-  static const int currentSchemaVersion = 3;
+  static const int currentSchemaVersion = 4;
   static const String boxName = 'kidsland_progress';
 
   static const String _schemaVersionKey = 'schemaVersion';
-  static const String _letterACompleteKey = 'letterAComplete';
   static const String _completedGameIdsKey = 'completedGameIds';
   static const String _soundEnabledKey = 'soundEnabled';
   static const String _dewBubbleHighestUnlockedLevelIndexKey =
@@ -53,9 +52,6 @@ class HiveProgressRepository implements ProgressRepository {
   }
 
   @override
-  bool get isLetterAComplete => isGameComplete(letterTracingGameId);
-
-  @override
   bool get soundEnabled =>
       _box.get(_soundEnabledKey, defaultValue: true) as bool;
 
@@ -67,11 +63,6 @@ class HiveProgressRepository implements ProgressRepository {
   @override
   int dewBubbleBestStars(String levelId) {
     return _readIntMap(_dewBubbleBestStarsKey)[levelId] ?? 0;
-  }
-
-  @override
-  Future<void> markLetterAComplete() async {
-    await markGameComplete(letterTracingGameId);
   }
 
   @override
@@ -131,27 +122,31 @@ class HiveProgressRepository implements ProgressRepository {
       return;
     }
 
-    if (storedVersion == 1) {
-      final legacyLetterComplete =
-          _box.get(_letterACompleteKey, defaultValue: false) as bool;
+    if (storedVersion == 3) {
+      final completedIds = completedGameIds.toList()..sort();
+      final soundEnabled = this.soundEnabled;
+      final highestUnlocked = dewBubbleHighestUnlockedLevelIndex;
+      final bestScores = _readIntMap(_dewBubbleBestScoresKey);
+      final bestStars = _readIntMap(_dewBubbleBestStarsKey);
+      await _box.clear();
+      await _writeDefaults();
+      await _box.put(
+        _completedGameIdsKey,
+        completedIds.where((id) => id == dewBubbleGameId).toList(),
+      );
+      await _box.put(_soundEnabledKey, soundEnabled);
+      await _box.put(_dewBubbleHighestUnlockedLevelIndexKey, highestUnlocked);
+      await _box.put(_dewBubbleBestScoresKey, bestScores);
+      await _box.put(_dewBubbleBestStarsKey, bestStars);
+      return;
+    }
+
+    if (storedVersion == 1 || storedVersion == 2) {
       final legacySoundEnabled =
           _box.get(_soundEnabledKey, defaultValue: true) as bool;
       await _box.clear();
       await _writeDefaults();
       await _box.put(_soundEnabledKey, legacySoundEnabled);
-      if (legacyLetterComplete) {
-        await markGameComplete(letterTracingGameId);
-      }
-      return;
-    }
-
-    if (storedVersion == 2) {
-      final completedIds = completedGameIds.toList()..sort();
-      final soundEnabled = this.soundEnabled;
-      await _box.clear();
-      await _writeDefaults();
-      await _box.put(_completedGameIdsKey, completedIds);
-      await _box.put(_soundEnabledKey, soundEnabled);
       return;
     }
 

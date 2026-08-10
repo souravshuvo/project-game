@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/audio/letter_audio_cue.dart';
+import '../../games/dew_bubble/data/dew_levels.dart';
 import '../../games/game_catalog.dart';
 import '../../games/shared/kid_celebration.dart';
 import '../../parent/presentation/parent_corner_screen.dart';
@@ -10,21 +11,19 @@ import '../../parent/presentation/parent_gate_dialog.dart';
 import '../../tracing/data/progress_repository.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({
-    required this.progressRepository,
-    required this.audioCue,
-    super.key,
-  });
+  const HomeScreen({required this.progressRepository, super.key});
 
   final ProgressRepository progressRepository;
-  final LetterAudioCue audioCue;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<void> _openGame(KidsGame game) async {
+  KidsGame get _game => kidsGameCatalog.single;
+
+  Future<void> _openGame() async {
+    final game = _game;
     var completionRequested = false;
 
     void markCompleted() {
@@ -38,12 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: '/games/${game.id}'),
-        builder: (context) => game.builder(
-          context,
-          markCompleted,
-          widget.audioCue,
-          widget.progressRepository,
-        ),
+        builder: (context) =>
+            game.builder(context, markCompleted, widget.progressRepository),
       ),
     );
 
@@ -63,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
         settings: const RouteSettings(name: '/parent'),
         builder: (context) => ParentCornerScreen(
           progressRepository: widget.progressRepository,
-          totalGames: kidsGameCatalog.length,
+          gameIds: [for (final game in kidsGameCatalog) game.id],
         ),
       ),
     );
@@ -75,18 +70,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final completed = widget.progressRepository.completedGameIds.length;
-    final total = kidsGameCatalog.length;
-    final progress = total == 0 ? 0.0 : completed / total;
+    final game = _game;
+    final totalLevels = dewBubbleLevels.length;
+    final highestUnlocked = widget
+        .progressRepository
+        .dewBubbleHighestUnlockedLevelIndex
+        .clamp(0, math.max(0, totalLevels - 1))
+        .toInt();
+    final unlockedLevels = totalLevels == 0 ? 0 : highestUnlocked + 1;
+    final savedStars = dewBubbleLevels.fold<int>(
+      0,
+      (total, level) =>
+          total + widget.progressRepository.dewBubbleBestStars(level.id),
+    );
+    final bestScore = dewBubbleLevels.fold<int>(
+      0,
+      (best, level) => math.max(
+        best,
+        widget.progressRepository.dewBubbleBestScore(level.id),
+      ),
+    );
+    final completed = widget.progressRepository.isGameComplete(game.id);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF9ED),
+      backgroundColor: const Color(0xFFF7FBF7),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF5D9), Color(0xFFF1ECFF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE6FAF5), Color(0xFFFFF8E8), Color(0xFFF8F0FF)],
           ),
         ),
         child: SafeArea(
@@ -94,115 +107,102 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
                 sliver: SliverToBoxAdapter(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1100),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Expanded(child: _BrandMark()),
-                            const SizedBox(width: 12),
-                            Semantics(
-                              button: true,
-                              label: 'Open parent settings',
-                              child: IconButton.filledTonal(
-                                key: const ValueKey('parent-corner-button'),
-                                onPressed: _openParentCorner,
-                                tooltip: 'Parent Corner',
-                                icon: const Icon(
-                                  Icons.family_restroom_rounded,
-                                  size: 30,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 720),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _HomeHeader(onParentCorner: _openParentCorner),
+                          const SizedBox(height: 20),
+                          _BubbleGardenPreview(completed: completed),
+                          const SizedBox(height: 18),
+                          Text(
+                            game.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
+                                  color: const Color(0xFF243C4A),
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0,
                                 ),
-                                style: IconButton.styleFrom(
-                                  minimumSize: const Size.square(64),
-                                  foregroundColor: const Color(0xFF4A397A),
-                                  backgroundColor: Colors.white,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            game.subtitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: const Color(0xFF5F6F74),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0,
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Pick a game!',
-                          style: Theme.of(context).textTheme.displaySmall
-                              ?.copyWith(
-                                color: const Color(0xFF35275F),
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Ten little adventures for curious minds',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: const Color(0xFF686078),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(height: 18),
-                        _ProgressBanner(
-                          completed: completed,
-                          total: total,
-                          progress: progress,
-                        ),
-                        const SizedBox(height: 26),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Games',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      color: const Color(0xFF35275F),
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Flexible(
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: _OfflineBadge(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 22),
+                          _PlayButton(
+                            completed: completed,
+                            onPressed: _openGame,
+                          ),
+                          const SizedBox(height: 18),
+                          _ProgressSummary(
+                            unlockedLevels: unlockedLevels,
+                            totalLevels: totalLevels,
+                            savedStars: savedStars,
+                            maxStars: totalLevels * 3,
+                            bestScore: bestScore,
+                          ),
+                          const SizedBox(height: 14),
+                          const _OfflineNote(),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 300,
-                    mainAxisExtent: 224,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final game = kidsGameCatalog[index];
-                    return _GameCard(
-                      game: game,
-                      completed: widget.progressRepository.isGameComplete(
-                        game.id,
-                      ),
-                      onTap: () => _openGame(game),
-                    );
-                  }, childCount: kidsGameCatalog.length),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.onParentCorner});
+
+  final VoidCallback onParentCorner;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: _BrandMark()),
+        const SizedBox(width: 12),
+        Semantics(
+          button: true,
+          label: 'Open parent settings',
+          child: IconButton.filledTonal(
+            key: const ValueKey('parent-corner-button'),
+            onPressed: onParentCorner,
+            tooltip: 'Parent Corner',
+            icon: const Icon(Icons.family_restroom_rounded, size: 28),
+            style: IconButton.styleFrom(
+              minimumSize: const Size.square(56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              foregroundColor: const Color(0xFF2E6E65),
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -215,31 +215,30 @@ class _BrandMark extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const DecoratedBox(
+        DecoratedBox(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF7257E8), Color(0xFFEF5DA8)],
-            ),
-            shape: BoxShape.circle,
+            color: const Color(0xFF2CB9A0),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(12),
+          child: const Padding(
+            padding: EdgeInsets.all(10),
             child: Icon(
-              Icons.auto_awesome_rounded,
-              size: 30,
+              Icons.bubble_chart_rounded,
+              size: 28,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Flexible(
           child: Text(
-            'KidsLand',
+            'Dew Bubble',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: const Color(0xFF35275F),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: const Color(0xFF243C4A),
               fontWeight: FontWeight.w900,
+              letterSpacing: 0,
             ),
           ),
         ),
@@ -248,231 +247,392 @@ class _BrandMark extends StatelessWidget {
   }
 }
 
-class _ProgressBanner extends StatelessWidget {
-  const _ProgressBanner({
-    required this.completed,
-    required this.total,
-    required this.progress,
-  });
+class _BubbleGardenPreview extends StatelessWidget {
+  const _BubbleGardenPreview({required this.completed});
 
-  final int completed;
-  final int total;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14634FA8),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              color: Color(0xFFFFE9A8),
-              shape: BoxShape.circle,
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(11),
-              child: Icon(
-                Icons.emoji_events_rounded,
-                color: Color(0xFFD98700),
-                size: 32,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  completed == 0
-                      ? 'Your adventure starts here'
-                      : '$completed of $total games explored',
-                  style: const TextStyle(
-                    color: Color(0xFF40355A),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 12,
-                  borderRadius: BorderRadius.circular(12),
-                  backgroundColor: const Color(0xFFE8E1F6),
-                  color: const Color(0xFF7257E8),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OfflineBadge extends StatelessWidget {
-  const _OfflineBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      constraints: const BoxConstraints(maxWidth: 178, minHeight: 36),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDFF7EC),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.offline_bolt_rounded, size: 18, color: Color(0xFF237A59)),
-          SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              'Offline • Ad-free',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Color(0xFF237A59),
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GameCard extends StatelessWidget {
-  const _GameCard({
-    required this.game,
-    required this.completed,
-    required this.onTap,
-  });
-
-  final KidsGame game;
   final bool completed;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      button: true,
-      label: completed ? '${game.title}. Completed.' : game.title,
-      hint: game.subtitle,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(30),
-        clipBehavior: Clip.antiAlias,
-        child: Ink(
-          key: ValueKey('game-card-${game.id}'),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: game.colors,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: game.colors.first.withValues(alpha: 0.24),
-                blurRadius: 18,
-                offset: const Offset(0, 9),
+      label: 'Dew Bubble Garden preview',
+      image: true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final height = math.min(
+            260.0,
+            math.max(168.0, constraints.maxWidth * 0.38),
+          );
+
+          return SizedBox(
+            height: height,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x183F8FEF),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      KidFloaty(
-                        phase: game.id.length * 0.05,
-                        amplitude: 2,
-                        sway: 1.5,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    const CustomPaint(painter: _BubbleGardenPreviewPainter()),
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: KidFloaty(
+                        amplitude: 3,
+                        sway: 2,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.24),
-                            borderRadius: BorderRadius.circular(18),
+                            color: completed
+                                ? const Color(0xFFFFF0B8)
+                                : const Color(0xFFE7FAFF),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(
-                              game.icon,
-                              color: Colors.white,
-                              size: 36,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  completed
+                                      ? Icons.check_rounded
+                                      : Icons.spa_rounded,
+                                  key: completed
+                                      ? const ValueKey(
+                                          'dew-bubble-complete-check',
+                                        )
+                                      : null,
+                                  color: completed
+                                      ? const Color(0xFFD98700)
+                                      : const Color(0xFF2CB9A0),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  completed ? 'Cleared' : 'Ready',
+                                  style: const TextStyle(
+                                    color: Color(0xFF34415F),
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                      const Spacer(),
-                      if (completed)
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(7),
-                            child: Icon(
-                              Icons.check_rounded,
-                              color: Color(0xFF24966C),
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    game.title,
-                    textScaler: TextScaler.noScaling,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 21,
-                      height: 1.05,
-                      fontWeight: FontWeight.w900,
                     ),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    game.subtitle,
-                    textScaler: TextScaler.noScaling,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontSize: 14,
-                      height: 1.2,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
+}
+
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({required this.completed, required this.onPressed});
+
+  final bool completed;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      key: const ValueKey('game-card-dew-bubble'),
+      onPressed: onPressed,
+      icon: const Icon(Icons.play_arrow_rounded, size: 32),
+      label: Text(completed ? 'Play Again' : 'Play'),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(64),
+        backgroundColor: const Color(0xFF2CB9A0),
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+}
+
+class _ProgressSummary extends StatelessWidget {
+  const _ProgressSummary({
+    required this.unlockedLevels,
+    required this.totalLevels,
+    required this.savedStars,
+    required this.maxStars,
+    required this.bestScore,
+  });
+
+  final int unlockedLevels;
+  final int totalLevels;
+  final int savedStars;
+  final int maxStars;
+  final int bestScore;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = totalLevels == 0 ? 0.0 : unlockedLevels / totalLevels;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                icon: Icons.lock_open_rounded,
+                label: 'Open',
+                value: '$unlockedLevels/$totalLevels',
+                color: const Color(0xFF3F8FEF),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                icon: Icons.star_rounded,
+                label: 'Stars',
+                value: '$savedStars/$maxStars',
+                color: const Color(0xFFFFA928),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                icon: Icons.emoji_events_rounded,
+                label: 'Best',
+                value: '$bestScore',
+                color: const Color(0xFF7257E8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 12,
+            backgroundColor: Colors.white.withValues(alpha: 0.75),
+            color: const Color(0xFF2CB9A0),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 78),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF243C4A),
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF68758B),
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfflineNote extends StatelessWidget {
+  const _OfflineNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.offline_bolt_rounded, size: 18, color: Color(0xFF237A59)),
+        SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            'Offline / Ad-free',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Color(0xFF237A59),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BubbleGardenPreviewPainter extends CustomPainter {
+  const _BubbleGardenPreviewPainter();
+
+  static const _bubbles = <_PreviewBubble>[
+    _PreviewBubble(0.18, 0.24, 0.12, Color(0xFF67B8F7)),
+    _PreviewBubble(0.31, 0.23, 0.12, Color(0xFFEF5DA8)),
+    _PreviewBubble(0.44, 0.24, 0.12, Color(0xFFFFD15C)),
+    _PreviewBubble(0.57, 0.23, 0.12, Color(0xFF2DBE88)),
+    _PreviewBubble(0.25, 0.39, 0.12, Color(0xFF67B8F7)),
+    _PreviewBubble(0.38, 0.39, 0.12, Color(0xFFEF5DA8)),
+    _PreviewBubble(0.51, 0.39, 0.12, Color(0xFFFFD15C)),
+    _PreviewBubble(0.64, 0.39, 0.12, Color(0xFF2DBE88)),
+    _PreviewBubble(0.70, 0.63, 0.1, Color(0xFFEF5DA8)),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) {
+      return;
+    }
+
+    final skyPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE9FBFF), Color(0xFFFFFAEA)],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, skyPaint);
+
+    final groundPaint = Paint()..color = const Color(0xFFE0F6D8);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, size.height * 0.66, size.width, size.height * 0.34),
+        const Radius.circular(28),
+      ),
+      groundPaint,
+    );
+
+    final stemPaint = Paint()
+      ..color = const Color(0xFF52A869)
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = math.max(2, size.shortestSide * 0.018);
+    canvas.drawLine(
+      Offset(size.width * 0.72, size.height * 0.73),
+      Offset(size.width * 0.72, size.height * 0.58),
+      stemPaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.78, size.height * 0.74),
+      Offset(size.width * 0.78, size.height * 0.62),
+      stemPaint,
+    );
+
+    for (final bubble in _bubbles) {
+      final center = Offset(bubble.x * size.width, bubble.y * size.height);
+      final radius = bubble.radius * size.shortestSide;
+      final shadowPaint = Paint()
+        ..color = const Color(0x2234415F)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(
+        center.translate(0, radius * 0.16),
+        radius,
+        shadowPaint,
+      );
+
+      final fillPaint = Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.45, -0.45),
+          radius: 0.9,
+          colors: [
+            Colors.white.withValues(alpha: 0.9),
+            bubble.color.withValues(alpha: 0.92),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: radius));
+      canvas.drawCircle(center, radius, fillPaint);
+
+      final ringPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.4, radius * 0.08)
+        ..color = Colors.white.withValues(alpha: 0.7);
+      canvas.drawCircle(center, radius * 0.9, ringPaint);
+    }
+
+    final shooterCenter = Offset(size.width * 0.5, size.height * 0.83);
+    final shooterPaint = Paint()..color = const Color(0xFF34415F);
+    final barrelPaint = Paint()
+      ..color = const Color(0xFF34415F)
+      ..strokeWidth = math.max(8, size.shortestSide * 0.04)
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      shooterCenter,
+      shooterCenter.translate(size.width * 0.12, -size.height * 0.18),
+      barrelPaint,
+    );
+    canvas.drawCircle(shooterCenter, size.shortestSide * 0.075, shooterPaint);
+    canvas.drawCircle(
+      shooterCenter,
+      size.shortestSide * 0.046,
+      Paint()..color = const Color(0xFFFFD15C),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BubbleGardenPreviewPainter oldDelegate) {
+    return false;
+  }
+}
+
+class _PreviewBubble {
+  const _PreviewBubble(this.x, this.y, this.radius, this.color);
+
+  final double x;
+  final double y;
+  final double radius;
+  final Color color;
 }

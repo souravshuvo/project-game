@@ -1,4 +1,4 @@
-const String letterTracingGameId = 'letter-tracing';
+const String dewBubbleGameId = 'dew-bubble';
 
 abstract interface class ProgressRepository {
   Set<String> get completedGameIds;
@@ -7,15 +7,11 @@ abstract interface class ProgressRepository {
 
   int get dewBubbleHighestUnlockedLevelIndex;
 
-  bool get isLetterAComplete;
-
   bool get soundEnabled;
 
   int dewBubbleBestScore(String levelId);
 
   int dewBubbleBestStars(String levelId);
-
-  Future<void> markLetterAComplete();
 
   Future<void> markGameComplete(String gameId);
 
@@ -37,16 +33,12 @@ abstract interface class ProgressRepository {
 /// only for the current process and is also useful in widget tests.
 class MemoryProgressRepository implements ProgressRepository {
   MemoryProgressRepository({
-    bool isLetterAComplete = false,
     bool soundEnabled = true,
     Set<String> completedGameIds = const <String>{},
     int dewBubbleHighestUnlockedLevelIndex = 0,
     Map<String, int> dewBubbleBestScores = const <String, int>{},
     Map<String, int> dewBubbleBestStars = const <String, int>{},
-  }) : _completedGameIds = <String>{
-         ...completedGameIds,
-         if (isLetterAComplete) letterTracingGameId,
-       },
+  }) : _completedGameIds = <String>{...completedGameIds},
        _soundEnabled = soundEnabled,
        _dewBubbleHighestUnlockedLevelIndex = dewBubbleHighestUnlockedLevelIndex,
        _dewBubbleBestScores = Map<String, int>.of(dewBubbleBestScores),
@@ -66,9 +58,6 @@ class MemoryProgressRepository implements ProgressRepository {
       _dewBubbleHighestUnlockedLevelIndex;
 
   @override
-  bool get isLetterAComplete => isGameComplete(letterTracingGameId);
-
-  @override
   bool get soundEnabled => _soundEnabled;
 
   @override
@@ -79,11 +68,6 @@ class MemoryProgressRepository implements ProgressRepository {
   @override
   int dewBubbleBestStars(String levelId) {
     return _dewBubbleBestStars[levelId] ?? 0;
-  }
-
-  @override
-  Future<void> markLetterAComplete() async {
-    await markGameComplete(letterTracingGameId);
   }
 
   @override
