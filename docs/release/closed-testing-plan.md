@@ -1,10 +1,10 @@
 # Closed Testing Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Goal
 
-Use real players to confirm whether Arrow Puzzle is understandable, satisfying, stable, and worth expanding before production release.
+Use real players to confirm whether Weather Lab Sort is understandable, satisfying, stable, and worth expanding before production release.
 
 ## Recommended Track Order
 
@@ -18,29 +18,32 @@ Use real players to confirm whether Arrow Puzzle is understandable, satisfying, 
 - Launch fresh install.
 - Complete Level 1.
 - Open Level Select.
-- Claim Daily Hint.
-- Use Hint on Level 1.
+- Complete at least three levels.
+- Use Undo.
+- Use Restart.
 - Toggle sound and haptics.
 - Close and reopen app to confirm progress persists.
 
 ## Closed Test Tasks
 
 - Play at least 10 minutes.
-- Try to complete the first 5 levels.
+- Try to complete all 10 v1 levels.
 - Report the first moment that felt confusing.
 - Report any level that felt unfair or boring.
-- Check whether the hint system feels useful.
+- Check whether color/icon readability is comfortable.
 - Confirm whether the game feels ad-ready or should stay ad-free longer.
 
 ## Feedback Questions
 
-- Did you understand the rule within the first minute?
+- Did you understand the pour rule within the first minute?
 - Which level did you stop at?
 - Was any text unclear?
-- Were the arrows, colors, and board readable?
+- Were the vessels, colors, and layer icons readable?
+- Did invalid move feedback make sense?
+- Did undo/restart behave how you expected?
 - Did the animations feel fast, slow, or right?
 - Would you play another 20 levels?
-- Would rewarded hints feel acceptable?
+- Would optional rewarded hints feel acceptable later?
 - Did anything crash, freeze, or look broken?
 - Device model and Android version?
 
@@ -51,6 +54,7 @@ Use real players to confirm whether Arrow Puzzle is understandable, satisfying, 
 - Crash notes
 - Confusing-level notes
 - Screenshot/video of any UI issue
+- Level difficulty notes
 - Retention signal: who came back the next day
 - Top requested improvement
 

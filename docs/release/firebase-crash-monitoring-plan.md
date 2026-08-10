@@ -33,8 +33,8 @@ This means no event data is sent anywhere in the current build.
 Only add Firebase Analytics after these are ready:
 
 - Firebase project created.
-- Android app registered with package `com.childhood.arrowpuzzle`.
-- iOS app registered with bundle ID `com.childhood.arrowpuzzle`, if iOS remains in scope.
+- Android app registered with package `com.childhood.weatherlabsort`.
+- iOS app registered with bundle ID `com.childhood.weatherlabsort`, if iOS remains in scope.
 - `flutterfire configure` can create real `firebase_options.dart`.
 - Privacy policy and Play Data safety are updated for Analytics behavior.
 - Tester build confirms events appear in Firebase DebugView.
@@ -65,7 +65,7 @@ flutterfire configure
 
 Expected adapter file:
 
-- `lib/features/arrow_puzzle/application/firebase_game_telemetry.dart`
+- `lib/features/weather_sort/application/firebase_game_telemetry.dart`
 
 The adapter should translate `GameTelemetryEvent` to Firebase Analytics events and keep the event/property names already defined in `game_telemetry.dart`.
 

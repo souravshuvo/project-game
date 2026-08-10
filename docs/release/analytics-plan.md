@@ -6,13 +6,13 @@ Last updated: 2026-08-02
 
 Do not add analytics SDKs in the current build.
 
-Reason: Arrow Puzzle is still validating core gameplay, levels, presentation, and store-readiness. Adding analytics now would create Data safety/privacy work before the product needs it.
+Reason: Weather Lab Sort is still validating core gameplay, levels, presentation, and store-readiness. Adding analytics now would create Data safety/privacy work before the product needs it.
 
 ## Current Implementation
 
 The app has a no-op telemetry boundary:
 
-- `lib/features/arrow_puzzle/application/game_telemetry.dart`
+- `lib/features/weather_sort/application/game_telemetry.dart`
 - Default adapter: `NoOpGameTelemetry`
 
 This is only an internal code boundary. It does not transmit data, does not add Firebase, and does not change the current Data safety draft.
@@ -34,9 +34,10 @@ Keep event names simple and avoid personal data:
 - `app_open`
 - `level_start`
 - `level_complete`
-- `level_retry`
-- `hint_claim`
-- `hint_use`
+- `level_restart`
+- `pour_valid`
+- `pour_invalid`
+- `undo_used`
 - `settings_sound_toggle`
 - `settings_haptics_toggle`
 
@@ -45,8 +46,9 @@ Suggested event properties:
 - `level_id`
 - `level_number`
 - `move_count`
-- `is_daily_level`
-- `hint_balance`
+- `stars`
+- `invalid_reason`
+- `layers_moved`
 
 Do not collect names, emails, precise location, contacts, photos, free-text input, or unrelated device data.
 
@@ -56,8 +58,8 @@ Do not collect names, emails, precise location, contacts, photos, free-text inpu
 - Level 1 retry rate
 - Level 2 unlock rate
 - Average moves per level
-- Hint claim rate
-- Hint use rate
+- Invalid move rate
+- Undo use rate
 - Day 1 return rate, only if analytics can be implemented with a compliant privacy setup
 
 ## Before Adding Any SDK

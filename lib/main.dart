@@ -8,8 +8,11 @@ import 'features/weather_sort/data/local_water_level_pack.dart';
 import 'features/weather_sort/data/water_progress_store.dart';
 import 'features/weather_sort/domain/water_player_progress.dart';
 import 'features/weather_sort/domain/water_sort_engine.dart';
+import 'features/weather_sort/presentation/pages/home_page.dart';
 import 'features/weather_sort/presentation/pages/level_complete_page.dart';
+import 'features/weather_sort/presentation/pages/level_select_page.dart';
 import 'features/weather_sort/presentation/pages/puzzle_page.dart';
+import 'features/weather_sort/presentation/pages/settings_page.dart';
 import 'features/weather_sort/presentation/theme/weather_sort_theme.dart';
 
 Future<void> main() async {
@@ -78,6 +81,11 @@ class _WeatherSortAppState extends State<WeatherSortApp> {
 
   Widget _buildHome() {
     return switch (_controller.screen) {
+      WaterSortScreen.home => WaterHomePage(controller: _controller),
+      WaterSortScreen.levelSelect => WaterLevelSelectPage(
+        controller: _controller,
+      ),
+      WaterSortScreen.settings => WaterSettingsPage(controller: _controller),
       WaterSortScreen.playing => WaterPuzzlePage(controller: _controller),
       WaterSortScreen.complete => WaterLevelCompletePage(
         controller: _controller,

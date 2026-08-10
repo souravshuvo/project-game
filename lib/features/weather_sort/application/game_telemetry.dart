@@ -42,6 +42,16 @@ final class GameTelemetryEvents {
     });
   }
 
+  static GameTelemetryEvent settingsChanged({
+    required String settingName,
+    required bool value,
+  }) {
+    return GameTelemetryEvent('settings_changed', {
+      'setting_name': settingName,
+      'value': value,
+    });
+  }
+
   static GameTelemetryEvent pourValid({
     required int levelId,
     required int sourceIndex,

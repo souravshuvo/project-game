@@ -12,7 +12,7 @@ class WeatherSortColors {
   static const primaryDark = Color(0xFF214C75);
   static const rain = Color(0xFF2F80B9);
   static const sun = Color(0xFFF6C65B);
-  static const mist = Color(0xFFAFC8C3);
+  static const mist = Color(0xFF88B4AE);
   static const mint = Color(0xFF35A878);
   static const coral = Color(0xFFE56F55);
   static const line = Color(0xFFD8E3EC);

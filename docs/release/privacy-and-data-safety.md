@@ -1,10 +1,10 @@
 # Privacy And Data Safety Draft
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current App Data Behavior
 
-Current build status:
+Current Weather Lab Sort build status:
 
 - No account system
 - No login
@@ -30,20 +30,20 @@ This must be updated before release if ads, analytics, crash reporting, purchase
 Publish this at a stable public URL before Play submission.
 
 ```text
-Privacy Policy for Arrow Puzzle
+Privacy Policy for Weather Lab Sort
 
 Effective date: [Add date]
 
-Arrow Puzzle is a puzzle game by Childhood.
+Weather Lab Sort is a puzzle game by Childhood.
 
 Data collection
-Arrow Puzzle does not currently collect, transmit, sell, or share personal data.
+Weather Lab Sort does not currently collect, transmit, sell, or share personal data.
 
 Local game progress
-The app saves gameplay progress, unlocked levels, best moves, hint count, sound settings, and haptic settings locally on your device. This information stays on your device and is not sent to us.
+The app saves gameplay progress, unlocked levels, best moves, best stars, sound settings, and haptic settings locally on your device. This information stays on your device and is not sent to us.
 
 Children
-Arrow Puzzle is not currently configured as a child-directed app. If this changes, this policy and the app's store declarations will be updated before release.
+Weather Lab Sort is not currently configured as a child-directed app. If this changes, this policy and the app's store declarations will be updated before release.
 
 Third-party services
 The current version does not include advertising, analytics, account login, payment, or cloud-sync services.

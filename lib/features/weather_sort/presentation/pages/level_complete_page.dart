@@ -72,15 +72,23 @@ class WaterLevelCompletePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 34),
                 FilledButton.icon(
-                  onPressed: controller.replayLevel,
-                  icon: const Icon(Icons.replay_rounded),
-                  label: const Text('Replay Prototype'),
+                  onPressed: controller.isLastLevel
+                      ? controller.backHome
+                      : controller.nextLevel,
+                  icon: Icon(
+                    controller.isLastLevel
+                        ? Icons.home_rounded
+                        : Icons.arrow_forward_rounded,
+                  ),
+                  label: Text(
+                    controller.isLastLevel ? 'Back Home' : 'Next Level',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: controller.undo,
-                  icon: const Icon(Icons.undo_rounded),
-                  label: const Text('Undo Last Move'),
+                  onPressed: controller.replayLevel,
+                  icon: const Icon(Icons.replay_rounded),
+                  label: const Text('Replay Level'),
                 ),
                 const Spacer(),
               ],

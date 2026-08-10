@@ -1,5 +1,7 @@
 class WaterPlayerProgress {
   WaterPlayerProgress({
+    required this.currentLevelIndex,
+    required this.unlockedLevelIndex,
     required Set<int> completedLevelIds,
     required Map<int, int> bestMovesByLevel,
     required Map<int, int> bestStarsByLevel,
@@ -11,6 +13,8 @@ class WaterPlayerProgress {
 
   factory WaterPlayerProgress.initial() {
     return WaterPlayerProgress(
+      currentLevelIndex: 0,
+      unlockedLevelIndex: 0,
       completedLevelIds: const {},
       bestMovesByLevel: const {},
       bestStarsByLevel: const {},
@@ -19,6 +23,8 @@ class WaterPlayerProgress {
     );
   }
 
+  final int currentLevelIndex;
+  final int unlockedLevelIndex;
   final Set<int> completedLevelIds;
   final Map<int, int> bestMovesByLevel;
   final Map<int, int> bestStarsByLevel;
@@ -26,6 +32,8 @@ class WaterPlayerProgress {
   final bool hapticsEnabled;
 
   WaterPlayerProgress copyWith({
+    int? currentLevelIndex,
+    int? unlockedLevelIndex,
     Set<int>? completedLevelIds,
     Map<int, int>? bestMovesByLevel,
     Map<int, int>? bestStarsByLevel,
@@ -33,11 +41,28 @@ class WaterPlayerProgress {
     bool? hapticsEnabled,
   }) {
     return WaterPlayerProgress(
+      currentLevelIndex: currentLevelIndex ?? this.currentLevelIndex,
+      unlockedLevelIndex: unlockedLevelIndex ?? this.unlockedLevelIndex,
       completedLevelIds: completedLevelIds ?? this.completedLevelIds,
       bestMovesByLevel: bestMovesByLevel ?? this.bestMovesByLevel,
       bestStarsByLevel: bestStarsByLevel ?? this.bestStarsByLevel,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+    );
+  }
+
+  WaterPlayerProgress normalized(int totalLevels) {
+    if (totalLevels <= 0) {
+      return WaterPlayerProgress.initial();
+    }
+
+    final lastIndex = totalLevels - 1;
+    final safeUnlocked = unlockedLevelIndex.clamp(0, lastIndex).toInt();
+    final safeCurrent = currentLevelIndex.clamp(0, safeUnlocked).toInt();
+
+    return copyWith(
+      currentLevelIndex: safeCurrent,
+      unlockedLevelIndex: safeUnlocked,
     );
   }
 }

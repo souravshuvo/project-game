@@ -131,7 +131,7 @@ Add-RoundedRectangle $graphics $gold 78 94 122 122 28
 Add-RoundedRectangle $graphics $white 104 120 70 70 16
 Add-Arrow $graphics 139 155 44 "right" "#4B68A5"
 
-Add-Text $graphics "Arrow Puzzle" "Segoe UI" 76 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 230
+Add-Text $graphics "Weather Lab Sort" "Segoe UI" 64 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 230
 Add-Text $graphics "Tap arrows. Clear the board." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#F7F2E8" 80 324
 
 $sparkPen = New-Pen "#FFC531" 8

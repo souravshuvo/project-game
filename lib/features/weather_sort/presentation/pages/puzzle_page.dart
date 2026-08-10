@@ -18,7 +18,14 @@ class WaterPuzzlePage extends StatelessWidget {
     final invalidMessage = invalidMoveMessage(controller.lastInvalidReason);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Level ${controller.currentLevelNumber}')),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: controller.backHome,
+          icon: const Icon(Icons.home_rounded),
+          tooltip: 'Home',
+        ),
+        title: Text('Level ${controller.currentLevelNumber}'),
+      ),
       body: WeatherBackdrop(
         child: SafeArea(
           child: Padding(

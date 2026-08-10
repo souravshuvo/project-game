@@ -78,7 +78,7 @@ function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
     $brush.Dispose()
 }
 
-function New-ArrowPuzzleIcon($path, $size) {
+function New-WeatherSortIcon($path, $size) {
     $bitmap = New-Object System.Drawing.Bitmap $size, $size
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
@@ -126,7 +126,7 @@ $androidIcons = @{
 }
 
 foreach ($entry in $androidIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-WeatherSortIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
 $iosIcons = @{
@@ -148,7 +148,7 @@ $iosIcons = @{
 }
 
 foreach ($entry in $iosIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-WeatherSortIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
-Write-Host "Generated Arrow Puzzle launcher icons."
+Write-Host "Generated Weather Lab Sort launcher icons."

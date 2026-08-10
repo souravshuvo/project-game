@@ -58,9 +58,10 @@ class _TubeWidgetState extends State<TubeWidget>
 
   @override
   Widget build(BuildContext context) {
+    final contents = widget.tube.layers.map((layer) => layer.label).join(', ');
     final label = widget.tube.isEmpty
         ? 'Empty vessel ${widget.index + 1}'
-        : 'Vessel ${widget.index + 1}, ${widget.tube.layerCount} layers';
+        : 'Vessel ${widget.index + 1}, bottom to top: $contents';
 
     return Semantics(
       button: true,
@@ -175,7 +176,7 @@ class _LayerFill extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.54)),
       ),
       child: Center(
-        child: Icon(layer.icon, color: layer.foregroundColor, size: 18),
+        child: Icon(layer.icon, color: layer.foregroundColor, size: 20),
       ),
     );
   }

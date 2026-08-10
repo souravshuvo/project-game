@@ -20,10 +20,10 @@ Reason: the first testing goal is to validate whether the puzzle loop is fun, re
 
 ## Recommended First Monetization Test
 
-If testers like the core loop, test rewarded hints first:
+If testers like the core loop, test rewarded hints first in a later update:
 
-- Keep one free daily hint.
-- Offer one optional rewarded hint when hint balance is zero.
+- Keep undo free.
+- Offer one optional rewarded hint only after a real hint system exists.
 - Never show ads after every tap or during active puzzle solving.
 - Cap ad prompts so the game still feels calm.
 

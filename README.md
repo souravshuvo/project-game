@@ -1,10 +1,10 @@
-# arrow_puzzle_tap_puzzle_games
+# Weather Lab Sort
 
-A new Flutter project.
+An original Flutter water sort puzzle game where players pour rain, sun, and mist essences into clean weather vessels.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Production v1 is focused on offline handcrafted levels, undo, restart, local progress, and no ads or online accounts.
 
 A few resources to get you started if this is your first Flutter project:
 

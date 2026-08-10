@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.childhood.arrowpuzzle"
+    namespace = "com.childhood.weatherlabsort"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.childhood.arrowpuzzle"
+        applicationId = "com.childhood.weatherlabsort"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -4,7 +4,7 @@ Last updated: 2026-08-02
 
 ## Goal
 
-Prepare Arrow Puzzle for internal and closed testing without rushing SDKs, ads, or production release before the app has real account/config values.
+Prepare Weather Lab Sort for internal and closed testing without rushing SDKs, ads, or production release before the app has real account/config values.
 
 ## Current Phase 6 Decisions
 

@@ -1,43 +1,53 @@
 # Release Checklist
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Identity Lock
 
-- [x] Android application ID uses the final production namespace.
-- [x] Android application ID: `com.childhood.arrowpuzzle`
-- [x] iOS bundle ID: `com.childhood.arrowpuzzle`
-- [x] Android launcher label: `Arrow Puzzle`
-- [x] iOS display name: `Arrow Puzzle`
-- [ ] Confirm `com.childhood.arrowpuzzle` is final before first Play Console upload. Package names cannot be reused for a different app after publishing.
+- [x] Runtime app title: `Weather Lab Sort`
+- [x] Android application ID: `com.childhood.weatherlabsort`
+- [x] iOS bundle ID: `com.childhood.weatherlabsort`
+- [x] Android launcher label: `Weather Lab Sort`
+- [x] iOS display name: `Weather Lab Sort`
+- [ ] Confirm `com.childhood.weatherlabsort` is final before first Play Console upload. Package names cannot be reused for a different app after publishing.
 
 ## Build Readiness
 
-- [x] `flutter analyze`
-- [x] `flutter test`
-- [x] `flutter build apk --debug`
-- [ ] `flutter build appbundle --release`
+- [ ] Run `flutter analyze`.
+- [ ] Run `flutter test`.
+- [ ] Run `flutter build apk --debug`.
+- [ ] Run `flutter build appbundle --release`.
 - [ ] Configure real Android release signing. Current release config still uses debug signing.
 - [ ] Confirm target API level meets current Google Play requirement before upload.
 - [ ] Test on physical Android phone.
 - [ ] Test fresh install after uninstalling older package IDs.
 
+## Gameplay Readiness
+
+- [x] One offline water-sort mode.
+- [x] 10 handcrafted v1 levels.
+- [x] Local progress, unlocks, best moves, and best stars.
+- [x] Undo and restart.
+- [x] Level validation logic and focused test coverage.
+- [ ] Manual QA on small and large Android phones.
+- [ ] Confirm Level 1 is understandable to a new player.
+- [ ] Confirm all v1 levels are fair without hints or boosters.
+
 ## Store Assets
 
-- [x] Launcher icons generated for Android and iOS.
-- [x] Android splash background/mark added.
-- [x] Capture final phone screenshots.
-- [x] Create feature graphic: 1024 x 500 PNG/JPEG, no alpha.
-- [x] Run `tool/generate_store_feature_graphic.ps1` and review `store_assets/feature_graphic/feature-graphic.png`.
-- [x] After installing on an emulator, run `tool/capture_store_screenshots.ps1` and review `store_assets/screenshots/phone/`.
-- [x] Review screenshots for status bar cleanliness, no debug banners, no misleading text.
+- [ ] Regenerate Weather Lab Sort launcher icons.
+- [ ] Capture final phone screenshots from real Weather Lab Sort gameplay.
+- [ ] Create feature graphic: 1024 x 500 PNG/JPEG, no alpha.
+- [ ] Review screenshots for status bar cleanliness, no debug banners, no misleading text.
 - [ ] Add alt text for uploaded screenshots.
+
+Existing `store_assets/` files may be stale from the earlier Arrow Puzzle prototype and must not be uploaded until regenerated from the current app.
 
 ## Play Console App Content
 
 - [ ] Privacy policy hosted at public URL.
 - [ ] Data safety form completed.
-- [ ] Ads declaration completed.
+- [ ] Ads declaration completed as "No" for the current build.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
 - [ ] App access declaration completed; no login required.
@@ -45,17 +55,16 @@ Last updated: 2026-08-02
 
 ## Product Readiness
 
-- [ ] Confirm first 20 levels are enough for the first internal test.
+- [ ] Confirm first 10 levels are enough for internal testing.
 - [x] Add no-op telemetry boundary for future analytics.
-- [ ] Decide whether daily hints should remain without rewarded ads for v1.
-- [ ] Decide whether Firebase Analytics/Crashlytics is needed before closed testing.
+- [x] Keep ads and analytics SDKs out of v1.
 - [ ] Confirm support email and developer website.
 - [ ] Confirm app category and tags.
 
-## Phase 6 Launch Prep
+## Launch Prep
 
-- [x] Add Android release signing example and secret ignore rules.
-- [x] Create Firebase/crash monitoring rollout plan.
+- [x] Add Android release signing notes.
+- [x] Create crash monitoring rollout plan.
 - [x] Create monetization plan.
 - [x] Create closed testing plan.
 - [x] Create post-test learning note template.

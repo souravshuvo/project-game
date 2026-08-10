@@ -2,6 +2,7 @@ import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/data/local_w
 import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/pour_move.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/pour_result.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/water_board.dart';
+import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/water_level_validator.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/water_sort_engine.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/weather_sort/domain/water_tube.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -123,20 +124,13 @@ void main() {
     },
   );
 
-  test('prototype level has a known winning sequence', () {
-    var board = engine.parse(localWaterLevelPack.single);
+  test('first v1 level has a known winning sequence', () {
+    var board = engine.parse(localWaterLevelPack.first);
 
     const moves = [
-      PourMove(sourceIndex: 0, destinationIndex: 3),
-      PourMove(sourceIndex: 2, destinationIndex: 0),
+      PourMove(sourceIndex: 0, destinationIndex: 2),
+      PourMove(sourceIndex: 1, destinationIndex: 0),
       PourMove(sourceIndex: 1, destinationIndex: 2),
-      PourMove(sourceIndex: 1, destinationIndex: 3),
-      PourMove(sourceIndex: 0, destinationIndex: 1),
-      PourMove(sourceIndex: 2, destinationIndex: 0),
-      PourMove(sourceIndex: 2, destinationIndex: 3),
-      PourMove(sourceIndex: 1, destinationIndex: 2),
-      PourMove(sourceIndex: 0, destinationIndex: 1),
-      PourMove(sourceIndex: 0, destinationIndex: 3),
     ];
 
     for (final move in moves) {
@@ -145,7 +139,29 @@ void main() {
       board = result.board;
     }
 
-    expect(board.toSymbolRows(), ['', 'SSSS', 'MMMM', 'RRRR', '']);
+    expect(board.toSymbolRows(), ['RRRR', '', 'SSSS']);
     expect(engine.isSolved(board), isTrue);
+  });
+
+  test('v1 water sort levels pass validation', () {
+    const validator = WaterLevelValidator();
+
+    for (final level in localWaterLevelPack) {
+      expect(
+        validator.validate(level),
+        isEmpty,
+        reason: 'Level ${level.id} ${level.name} should be valid.',
+      );
+    }
+  });
+
+  test('v1 level ids are unique and sequential', () {
+    final ids = localWaterLevelPack.map((level) => level.id).toList();
+
+    expect(ids.toSet().length, localWaterLevelPack.length);
+    expect(
+      ids,
+      List.generate(localWaterLevelPack.length, (index) => index + 1),
+    );
   });
 }

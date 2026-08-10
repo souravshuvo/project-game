@@ -11,6 +11,8 @@ abstract class WaterProgressStore {
 }
 
 class SharedPreferencesWaterProgressStore implements WaterProgressStore {
+  static const _currentLevelKey = 'weather_sort.current_level_index';
+  static const _unlockedLevelKey = 'weather_sort.unlocked_level_index';
   static const _completedLevelsKey = 'weather_sort.completed_level_ids';
   static const _bestMovesKey = 'weather_sort.best_moves_by_level';
   static const _bestStarsKey = 'weather_sort.best_stars_by_level';
@@ -23,6 +25,8 @@ class SharedPreferencesWaterProgressStore implements WaterProgressStore {
       final preferences = await SharedPreferences.getInstance();
 
       return WaterPlayerProgress(
+        currentLevelIndex: preferences.getInt(_currentLevelKey) ?? 0,
+        unlockedLevelIndex: preferences.getInt(_unlockedLevelKey) ?? 0,
         completedLevelIds:
             preferences
                 .getStringList(_completedLevelsKey)
@@ -45,6 +49,8 @@ class SharedPreferencesWaterProgressStore implements WaterProgressStore {
     try {
       final preferences = await SharedPreferences.getInstance();
 
+      await preferences.setInt(_currentLevelKey, progress.currentLevelIndex);
+      await preferences.setInt(_unlockedLevelKey, progress.unlockedLevelIndex);
       await preferences.setStringList(
         _completedLevelsKey,
         progress.completedLevelIds.map((levelId) => '$levelId').toList(),

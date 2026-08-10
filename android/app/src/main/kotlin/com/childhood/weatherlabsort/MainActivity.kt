@@ -1,4 +1,4 @@
-package com.childhood.arrowpuzzle
+package com.childhood.weatherlabsort
 
 import io.flutter.embedding.android.FlutterActivity
 

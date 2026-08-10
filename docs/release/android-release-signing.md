@@ -1,6 +1,6 @@
 # Android Release Signing
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current Status
 
@@ -13,7 +13,7 @@ The repository includes `android/key.properties.example`, but the real `android/
 1. Create an upload keystore.
 
 ```powershell
-keytool -genkey -v -keystore android/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias arrow-puzzle
+keytool -genkey -v -keystore android/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias weather-lab-sort
 ```
 
 2. Copy the example config.
@@ -31,7 +31,7 @@ Copy-Item android/key.properties.example android/key.properties
 - Keep the upload keystore backed up in a private password manager or secure drive.
 - Do not commit `android/key.properties`, `.jks`, or `.keystore` files.
 - Build and upload an Android App Bundle, not only an APK.
-- Confirm the Play Console package name is `com.childhood.arrowpuzzle`.
+- Confirm the Play Console package name is `com.childhood.weatherlabsort`.
 
 ## Build Command
 

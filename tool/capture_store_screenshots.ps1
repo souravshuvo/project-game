@@ -1,6 +1,6 @@
 param(
     [string] $DeviceId = "",
-    [string] $Package = "com.childhood.arrowpuzzle",
+    [string] $Package = "com.childhood.weatherlabsort",
     [string] $OutputDirectory = "store_assets/screenshots/phone",
     [int] $StartupDelaySeconds = 8
 )

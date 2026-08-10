@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +14,7 @@ import '../domain/water_player_progress.dart';
 import '../domain/water_sort_engine.dart';
 import 'game_telemetry.dart';
 
-enum WaterSortScreen { playing, complete }
+enum WaterSortScreen { home, levelSelect, settings, playing, complete }
 
 class WaterSortController extends ChangeNotifier {
   WaterSortController({
@@ -24,10 +25,18 @@ class WaterSortController extends ChangeNotifier {
     this.enableFeedback = true,
     this.telemetry = const NoOpGameTelemetry(),
     DateTime Function()? now,
-  }) : _progress = initialProgress,
+  }) : _progress = initialProgress.normalized(levels.length),
        _now = now ?? DateTime.now {
+    if (levels.isEmpty) {
+      throw ArgumentError.value(
+        levels,
+        'levels',
+        'Weather Lab Sort requires at least one level.',
+      );
+    }
     telemetry.track(GameTelemetryEvents.appOpen(totalLevels: levels.length));
-    _loadLevel(source: 'launch');
+    _levelIndex = _progress.currentLevelIndex;
+    _loadLevel();
     _trackScreenView();
   }
 
@@ -41,8 +50,8 @@ class WaterSortController extends ChangeNotifier {
   late WaterBoard _board;
   late DateTime _attemptStartedAt;
   WaterPlayerProgress _progress;
-  WaterSortScreen _screen = WaterSortScreen.playing;
-  final int _levelIndex = 0;
+  WaterSortScreen _screen = WaterSortScreen.home;
+  late int _levelIndex;
   int _moveCount = 0;
   int _feedbackToken = 0;
   int? _selectedTubeIndex;
@@ -56,7 +65,13 @@ class WaterSortController extends ChangeNotifier {
 
   WaterBoard get board => _board;
 
+  List<WaterLevel> get allLevels => levels;
+
   int get currentLevelNumber => _levelIndex + 1;
+
+  int get resumeLevelNumber => _progress.currentLevelIndex + 1;
+
+  int get totalLevels => levels.length;
 
   int get moveCount => _moveCount;
 
@@ -74,13 +89,116 @@ class WaterSortController extends ChangeNotifier {
 
   bool get hapticsEnabled => _progress.hapticsEnabled;
 
+  int get completedLevelCount => _progress.completedLevelIds.length;
+
+  int get unlockedLevelCount => _progress.unlockedLevelIndex + 1;
+
+  bool get isLastLevel => _levelIndex == levels.length - 1;
+
   int? get currentLevelBestMoves => _progress.bestMovesByLevel[currentLevel.id];
+
+  int? get currentLevelBestStars => _progress.bestStarsByLevel[currentLevel.id];
 
   int get starsForCurrentAttempt {
     return LevelScore.starsForMoves(
       moves: _moveCount,
       parMoves: currentLevel.parMoves,
     );
+  }
+
+  bool isLevelUnlocked(int index) {
+    return index >= 0 &&
+        index < levels.length &&
+        index <= _progress.unlockedLevelIndex;
+  }
+
+  bool isLevelComplete(int levelId) {
+    return _progress.completedLevelIds.contains(levelId);
+  }
+
+  int? bestMovesForLevel(int levelId) {
+    return _progress.bestMovesByLevel[levelId];
+  }
+
+  int? bestStarsForLevel(int levelId) {
+    return _progress.bestStarsByLevel[levelId];
+  }
+
+  void play() {
+    _levelIndex = _progress.currentLevelIndex;
+    _loadLevel();
+    _screen = WaterSortScreen.playing;
+    _trackLevelStart(source: 'continue');
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void showLevelSelect() {
+    _screen = WaterSortScreen.levelSelect;
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void showSettings() {
+    _screen = WaterSortScreen.settings;
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void backHome() {
+    _levelIndex = _progress.currentLevelIndex;
+    _loadLevel();
+    _screen = WaterSortScreen.home;
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void selectLevel(int index, {String source = 'level_select'}) {
+    if (!isLevelUnlocked(index)) {
+      return;
+    }
+
+    _levelIndex = index;
+    _loadLevel();
+    _screen = WaterSortScreen.playing;
+    _trackLevelStart(source: source);
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void nextLevel() {
+    if (!isLastLevel) {
+      _levelIndex = min(_levelIndex + 1, _progress.unlockedLevelIndex);
+    }
+    _loadLevel();
+    _screen = WaterSortScreen.playing;
+    _trackLevelStart(source: 'next_level');
+    _trackScreenView();
+    notifyListeners();
+  }
+
+  void toggleSound(bool value) {
+    _progress = _progress.copyWith(soundEnabled: value);
+    telemetry.track(
+      GameTelemetryEvents.settingsChanged(
+        settingName: 'sound_enabled',
+        value: value,
+      ),
+    );
+    _saveProgress();
+    notifyListeners();
+  }
+
+  void toggleHaptics(bool value) {
+    _progress = _progress.copyWith(hapticsEnabled: value);
+    telemetry.track(
+      GameTelemetryEvents.settingsChanged(
+        settingName: 'haptics_enabled',
+        value: value,
+      ),
+    );
+    _saveProgress();
+    notifyListeners();
   }
 
   void tapTube(int tubeIndex) {
@@ -152,7 +270,7 @@ class WaterSortController extends ChangeNotifier {
   }
 
   void undo() {
-    if (!canUndo) {
+    if (_screen != WaterSortScreen.playing || !canUndo) {
       _showInvalidFeedback(
         tubeIndex: _selectedTubeIndex,
         reason: PourInvalidReason.noTransfer,
@@ -184,16 +302,21 @@ class WaterSortController extends ChangeNotifier {
         movesBeforeRestart: _moveCount,
       ),
     );
-    _loadLevel(source: 'restart');
+    _loadLevel();
+    _screen = WaterSortScreen.playing;
+    _trackLevelStart(source: 'restart');
     notifyListeners();
   }
 
   void replayLevel() {
-    _loadLevel(source: 'replay');
+    _loadLevel();
+    _screen = WaterSortScreen.playing;
+    _trackLevelStart(source: 'replay');
+    _trackScreenView();
     notifyListeners();
   }
 
-  void _loadLevel({required String source}) {
+  void _loadLevel() {
     _board = engine.parse(currentLevel);
     _attemptStartedAt = _now();
     _moveCount = 0;
@@ -201,14 +324,6 @@ class WaterSortController extends ChangeNotifier {
     _invalidTubeIndex = null;
     _lastInvalidReason = null;
     _undoStack.clear();
-    _screen = WaterSortScreen.playing;
-    telemetry.track(
-      GameTelemetryEvents.levelStart(
-        levelId: currentLevel.id,
-        levelNumber: currentLevelNumber,
-        source: source,
-      ),
-    );
   }
 
   void _recordCompletion() {
@@ -227,7 +342,11 @@ class WaterSortController extends ChangeNotifier {
       bestStarsByLevel[levelId] = stars;
     }
 
+    final lastLevelIndex = levels.length - 1;
+    final nextLevelIndex = min(_levelIndex + 1, lastLevelIndex);
     _progress = _progress.copyWith(
+      currentLevelIndex: max(_progress.currentLevelIndex, nextLevelIndex),
+      unlockedLevelIndex: max(_progress.unlockedLevelIndex, nextLevelIndex),
       completedLevelIds: completedLevelIds,
       bestMovesByLevel: bestMovesByLevel,
       bestStarsByLevel: bestStarsByLevel,
@@ -310,6 +429,16 @@ class WaterSortController extends ChangeNotifier {
 
   void _trackScreenView() {
     telemetry.track(GameTelemetryEvents.screenView(screen: _screen.name));
+  }
+
+  void _trackLevelStart({required String source}) {
+    telemetry.track(
+      GameTelemetryEvents.levelStart(
+        levelId: currentLevel.id,
+        levelNumber: currentLevelNumber,
+        source: source,
+      ),
+    );
   }
 }
 

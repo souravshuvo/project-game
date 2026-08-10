@@ -1,11 +1,11 @@
 # Play Store Metadata Draft
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## App Identity
 
-- App title: Arrow Puzzle
-- Package name: `com.childhood.arrowpuzzle`
+- App title: Weather Lab Sort
+- Package name: `com.childhood.weatherlabsort`
 - Category: Game / Puzzle
 - Default language: English (United States)
 - Current version: `1.0.0+1`
@@ -14,43 +14,44 @@ Last updated: 2026-08-02
 
 ## Short Description
 
-Tap arrows in the right order and clear every puzzle board.
+Sort rain, sun, and mist into calm weather vessels.
 
-Character count: 60 / 80
+Character count: 52 / 80
 
 ## Full Description
 
-Arrow Puzzle is a calm, focused tap puzzle game where every arrow needs a clear path off the board.
+Weather Lab Sort is a calm offline liquid sorting puzzle about organizing rain, sun, and mist essences into clean glass vessels.
 
-Study the lanes, choose the arrows that can escape, and clear each board in the right order. Early levels teach the basics, while later boards add wider grids, chained dependencies, and trickier paths.
+Tap one vessel, then another, and pour matching top layers into place. Each level asks you to plan a small chain of moves, use empty vessels wisely, and finish with every weather essence sorted into its own vessel.
 
 Features:
 
-- Simple one-touch puzzle controls
-- 20 handcrafted prototype levels
-- Level unlock progression
-- Best-move tracking for replay goals
-- Daily level and daily hint loop
+- Simple tap-to-pour puzzle controls
+- 10 handcrafted v1 levels
+- Offline play
+- Undo and restart
+- Best-move and star tracking
 - Sound and haptic settings
-- Clean, lightweight gameplay with no login required
+- No login, no ads, and no online account required
 
-Arrow Puzzle is designed for quick puzzle sessions, careful scanning, and satisfying board-clearing moments.
+Weather Lab Sort is designed for short, readable puzzle sessions with no timers and no pressure.
 
 ## Keywords To Use Carefully
 
-- arrow puzzle
-- tap puzzle
+- water sort
+- liquid sort
+- color puzzle
 - logic puzzle
-- board puzzle
-- casual puzzle
+- relaxing puzzle
 
 Avoid keyword stuffing or repeating phrases unnaturally in the title or description.
 
 ## Graphics Checklist
 
-- App icon: generated in Android and iOS launcher assets.
+- App icon: must be regenerated for Weather Lab Sort before upload.
 - Feature graphic needed: 1024 x 500 PNG/JPEG, no alpha.
-- Phone screenshots needed: at least 2 required; 3+ portrait screenshots recommended for games.
+- Phone screenshots needed: at least 2 required; 5 portrait screenshots recommended for games.
+- Screenshot source must be real Weather Lab Sort gameplay, not old Arrow Puzzle captures.
 - Current screenshot capture script: `tool/capture_store_screenshots.ps1`
 - Screenshot source folder after capture: `store_assets/screenshots/phone/`
 
