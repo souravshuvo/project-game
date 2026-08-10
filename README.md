@@ -1,17 +1,21 @@
-# arrow_puzzle_tap_puzzle_games
+# Pocket Observatory XO
 
-A new Flutter project.
+An original Flutter tic tac toe game with a calm star-map presentation, local two-player play, and one balanced AI opponent.
 
-## Getting Started
+## Current V1 Scope
 
-This project is a starting point for a Flutter application.
+- 3x3 tic tac toe
+- Local two-player mode
+- Vs AI mode with one balanced difficulty
+- Turn indicator
+- Win and draw detection
+- Current-session scoring
+- Restart/rematch
+- Sound and vibration settings
+- No ads, login, online multiplayer, shop, leaderboard, or cloud sync
 
-A few resources to get you started if this is your first Flutter project:
+## Release Notes
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Release planning lives in `docs/release/`. Store assets must be generated from the actual Pocket Observatory build and screenshots must show real gameplay only.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app is not production-ready until analysis, tests, signed release build, physical-device QA, real screenshots, and Play Console app content checks are complete.

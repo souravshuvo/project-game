@@ -1,6 +1,6 @@
 param(
     [string] $DeviceId = "",
-    [string] $Package = "com.childhood.arrowpuzzle",
+    [string] $Package = "com.childhood.pocketobservatory",
     [string] $OutputDirectory = "store_assets/screenshots/phone",
     [int] $StartupDelaySeconds = 8
 )
@@ -69,20 +69,26 @@ Invoke-Adb @("shell", "am", "force-stop", $Package) | Out-Null
 Invoke-Adb @("shell", "pm", "clear", $Package) | Out-Null
 Invoke-Adb @("shell", "am", "start", "-n", "$Package/.MainActivity") | Out-Null
 Start-Sleep -Seconds $StartupDelaySeconds
-Save-Screenshot "01-home"
+Save-Screenshot "01-setup"
 
-Tap-Ratio 0.50 0.56
+Tap-Ratio 0.50 0.52
 Start-Sleep -Seconds 2
-Save-Screenshot "02-levels"
+Save-Screenshot "02-active-round"
 
-Tap-Ratio 0.07 0.06
-Start-Sleep -Seconds 2
-Tap-Ratio 0.50 0.48
-Start-Sleep -Seconds 2
-Save-Screenshot "03-gameplay"
+Tap-Ratio 0.28 0.42
+Start-Sleep -Milliseconds 500
+Tap-Ratio 0.28 0.55
+Start-Sleep -Milliseconds 500
+Tap-Ratio 0.50 0.42
+Start-Sleep -Milliseconds 500
+Tap-Ratio 0.50 0.55
+Start-Sleep -Milliseconds 500
+Tap-Ratio 0.72 0.42
+Start-Sleep -Seconds 1
+Save-Screenshot "03-win-result"
 
-Tap-Ratio 0.78 0.07
+Tap-Ratio 0.94 0.06
 Start-Sleep -Milliseconds 700
-Save-Screenshot "04-hint"
+Save-Screenshot "04-settings"
 
 Write-Host "Captured screenshots for $Package in $OutputPath"

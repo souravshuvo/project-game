@@ -1,71 +1,80 @@
-# Release Checklist
+# Production V1 Release Checklist
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Identity Lock
 
-- [x] Android application ID uses the final production namespace.
-- [x] Android application ID: `com.childhood.arrowpuzzle`
-- [x] iOS bundle ID: `com.childhood.arrowpuzzle`
-- [x] Android launcher label: `Arrow Puzzle`
-- [x] iOS display name: `Arrow Puzzle`
-- [ ] Confirm `com.childhood.arrowpuzzle` is final before first Play Console upload. Package names cannot be reused for a different app after publishing.
+- [x] App name: `Pocket Observatory XO`
+- [x] Android launcher label: `Pocket Observatory`
+- [x] iOS display name: `Pocket Observatory`
+- [x] Android application ID: `com.childhood.pocketobservatory`
+- [x] Android namespace: `com.childhood.pocketobservatory`
+- [x] iOS bundle ID: `com.childhood.pocketobservatory`
+- [ ] Confirm this package/bundle ID is final before the first Play Console upload. Package names cannot be reused for a different app after publishing.
 
 ## Build Readiness
 
-- [x] `flutter analyze`
-- [x] `flutter test`
-- [x] `flutter build apk --debug`
-- [ ] `flutter build appbundle --release`
-- [ ] Configure real Android release signing. Current release config still uses debug signing.
-- [ ] Confirm target API level meets current Google Play requirement before upload.
-- [ ] Test on physical Android phone.
-- [ ] Test fresh install after uninstalling older package IDs.
+- [ ] Run `dart format` after final edits.
+- [ ] Run `flutter analyze`.
+- [ ] Run `flutter test`.
+- [ ] Build signed release `.aab`.
+- [ ] Install and smoke-test release build on a physical Android phone.
+- [ ] Confirm Android SDK platform 36 is installed locally.
+- [x] Target SDK configured for API 36.
+- [x] Release build no longer falls back to debug signing.
+- [ ] Configure real Android upload keystore in local `android/key.properties`.
+
+## Gameplay Readiness
+
+- [x] 3x3 board.
+- [x] Local two-player mode.
+- [x] One balanced AI difficulty.
+- [x] Win and draw detection.
+- [x] Restart/rematch.
+- [x] Current-session score.
+- [x] Basic sound and vibration settings.
+- [x] Invalid move state has repeatable feedback sequencing.
+- [x] Board has safer narrow-screen sizing.
+- [x] Cell semantics include row and column.
+- [ ] Manual device QA pass.
+- [ ] Large text accessibility pass.
 
 ## Store Assets
 
-- [x] Launcher icons generated for Android and iOS.
-- [x] Android splash background/mark added.
-- [x] Capture final phone screenshots.
-- [x] Create feature graphic: 1024 x 500 PNG/JPEG, no alpha.
-- [x] Run `tool/generate_store_feature_graphic.ps1` and review `store_assets/feature_graphic/feature-graphic.png`.
-- [x] After installing on an emulator, run `tool/capture_store_screenshots.ps1` and review `store_assets/screenshots/phone/`.
-- [x] Review screenshots for status bar cleanliness, no debug banners, no misleading text.
-- [ ] Add alt text for uploaded screenshots.
+- [x] Asset generation scripts updated for Pocket Observatory XO.
+- [ ] Regenerate launcher icons with `tool/generate_phase4_assets.ps1`.
+- [ ] Regenerate feature graphic with `tool/generate_store_feature_graphic.ps1`.
+- [ ] Capture real gameplay screenshots with `tool/capture_store_screenshots.ps1`.
+- [ ] Review screenshots for actual shipped gameplay only.
+- [ ] Add alt text for uploaded screenshots and feature graphic.
+- [ ] Do not upload old Arrow Puzzle screenshots or feature graphics.
 
 ## Play Console App Content
 
-- [ ] Privacy policy hosted at public URL.
+- [ ] Privacy policy hosted at a public URL.
 - [ ] Data safety form completed.
-- [ ] Ads declaration completed.
+- [ ] Ads declaration completed: no ads in v1.
+- [ ] App access declaration completed: no login required.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
-- [ ] App access declaration completed; no login required.
-- [ ] Store listing reviewed against metadata policy.
+- [ ] Store listing reviewed against metadata and misleading-claims policy.
 
 ## Product Readiness
 
-- [ ] Confirm first 20 levels are enough for the first internal test.
-- [x] Add no-op telemetry boundary for future analytics.
-- [ ] Decide whether daily hints should remain without rewarded ads for v1.
-- [ ] Decide whether Firebase Analytics/Crashlytics is needed before closed testing.
-- [ ] Confirm support email and developer website.
-- [ ] Confirm app category and tags.
+- [ ] Decide whether to remove unused legacy Arrow Puzzle code before final source freeze.
+- [ ] Confirm support email.
+- [ ] Confirm developer website or support page.
+- [ ] Confirm category: Game / Board or Game / Puzzle.
+- [ ] Run internal test before any closed test.
+- [ ] Run closed test before production release.
 
-## Phase 6 Launch Prep
+## Do Not Add In V1
 
-- [x] Add Android release signing example and secret ignore rules.
-- [x] Create Firebase/crash monitoring rollout plan.
-- [x] Create monetization plan.
-- [x] Create closed testing plan.
-- [x] Create post-test learning note template.
-- [ ] Configure real Android release signing.
-- [ ] Build signed release `.aab`.
-- [ ] Upload internal testing release.
-- [ ] Collect first tester feedback.
-
-## Official References
-
-- Google Play target API level requirements: https://developer.android.com/google/play/requirements/target-sdk
-- Google Play App content page: https://support.google.com/googleplay/android-developer/answer/9859455
-- Google Play preview assets: https://support.google.com/googleplay/android-developer/answer/9866151
+- Ads
+- Online multiplayer
+- Login or cloud sync
+- Leaderboards
+- Shop, skins, or purchases
+- Extra board sizes
+- Timed turns
+- Tournament mode

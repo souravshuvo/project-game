@@ -1,57 +1,53 @@
-# Phase 6 Launch Plan
+# Production V1 Launch Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Goal
 
-Prepare Arrow Puzzle for internal and closed testing without rushing SDKs, ads, or production release before the app has real account/config values.
+Prepare Pocket Observatory XO for internal and closed testing without rushing SDKs, ads, or production release before the app has real signing, store assets, and tester evidence.
 
-## Current Phase 6 Decisions
+## Current Decisions
 
-- Keep the current build privacy-light: no network SDKs yet.
-- Add a no-op telemetry boundary in code so Firebase Analytics can be connected later without changing gameplay logic.
-- Do not add Crashlytics until the Firebase project is created and `flutterfire configure` can be run with the real app IDs.
-- Do not add AdMob until the monetization decision is final and real test ad flow is verified.
+- Keep v1 privacy-light: no network SDKs.
+- Keep v1 ad-free.
+- Use one balanced AI difficulty.
+- Do not add variants before polish and QA.
 - Use internal testing first, then closed testing, then production.
 
 ## Completion Map
 
 | Area | Status | Next Gate |
 | --- | --- | --- |
-| Release signing | Prepared | Create private keystore and wire Gradle release signing |
-| Analytics events | Prepared | Add Firebase Analytics adapter after Firebase setup |
-| Crash monitoring | Planned | Add Crashlytics after Firebase setup |
-| Monetization | Planned | Choose no ads, rewarded hints, interstitials, or IAP |
-| Internal testing | Pending | Upload signed `.aab` to Play internal testing |
+| Release signing | Wired, secrets missing | Create private keystore and local key.properties |
+| Android target SDK | Configured for 36 | Confirm local SDK and successful release build |
+| Analytics events | No-op boundary | Add real SDK only after privacy review |
+| Crash monitoring | Deferred | Add after Firebase setup, if approved |
+| Monetization | Deferred | Stay ad-free through first closed test |
+| Store assets | Scripts updated | Regenerate and review real gameplay assets |
+| Internal testing | Pending | Upload signed `.aab` |
 | Closed testing | Pending | Recruit testers and collect structured feedback |
-| Production release | Pending | Only after stability, retention, and policy checks |
-| Monitoring loop | Planned | Review crashes, funnel, retention, ratings, and revenue weekly |
+| Production release | Pending | Only after stability, QA, and policy checks |
 
-## Phase 6 Exit Criteria
+## V1 Exit Criteria
 
+- `flutter analyze` passes.
+- `flutter test` passes.
 - Signed release `.aab` builds successfully.
+- Release build installs on a physical Android phone.
 - Privacy policy is hosted and matches actual SDK behavior.
-- Firebase/Crashlytics decision is either implemented or explicitly deferred.
-- Monetization decision is recorded.
-- Internal test release is available to testers.
-- Closed testing plan has tester list, tasks, and feedback form.
-- Learning note is filled after first tester feedback.
+- Real tic tac toe screenshots and feature graphic are uploaded.
+- Play Console app content forms are complete.
+- Internal testing shows no launch/blocking gameplay issues.
+- Closed testing confirms gameplay is understandable and stable.
 
 ## Recommended Order
 
-1. Configure Android release signing.
-2. Build release `.aab`.
-3. Create Firebase project only if analytics/crash monitoring is approved.
-4. Create AdMob app only if ads are approved.
-5. Complete Play Console app content forms.
-6. Run internal testing.
-7. Run closed testing.
-8. Review data and human feedback.
-9. Decide production release or next update.
-
-## Official References
-
-- Firebase Flutter setup: https://firebase.google.com/docs/flutter/setup
-- Firebase Crashlytics for Flutter: https://firebase.google.com/docs/crashlytics/flutter/get-started
-- Google Mobile Ads Flutter setup: https://developers.google.com/admob/flutter/quick-start
-- Play testing tracks: https://support.google.com/googleplay/android-developer/answer/9845334
+1. Run formatting, analysis, and tests.
+2. Generate Pocket Observatory icons and feature graphic.
+3. Capture real gameplay screenshots.
+4. Configure Android release signing secrets locally.
+5. Build signed release `.aab`.
+6. Complete Play Console app content forms.
+7. Run internal testing.
+8. Run closed testing.
+9. Review feedback and decide production release or next update.

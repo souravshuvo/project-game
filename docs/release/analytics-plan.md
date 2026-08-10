@@ -1,64 +1,47 @@
 # Privacy-Safe Analytics Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current Decision
 
-Do not add analytics SDKs in the current build.
+Do not add analytics SDKs in v1.
 
-Reason: Arrow Puzzle is still validating core gameplay, levels, presentation, and store-readiness. Adding analytics now would create Data safety/privacy work before the product needs it.
+Reason: Pocket Observatory XO should validate correctness, readability, replay, and store fit before adding privacy and Data safety complexity.
 
 ## Current Implementation
 
 The app has a no-op telemetry boundary:
 
-- `lib/features/arrow_puzzle/application/game_telemetry.dart`
-- Default adapter: `NoOpGameTelemetry`
+- `lib/features/tic_tac_toe/application/tic_tac_toe_telemetry.dart`
+- Default adapter: `NoOpTicTacToeTelemetry`
 
-This is only an internal code boundary. It does not transmit data, does not add Firebase, and does not change the current Data safety draft.
+This boundary does not transmit data, does not add Firebase, and does not change the current Data safety draft.
 
-## If Analytics Is Added Later
+## Candidate Events For Later
 
-Only add analytics after deciding:
-
-- Which product questions must be answered.
-- Which events are required.
-- Whether device identifiers or advertising IDs are collected.
-- Whether consent, opt-out, or regional handling is needed.
-- How the Play Console Data safety form and privacy policy must change.
-
-## Candidate Events
-
-Keep event names simple and avoid personal data:
-
-- `app_open`
-- `level_start`
-- `level_complete`
-- `level_retry`
-- `hint_claim`
-- `hint_use`
-- `settings_sound_toggle`
-- `settings_haptics_toggle`
+- `app_opened`
+- `mode_selected`
+- `round_started`
+- `move_made`
+- `invalid_cell_tapped`
+- `round_ended`
+- `rematch_tapped`
+- `score_reset`
+- `settings_changed`
 
 Suggested event properties:
 
-- `level_id`
-- `level_number`
+- `mode`
+- `move_index`
+- `cell_index`
+- `player_type`
+- `result`
+- `winner_type`
 - `move_count`
-- `is_daily_level`
-- `hint_balance`
+- `setting_name`
+- `enabled`
 
 Do not collect names, emails, precise location, contacts, photos, free-text input, or unrelated device data.
-
-## MVP Metrics
-
-- Level 1 completion rate
-- Level 1 retry rate
-- Level 2 unlock rate
-- Average moves per level
-- Hint claim rate
-- Hint use rate
-- Day 1 return rate, only if analytics can be implemented with a compliant privacy setup
 
 ## Before Adding Any SDK
 
@@ -66,9 +49,5 @@ Do not collect names, emails, precise location, contacts, photos, free-text inpu
 - Update the hosted privacy policy.
 - Update Play Console Data safety.
 - Re-check permissions and generated manifests.
-- Confirm SDK behavior from the vendor documentation.
-
-## Official References
-
-- Firebase Flutter setup: https://firebase.google.com/docs/flutter/setup
-- Firebase Analytics events for Flutter: https://firebase.google.com/docs/analytics/events?platform=flutter
+- Confirm SDK behavior from vendor documentation.
+- Decide whether consent, opt-out, or regional handling is needed.

@@ -1,73 +1,53 @@
 # Firebase And Crash Monitoring Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current Decision
 
-Firebase is not installed in the current build.
+Firebase and Crashlytics are not installed in v1.
 
-Reason: the game has no real Firebase project/config yet, and adding Firebase placeholders would create misleading privacy, build, and policy work.
+Reason: the game has no real Firebase project/config yet, and adding placeholder SDK setup would create misleading privacy, build, and policy work.
 
 ## What Is Implemented Now
 
-The app now has a no-op `GameTelemetry` boundary in code.
+The app has a no-op `TicTacToeTelemetry` boundary in code.
 
 Tracked internal event names:
 
-- `app_open`
-- `screen_view`
-- `level_start`
-- `level_complete`
-- `level_retry`
-- `hint_claim`
-- `hint_use`
-- `settings_sound_toggle`
-- `settings_haptics_toggle`
+- `app_opened`
+- `mode_selected`
+- `round_started`
+- `move_made`
+- `invalid_cell_tapped`
+- `round_ended`
+- `rematch_tapped`
+- `score_reset`
+- `settings_changed`
 
-Current adapter: `NoOpGameTelemetry`
+Current adapter: `NoOpTicTacToeTelemetry`
 
 This means no event data is sent anywhere in the current build.
 
 ## Firebase Analytics Gate
 
-Only add Firebase Analytics after these are ready:
+Only add Firebase Analytics after:
 
-- Firebase project created.
-- Android app registered with package `com.childhood.arrowpuzzle`.
-- iOS app registered with bundle ID `com.childhood.arrowpuzzle`, if iOS remains in scope.
+- Firebase project is created.
+- Android app is registered with package `com.childhood.pocketobservatory`.
+- iOS app is registered with bundle ID `com.childhood.pocketobservatory`, if iOS remains in scope.
 - `flutterfire configure` can create real `firebase_options.dart`.
 - Privacy policy and Play Data safety are updated for Analytics behavior.
 - Tester build confirms events appear in Firebase DebugView.
 
 ## Crashlytics Gate
 
-Only add Crashlytics after these are ready:
+Only add Crashlytics after:
 
 - Firebase project exists.
-- Analytics decision is made, because Crashlytics breadcrumb logs work best when Analytics is enabled.
+- Crash diagnostics are approved for the next release.
 - Crash handlers are added in `main.dart`.
 - A test crash is sent and visible in Firebase Console.
 - Privacy policy discloses crash diagnostics if required by final SDK behavior.
-
-## Implementation Notes For Later
-
-Expected packages:
-
-- `firebase_core`
-- `firebase_analytics`
-- `firebase_crashlytics`
-
-Expected setup command:
-
-```powershell
-flutterfire configure
-```
-
-Expected adapter file:
-
-- `lib/features/arrow_puzzle/application/firebase_game_telemetry.dart`
-
-The adapter should translate `GameTelemetryEvent` to Firebase Analytics events and keep the event/property names already defined in `game_telemetry.dart`.
 
 ## Do Not Collect
 
@@ -78,9 +58,3 @@ The adapter should translate `GameTelemetryEvent` to Firebase Analytics events a
 - Photos
 - Free-text input
 - Advertising ID unless monetization explicitly requires it and policy docs are updated
-
-## Official References
-
-- Firebase Flutter setup: https://firebase.google.com/docs/flutter/setup
-- Firebase Analytics events for Flutter: https://firebase.google.com/docs/analytics/events?platform=flutter
-- Firebase Crashlytics for Flutter: https://firebase.google.com/docs/crashlytics/flutter/get-started

@@ -1,8 +1,8 @@
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/data/local_level_pack.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/board_position.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_board.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_level.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/data/local_level_pack.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/board_position.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/puzzle_board.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/puzzle_engine.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/puzzle_level.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

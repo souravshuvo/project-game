@@ -1,6 +1,6 @@
 # Post-Test Learning Note
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 Fill this after internal or closed testing.
 
@@ -14,34 +14,39 @@ Fill this after internal or closed testing.
 
 ## What Worked
 
-- 
+-
 
 ## What Confused Players
 
-- 
+-
 
 ## Bugs Or Stability Issues
 
-- 
+-
 
-## Levels To Improve
+## Gameplay Notes
 
-- 
+- Local two-player:
+- Vs AI:
+- Restart/rematch:
+- Score clarity:
+- Settings:
 
 ## Monetization Signal
 
 - Keep ad-free:
-- Rewarded hints:
+- Supporter upgrade:
+- Rewarded ads:
 - Interstitials:
-- Paid/IAP:
 
 ## Metrics To Check
 
-- Level 1 completion:
-- Level 2 unlock:
-- First 5 level completion:
-- Hint claim:
-- Hint use:
+- App launch success:
+- First round completion:
+- Rematch rate:
+- Vs AI usage:
+- Draw rate:
+- Invalid tap rate:
 - Day 1 return:
 
 ## Decision
@@ -52,4 +57,4 @@ Fill this after internal or closed testing.
 
 ## Next Update Scope
 
-- 
+-

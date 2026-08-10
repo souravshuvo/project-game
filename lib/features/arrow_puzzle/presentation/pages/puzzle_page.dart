@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../main.dart';
 import '../../application/puzzle_controller.dart';
 import '../../domain/board_position.dart';
 import '../../domain/puzzle_cell.dart';
+import '../arrow_puzzle_helpers.dart';
 import '../theme/arrow_puzzle_theme.dart';
 
 class PuzzlePage extends StatelessWidget {

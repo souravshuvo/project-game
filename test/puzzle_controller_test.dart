@@ -1,10 +1,10 @@
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/application/game_telemetry.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/application/puzzle_controller.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/board_position.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/player_progress.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_level.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/application/game_telemetry.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/application/puzzle_controller.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/data/puzzle_progress_store.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/board_position.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/player_progress.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/puzzle_engine.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/puzzle_level.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

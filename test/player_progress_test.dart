@@ -1,5 +1,5 @@
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/player_progress.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/data/puzzle_progress_store.dart';
+import 'package:pocket_observatory_xo/features/arrow_puzzle/domain/player_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

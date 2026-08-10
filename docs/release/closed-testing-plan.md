@@ -1,10 +1,10 @@
 # Closed Testing Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Goal
 
-Use real players to confirm whether Arrow Puzzle is understandable, satisfying, stable, and worth expanding before production release.
+Use real players to confirm whether Pocket Observatory XO is understandable, satisfying, stable, accessible, and worth expanding before production release.
 
 ## Recommended Track Order
 
@@ -16,31 +16,36 @@ Use real players to confirm whether Arrow Puzzle is understandable, satisfying, 
 
 - Install from Play internal testing link.
 - Launch fresh install.
-- Complete Level 1.
-- Open Level Select.
-- Claim Daily Hint.
-- Use Hint on Level 1.
-- Toggle sound and haptics.
-- Close and reopen app to confirm progress persists.
+- Start local two-player mode.
+- Complete one X win.
+- Complete one draw.
+- Restart an active round.
+- Rematch after a completed round.
+- Reset score.
+- Start Vs AI mode.
+- Confirm AI makes a move.
+- Toggle sound and vibration.
+- Close and reopen app to confirm settings persist.
 
 ## Closed Test Tasks
 
 - Play at least 10 minutes.
-- Try to complete the first 5 levels.
+- Try both local two-player and Vs AI.
 - Report the first moment that felt confusing.
-- Report any level that felt unfair or boring.
-- Check whether the hint system feels useful.
-- Confirm whether the game feels ad-ready or should stay ad-free longer.
+- Report whether the board and score were readable.
+- Report whether invalid taps, wins, draws, and rematches felt clear.
+- Confirm whether the game should stay ad-free longer.
 
 ## Feedback Questions
 
-- Did you understand the rule within the first minute?
-- Which level did you stop at?
-- Was any text unclear?
-- Were the arrows, colors, and board readable?
-- Did the animations feel fast, slow, or right?
-- Would you play another 20 levels?
-- Would rewarded hints feel acceptable?
+- Did you understand the game within the first minute?
+- Was the board readable on your phone?
+- Were X and O easy to tell apart?
+- Did the turn indicator make sense?
+- Did the AI feel too easy, too hard, or right?
+- Did any text overlap or clip?
+- Did animations feel fast, slow, or right?
+- Would you play another match?
 - Did anything crash, freeze, or look broken?
 - Device model and Android version?
 
@@ -49,11 +54,8 @@ Use real players to confirm whether Arrow Puzzle is understandable, satisfying, 
 - Tester count
 - Device list
 - Crash notes
-- Confusing-level notes
+- Confusing-flow notes
 - Screenshot/video of any UI issue
-- Retention signal: who came back the next day
+- Replay signal: who played more than one round
+- Return signal: who came back the next day
 - Top requested improvement
-
-## Official Reference
-
-- Play Console testing tracks: https://support.google.com/googleplay/android-developer/answer/9845334

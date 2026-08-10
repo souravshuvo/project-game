@@ -33,66 +33,40 @@ function Add-RoundedRectangle($graphics, $brush, $x, $y, $width, $height, $radiu
     $path.Dispose()
 }
 
-function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
-    $pen = New-Pen $hex ([Math]::Max(4, $size * 0.11))
-    $brush = New-Brush $hex
-    $half = $size / 2
-    $shaft = $size * 0.22
-    $head = $size * 0.24
-
-    switch ($direction) {
-        "right" {
-            $graphics.DrawLine($pen, $x - $shaft, $y, $x + $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x + $half - $head, $y - $head),
-                [System.Drawing.PointF]::new($x + $half, $y),
-                [System.Drawing.PointF]::new($x + $half - $head, $y + $head)
-            )
-        }
-        "left" {
-            $graphics.DrawLine($pen, $x + $shaft, $y, $x - $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $half + $head, $y - $head),
-                [System.Drawing.PointF]::new($x - $half, $y),
-                [System.Drawing.PointF]::new($x - $half + $head, $y + $head)
-            )
-        }
-        "down" {
-            $graphics.DrawLine($pen, $x, $y - $shaft, $x, $y + $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y + $half - $head),
-                [System.Drawing.PointF]::new($x, $y + $half),
-                [System.Drawing.PointF]::new($x + $head, $y + $half - $head)
-            )
-        }
-        default {
-            $graphics.DrawLine($pen, $x, $y + $shaft, $x, $y - $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y - $half + $head),
-                [System.Drawing.PointF]::new($x, $y - $half),
-                [System.Drawing.PointF]::new($x + $head, $y - $half + $head)
-            )
-        }
-    }
-
-    $graphics.FillPolygon($brush, $points)
-    $pen.Dispose()
-    $brush.Dispose()
-}
-
-function Add-Tile($graphics, $x, $y, $size, $direction, $fillHex, $arrowHex) {
-    $brush = New-Brush $fillHex
-    Add-RoundedRectangle $graphics $brush $x $y $size $size 18
-    Add-Arrow $graphics ($x + ($size / 2)) ($y + ($size / 2)) ($size * 0.5) $direction $arrowHex
-    $brush.Dispose()
-}
-
 function Add-Text($graphics, $text, $fontName, $size, $style, $hex, $x, $y) {
     $font = New-Object System.Drawing.Font($fontName, $size, $style, [System.Drawing.GraphicsUnit]::Pixel)
     $brush = New-Brush $hex
     $graphics.DrawString($text, $font, $brush, $x, $y)
     $brush.Dispose()
     $font.Dispose()
+}
+
+function Add-X($graphics, $x, $y, $size, $hex) {
+    $pen = New-Pen $hex ([Math]::Max(8, $size * 0.12))
+    $inset = $size * 0.28
+    $graphics.DrawLine($pen, $x + $inset, $y + $inset, $x + $size - $inset, $y + $size - $inset)
+    $graphics.DrawLine($pen, $x + $size - $inset, $y + $inset, $x + $inset, $y + $size - $inset)
+    $pen.Dispose()
+}
+
+function Add-O($graphics, $x, $y, $size, $hex) {
+    $pen = New-Pen $hex ([Math]::Max(8, $size * 0.11))
+    $inset = $size * 0.25
+    $graphics.DrawEllipse($pen, $x + $inset, $y + $inset, $size - ($inset * 2), $size - ($inset * 2))
+    $graphics.DrawArc($pen, $x + ($size * 0.17), $y + ($size * 0.33), $size * 0.66, $size * 0.34, 190, 160)
+    $pen.Dispose()
+}
+
+function Add-Cell($graphics, $x, $y, $size, $mark) {
+    $cellBrush = New-Brush "#F8F2E7"
+    Add-RoundedRectangle $graphics $cellBrush $x $y $size $size 8
+    if ($mark -eq "x") {
+        Add-X $graphics $x $y $size "#7465B8"
+    }
+    if ($mark -eq "o") {
+        Add-O $graphics $x $y $size "#4DB7A8"
+    }
+    $cellBrush.Dispose()
 }
 
 $outputDirectory = Split-Path -Parent $OutputPath
@@ -104,46 +78,48 @@ $bitmap = New-Object System.Drawing.Bitmap 1024, 500, ([System.Drawing.Imaging.P
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
 $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#4B68A5"))
+$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#17151F"))
 
-$navy = New-Brush "#2E477C"
-$white = New-Brush "#FFFFFF"
-$gold = New-Brush "#FFC531"
+$panel = New-Brush "#24202E"
+$gold = New-Brush "#E9B64E"
+$cream = New-Brush "#F8F2E7"
 
-Add-RoundedRectangle $graphics $navy 610 62 314 314 42
-Add-RoundedRectangle $graphics $white 590 42 314 314 42
+Add-RoundedRectangle $graphics $panel 568 42 330 330 18
+Add-RoundedRectangle $graphics $cream 592 66 282 282 12
 
 $tileSize = 82
-$gap = 20
-$startX = 624
-$startY = 76
-Add-Tile $graphics $startX $startY $tileSize "right" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) $startY $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "left" "#47C3B8" "#2E477C"
-Add-Tile $graphics $startX ($startY + $tileSize + $gap) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + $tileSize + $gap) $tileSize "left" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + $tileSize + $gap) $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize "right" "#F06C8E" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "left" "#FFC531" "#2E477C"
+$gap = 9
+$startX = 612
+$startY = 86
+Add-Cell $graphics $startX $startY $tileSize "x"
+Add-Cell $graphics ($startX + $tileSize + $gap) $startY $tileSize "o"
+Add-Cell $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "x"
+Add-Cell $graphics $startX ($startY + $tileSize + $gap) $tileSize "o"
+Add-Cell $graphics ($startX + $tileSize + $gap) ($startY + $tileSize + $gap) $tileSize "x"
+Add-Cell $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + $tileSize + $gap) $tileSize ""
+Add-Cell $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize ""
+Add-Cell $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "o"
+Add-Cell $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "x"
 
-Add-RoundedRectangle $graphics $gold 78 94 122 122 28
-Add-RoundedRectangle $graphics $white 104 120 70 70 16
-Add-Arrow $graphics 139 155 44 "right" "#4B68A5"
+$winPen = New-Pen "#E9B64E" 12
+$graphics.DrawLine($winPen, 646, 120, 828, 302)
+$winPen.Dispose()
 
-Add-Text $graphics "Arrow Puzzle" "Segoe UI" 76 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 230
-Add-Text $graphics "Tap arrows. Clear the board." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#F7F2E8" 80 324
+Add-RoundedRectangle $graphics $gold 76 94 96 96 18
+Add-X $graphics 76 94 96 "#17151F"
+Add-Text $graphics "Pocket Observatory XO" "Segoe UI" 60 ([System.Drawing.FontStyle]::Bold) "#F8F2E7" 76 222
+Add-Text $graphics "A calm star-map tic tac toe duel." "Segoe UI" 32 ([System.Drawing.FontStyle]::Regular) "#C9C0B5" 80 304
 
-$sparkPen = New-Pen "#FFC531" 8
-$graphics.DrawLine($sparkPen, 456, 106, 500, 106)
-$graphics.DrawLine($sparkPen, 478, 84, 478, 128)
+$sparkPen = New-Pen "#E9B64E" 6
+$graphics.DrawLine($sparkPen, 464, 116, 506, 116)
+$graphics.DrawLine($sparkPen, 485, 95, 485, 137)
 $sparkPen.Dispose()
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 
-$navy.Dispose()
-$white.Dispose()
+$panel.Dispose()
 $gold.Dispose()
+$cream.Dispose()
 $graphics.Dispose()
 $bitmap.Dispose()
 

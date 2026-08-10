@@ -1,64 +1,62 @@
 # Play Store Metadata Draft
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## App Identity
 
-- App title: Arrow Puzzle
-- Package name: `com.childhood.arrowpuzzle`
-- Category: Game / Puzzle
+- Store title: Pocket Observatory XO
+- Launcher label: Pocket Observatory
+- Package name: `com.childhood.pocketobservatory`
+- Category: Game / Board or Game / Puzzle
 - Default language: English (United States)
 - Current version: `1.0.0+1`
 - Developer name: Childhood
-- Target audience draft: General puzzle-game audience. Do not mark as child-directed unless the full Families/children policy review is completed.
+- Target audience draft: general audience. Do not mark as child-directed unless the full Families/children policy review is completed.
 
 ## Short Description
 
-Tap arrows in the right order and clear every puzzle board.
+Local tic tac toe with a calm cosmic board and balanced AI.
 
-Character count: 60 / 80
+Character count: 59 / 80
 
 ## Full Description
 
-Arrow Puzzle is a calm, focused tap puzzle game where every arrow needs a clear path off the board.
+Pocket Observatory XO is a quick, polished tic tac toe game with a calm star-map style.
 
-Study the lanes, choose the arrows that can escape, and clear each board in the right order. Early levels teach the basics, while later boards add wider grids, chained dependencies, and trickier paths.
+Play local X/O rounds on one device, or face one balanced AI opponent built for casual, beatable games. Each round is short, clear, and easy to restart when you want one more match.
 
 Features:
 
-- Simple one-touch puzzle controls
-- 20 handcrafted prototype levels
-- Level unlock progression
-- Best-move tracking for replay goals
-- Daily level and daily hint loop
-- Sound and haptic settings
-- Clean, lightweight gameplay with no login required
+- Classic 3x3 tic tac toe
+- Local two-player mode on one device
+- One balanced AI opponent
+- Current-session score tracking
+- Clear win and draw feedback
+- Sound and vibration settings
+- No login required
+- No ads in version 1
 
-Arrow Puzzle is designed for quick puzzle sessions, careful scanning, and satisfying board-clearing moments.
+Pocket Observatory XO is designed for fast rounds, quiet polish, and simple same-device play.
 
 ## Keywords To Use Carefully
 
-- arrow puzzle
-- tap puzzle
-- logic puzzle
-- board puzzle
+- tic tac toe
+- X O game
+- board game
+- local two player
 - casual puzzle
 
-Avoid keyword stuffing or repeating phrases unnaturally in the title or description.
+Avoid keyword stuffing or claiming unavailable features such as online multiplayer, leaderboards, skins, rewards, or tournaments.
 
 ## Graphics Checklist
 
-- App icon: generated in Android and iOS launcher assets.
-- Feature graphic needed: 1024 x 500 PNG/JPEG, no alpha.
-- Phone screenshots needed: at least 2 required; 3+ portrait screenshots recommended for games.
-- Current screenshot capture script: `tool/capture_store_screenshots.ps1`
-- Screenshot source folder after capture: `store_assets/screenshots/phone/`
+- App icon: regenerate with `tool/generate_phase4_assets.ps1` before upload.
+- Feature graphic: regenerate with `tool/generate_store_feature_graphic.ps1`.
+- Phone screenshots: capture real gameplay with `tool/capture_store_screenshots.ps1`.
+- Required screenshots: at least 2; recommended 3+ portrait screenshots for games.
+- Do not upload old Arrow Puzzle screenshots.
+- Add alt text for each uploaded asset.
 
 ## Review Notes Draft
 
-No login is required. All current content is available through normal gameplay progression. The game stores progress locally on-device and does not currently include ads, analytics, account creation, purchases, or external network features.
-
-## Official References
-
-- Google Play store listing best practices: https://support.google.com/googleplay/android-developer/answer/13393723
-- Google Play preview asset requirements: https://support.google.com/googleplay/android-developer/answer/9866151
+No login is required. All current content is available immediately through local play. The game stores sound and vibration settings locally on-device and does not currently include ads, analytics, account creation, purchases, cloud sync, or external network features.

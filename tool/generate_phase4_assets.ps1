@@ -11,6 +11,7 @@ function New-Pen($hex, $width) {
     $pen = New-Object System.Drawing.Pen ([System.Drawing.ColorTranslator]::FromHtml($hex)), $width
     $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
     $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
     return $pen
 }
 
@@ -31,78 +32,50 @@ function Add-RoundedRectangle($graphics, $brush, $x, $y, $width, $height, $radiu
     $path.Dispose()
 }
 
-function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
-    $pen = New-Pen $hex ([Math]::Max(2, $size * 0.11))
-    $brush = New-Brush $hex
-    $half = $size / 2
-    $shaft = $size * 0.22
-    $head = $size * 0.24
-
-    switch ($direction) {
-        "right" {
-            $graphics.DrawLine($pen, $x - $shaft, $y, $x + $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x + $half - $head, $y - $head),
-                [System.Drawing.PointF]::new($x + $half, $y),
-                [System.Drawing.PointF]::new($x + $half - $head, $y + $head)
-            )
-        }
-        "left" {
-            $graphics.DrawLine($pen, $x + $shaft, $y, $x - $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $half + $head, $y - $head),
-                [System.Drawing.PointF]::new($x - $half, $y),
-                [System.Drawing.PointF]::new($x - $half + $head, $y + $head)
-            )
-        }
-        "down" {
-            $graphics.DrawLine($pen, $x, $y - $shaft, $x, $y + $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y + $half - $head),
-                [System.Drawing.PointF]::new($x, $y + $half),
-                [System.Drawing.PointF]::new($x + $head, $y + $half - $head)
-            )
-        }
-        default {
-            $graphics.DrawLine($pen, $x, $y + $shaft, $x, $y - $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y - $half + $head),
-                [System.Drawing.PointF]::new($x, $y - $half),
-                [System.Drawing.PointF]::new($x + $head, $y - $half + $head)
-            )
-        }
-    }
-
-    $graphics.FillPolygon($brush, $points)
+function Add-X($graphics, $x, $y, $size, $hex) {
+    $pen = New-Pen $hex ([Math]::Max(2, $size * 0.12))
+    $inset = $size * 0.25
+    $graphics.DrawLine($pen, $x + $inset, $y + $inset, $x + $size - $inset, $y + $size - $inset)
+    $graphics.DrawLine($pen, $x + $size - $inset, $y + $inset, $x + $inset, $y + $size - $inset)
     $pen.Dispose()
-    $brush.Dispose()
 }
 
-function New-ArrowPuzzleIcon($path, $size) {
+function Add-O($graphics, $x, $y, $size, $hex) {
+    $pen = New-Pen $hex ([Math]::Max(2, $size * 0.11))
+    $inset = $size * 0.24
+    $graphics.DrawEllipse($pen, $x + $inset, $y + $inset, $size - ($inset * 2), $size - ($inset * 2))
+    $pen.Dispose()
+}
+
+function New-PocketObservatoryIcon($path, $size) {
     $bitmap = New-Object System.Drawing.Bitmap $size, $size
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#4B68A5"))
+    $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#17151F"))
 
     $scale = $size / 192.0
-    $accentBrush = New-Brush "#FFC531"
-    $whiteBrush = New-Brush "#FFFFFF"
-    $shadowBrush = New-Brush "#2E477C"
+    $panelBrush = New-Brush "#F8F2E7"
+    $goldBrush = New-Brush "#E9B64E"
+    $inkBrush = New-Brush "#24202E"
 
-    Add-RoundedRectangle $graphics $shadowBrush (18 * $scale) (24 * $scale) (156 * $scale) (150 * $scale) (28 * $scale)
-    Add-RoundedRectangle $graphics $whiteBrush (16 * $scale) (18 * $scale) (156 * $scale) (150 * $scale) (28 * $scale)
+    Add-RoundedRectangle $graphics $goldBrush (20 * $scale) (20 * $scale) (152 * $scale) (152 * $scale) (18 * $scale)
+    Add-RoundedRectangle $graphics $panelBrush (28 * $scale) (28 * $scale) (136 * $scale) (136 * $scale) (12 * $scale)
 
-    $tile = 48 * $scale
-    $radius = 12 * $scale
-    Add-RoundedRectangle $graphics $accentBrush (38 * $scale) (38 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $whiteBrush (106 * $scale) (38 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $whiteBrush (38 * $scale) (106 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $accentBrush (106 * $scale) (106 * $scale) $tile $tile $radius
+    $linePen = New-Pen "#24202E" ([Math]::Max(1, 5 * $scale))
+    $graphics.DrawLine($linePen, 73 * $scale, 30 * $scale, 73 * $scale, 162 * $scale)
+    $graphics.DrawLine($linePen, 119 * $scale, 30 * $scale, 119 * $scale, 162 * $scale)
+    $graphics.DrawLine($linePen, 30 * $scale, 73 * $scale, 162 * $scale, 73 * $scale)
+    $graphics.DrawLine($linePen, 30 * $scale, 119 * $scale, 162 * $scale, 119 * $scale)
+    $linePen.Dispose()
 
-    Add-Arrow $graphics (62 * $scale) (62 * $scale) (28 * $scale) "right" "#4B68A5"
-    Add-Arrow $graphics (130 * $scale) (62 * $scale) (28 * $scale) "down" "#4B68A5"
-    Add-Arrow $graphics (62 * $scale) (130 * $scale) (28 * $scale) "up" "#4B68A5"
-    Add-Arrow $graphics (130 * $scale) (130 * $scale) (28 * $scale) "left" "#4B68A5"
+    Add-X $graphics (34 * $scale) (34 * $scale) (38 * $scale) "#7465B8"
+    Add-O $graphics (82 * $scale) (82 * $scale) (38 * $scale) "#4DB7A8"
+    Add-X $graphics (120 * $scale) (120 * $scale) (38 * $scale) "#7465B8"
+
+    $sparkPen = New-Pen "#E9B64E" ([Math]::Max(1, 4 * $scale))
+    $graphics.DrawLine($sparkPen, 132 * $scale, 48 * $scale, 154 * $scale, 48 * $scale)
+    $graphics.DrawLine($sparkPen, 143 * $scale, 37 * $scale, 143 * $scale, 59 * $scale)
+    $sparkPen.Dispose()
 
     $directory = Split-Path -Parent $path
     if (!(Test-Path $directory)) {
@@ -110,9 +83,9 @@ function New-ArrowPuzzleIcon($path, $size) {
     }
     $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
 
-    $accentBrush.Dispose()
-    $whiteBrush.Dispose()
-    $shadowBrush.Dispose()
+    $panelBrush.Dispose()
+    $goldBrush.Dispose()
+    $inkBrush.Dispose()
     $graphics.Dispose()
     $bitmap.Dispose()
 }
@@ -126,7 +99,7 @@ $androidIcons = @{
 }
 
 foreach ($entry in $androidIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-PocketObservatoryIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
 $iosIcons = @{
@@ -148,7 +121,7 @@ $iosIcons = @{
 }
 
 foreach ($entry in $iosIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-PocketObservatoryIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
-Write-Host "Generated Arrow Puzzle launcher icons."
+Write-Host "Generated Pocket Observatory launcher icons."
