@@ -1,6 +1,6 @@
 param(
     [string] $DeviceId = "",
-    [string] $Package = "com.childhood.arrowpuzzle",
+    [string] $Package = "com.childhood.signalreef",
     [string] $OutputDirectory = "store_assets/screenshots/phone",
     [int] $StartupDelaySeconds = 8
 )
@@ -71,18 +71,18 @@ Invoke-Adb @("shell", "am", "start", "-n", "$Package/.MainActivity") | Out-Null
 Start-Sleep -Seconds $StartupDelaySeconds
 Save-Screenshot "01-home"
 
-Tap-Ratio 0.50 0.56
+Tap-Ratio 0.50 0.54
 Start-Sleep -Seconds 2
-Save-Screenshot "02-levels"
+Save-Screenshot "02-gameplay-start"
 
-Tap-Ratio 0.07 0.06
-Start-Sleep -Seconds 2
-Tap-Ratio 0.50 0.48
-Start-Sleep -Seconds 2
-Save-Screenshot "03-gameplay"
+Tap-Ratio 0.50 0.76
+Start-Sleep -Milliseconds 400
+Tap-Ratio 0.24 0.74
+Start-Sleep -Seconds 3
+Save-Screenshot "03-wave-pressure"
 
-Tap-Ratio 0.78 0.07
+Tap-Ratio 0.91 0.05
 Start-Sleep -Milliseconds 700
-Save-Screenshot "04-hint"
+Save-Screenshot "04-pause"
 
 Write-Host "Captured screenshots for $Package in $OutputPath"

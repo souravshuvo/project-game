@@ -1,57 +1,57 @@
-# Phase 6 Launch Plan
+# Signal Reef Launch Prep Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Goal
 
-Prepare Arrow Puzzle for internal and closed testing without rushing SDKs, ads, or production release before the app has real account/config values.
+Prepare Signal Reef for internal and closed testing without rushing SDKs, ads, or production release before the game has real tester evidence.
 
-## Current Phase 6 Decisions
+## Decisions
 
 - Keep the current build privacy-light: no network SDKs yet.
-- Add a no-op telemetry boundary in code so Firebase Analytics can be connected later without changing gameplay logic.
-- Do not add Crashlytics until the Firebase project is created and `flutterfire configure` can be run with the real app IDs.
+- Do not add Crashlytics until the Firebase project is created and `flutterfire configure` can run with real app IDs.
 - Do not add AdMob until the monetization decision is final and real test ad flow is verified.
 - Use internal testing first, then closed testing, then production.
 
-## Completion Map
+## Readiness Table
 
-| Area | Status | Next Gate |
+| Area | Status | Next Action |
 | --- | --- | --- |
-| Release signing | Prepared | Create private keystore and wire Gradle release signing |
-| Analytics events | Prepared | Add Firebase Analytics adapter after Firebase setup |
+| App identity | Mostly prepared | Confirm package ID before first Play upload |
+| Release signing | Config prepared | Create private keystore and `android/key.properties` |
+| Store assets | Partially prepared | Regenerate icons/feature graphic; recapture real Signal Reef screenshots |
+| Privacy/Data safety | Drafted | Add support email and hosted privacy policy URL |
+| Analytics | Deferred | Keep no-op telemetry until needed |
 | Crash monitoring | Planned | Add Crashlytics after Firebase setup |
-| Monetization | Planned | Choose no ads, rewarded hints, interstitials, or IAP |
+| Monetization | Deferred | Keep ad-free during first internal test |
 | Internal testing | Pending | Upload signed `.aab` to Play internal testing |
 | Closed testing | Pending | Recruit testers and collect structured feedback |
 | Production release | Pending | Only after stability, retention, and policy checks |
-| Monitoring loop | Planned | Review crashes, funnel, retention, ratings, and revenue weekly |
 
-## Phase 6 Exit Criteria
+## Internal Test Exit Criteria
 
 - Signed release `.aab` builds successfully.
-- Privacy policy is hosted and matches actual SDK behavior.
-- Firebase/Crashlytics decision is either implemented or explicitly deferred.
-- Monetization decision is recorded.
-- Internal test release is available to testers.
-- Closed testing plan has tester list, tasks, and feedback form.
-- Learning note is filled after first tester feedback.
+- Fresh install works on at least one physical Android phone.
+- No known launch-blocking crashes.
+- Main menu, gameplay, pause, game over/win, retry, and best-score save work.
+- Real Signal Reef screenshots and feature graphic are uploaded.
+- Internal testers confirm movement and damage feedback are understandable.
 
-## Recommended Order
+## Next Steps
 
 1. Configure Android release signing.
-2. Build release `.aab`.
-3. Create Firebase project only if analytics/crash monitoring is approved.
-4. Create AdMob app only if ads are approved.
-5. Complete Play Console app content forms.
-6. Run internal testing.
-7. Run closed testing.
-8. Review data and human feedback.
-9. Decide production release or next update.
+2. Generate launcher icons and feature graphic.
+3. Build release `.aab`.
+4. Install/test locally or through Play internal testing.
+5. Capture real gameplay screenshots.
+6. Complete Play App content declarations.
+7. Run internal testing.
+8. Review feedback and crash/performance notes.
+9. Run closed testing.
+10. Decide production release or next update.
 
 ## Official References
 
-- Firebase Flutter setup: https://firebase.google.com/docs/flutter/setup
-- Firebase Crashlytics for Flutter: https://firebase.google.com/docs/crashlytics/flutter/get-started
-- Google Mobile Ads Flutter setup: https://developers.google.com/admob/flutter/quick-start
+- Google Play App content: https://support.google.com/googleplay/android-developer/answer/9859455
 - Play testing tracks: https://support.google.com/googleplay/android-developer/answer/9845334
+- Firebase Crashlytics for Flutter: https://firebase.google.com/docs/crashlytics/flutter/get-started

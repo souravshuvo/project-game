@@ -1,6 +1,6 @@
-# Post-Test Learning Note
+# Signal Reef Post-Test Learning Note
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 Fill this after internal or closed testing.
 
@@ -24,24 +24,29 @@ Fill this after internal or closed testing.
 
 - 
 
-## Levels To Improve
+## Gameplay To Improve
 
-- 
+- Movement feel:
+- Shooting feedback:
+- Enemy readability:
+- Damage clarity:
+- Difficulty:
 
 ## Monetization Signal
 
 - Keep ad-free:
-- Rewarded hints:
+- Rewarded revive:
 - Interstitials:
 - Paid/IAP:
 
 ## Metrics To Check
 
-- Level 1 completion:
-- Level 2 unlock:
-- First 5 level completion:
-- Hint claim:
-- Hint use:
+- Run starts:
+- Wave 1 completion:
+- Wave 2 completion:
+- Wave 3 completion:
+- Average run duration:
+- Retry rate:
 - Day 1 return:
 
 ## Decision

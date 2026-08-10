@@ -16,83 +16,62 @@ function New-Pen($hex, $width) {
     return $pen
 }
 
-function New-RoundedRectanglePath($x, $y, $width, $height, $radius) {
-    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $diameter = $radius * 2
-    $path.AddArc($x, $y, $diameter, $diameter, 180, 90)
-    $path.AddArc($x + $width - $diameter, $y, $diameter, $diameter, 270, 90)
-    $path.AddArc($x + $width - $diameter, $y + $height - $diameter, $diameter, $diameter, 0, 90)
-    $path.AddArc($x, $y + $height - $diameter, $diameter, $diameter, 90, 90)
-    $path.CloseFigure()
-    return $path
-}
-
-function Add-RoundedRectangle($graphics, $brush, $x, $y, $width, $height, $radius) {
-    $path = New-RoundedRectanglePath $x $y $width $height $radius
-    $graphics.FillPath($brush, $path)
-    $path.Dispose()
-}
-
-function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
-    $pen = New-Pen $hex ([Math]::Max(4, $size * 0.11))
-    $brush = New-Brush $hex
-    $half = $size / 2
-    $shaft = $size * 0.22
-    $head = $size * 0.24
-
-    switch ($direction) {
-        "right" {
-            $graphics.DrawLine($pen, $x - $shaft, $y, $x + $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x + $half - $head, $y - $head),
-                [System.Drawing.PointF]::new($x + $half, $y),
-                [System.Drawing.PointF]::new($x + $half - $head, $y + $head)
-            )
-        }
-        "left" {
-            $graphics.DrawLine($pen, $x + $shaft, $y, $x - $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $half + $head, $y - $head),
-                [System.Drawing.PointF]::new($x - $half, $y),
-                [System.Drawing.PointF]::new($x - $half + $head, $y + $head)
-            )
-        }
-        "down" {
-            $graphics.DrawLine($pen, $x, $y - $shaft, $x, $y + $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y + $half - $head),
-                [System.Drawing.PointF]::new($x, $y + $half),
-                [System.Drawing.PointF]::new($x + $head, $y + $half - $head)
-            )
-        }
-        default {
-            $graphics.DrawLine($pen, $x, $y + $shaft, $x, $y - $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y - $half + $head),
-                [System.Drawing.PointF]::new($x, $y - $half),
-                [System.Drawing.PointF]::new($x + $head, $y - $half + $head)
-            )
-        }
-    }
-
-    $graphics.FillPolygon($brush, $points)
-    $pen.Dispose()
-    $brush.Dispose()
-}
-
-function Add-Tile($graphics, $x, $y, $size, $direction, $fillHex, $arrowHex) {
-    $brush = New-Brush $fillHex
-    Add-RoundedRectangle $graphics $brush $x $y $size $size 18
-    Add-Arrow $graphics ($x + ($size / 2)) ($y + ($size / 2)) ($size * 0.5) $direction $arrowHex
-    $brush.Dispose()
-}
-
 function Add-Text($graphics, $text, $fontName, $size, $style, $hex, $x, $y) {
     $font = New-Object System.Drawing.Font($fontName, $size, $style, [System.Drawing.GraphicsUnit]::Pixel)
     $brush = New-Brush $hex
     $graphics.DrawString($text, $font, $brush, $x, $y)
     $brush.Dispose()
     $font.Dispose()
+}
+
+function Add-SignalShip($graphics, $cx, $cy, $scale) {
+    $shipBrush = New-Brush "#50D6C7"
+    $coreBrush = New-Brush "#FFFFFF"
+    $trailPen = New-Pen "#FFC857" (9 * $scale)
+    $ship = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $ship.AddPolygon(@(
+        [System.Drawing.PointF]::new($cx, $cy - (92 * $scale)),
+        [System.Drawing.PointF]::new($cx + (54 * $scale), $cy + (60 * $scale)),
+        [System.Drawing.PointF]::new($cx, $cy + (96 * $scale)),
+        [System.Drawing.PointF]::new($cx - (54 * $scale), $cy + (60 * $scale))
+    ))
+    $graphics.FillPath($shipBrush, $ship)
+    $graphics.FillEllipse($coreBrush, $cx - (15 * $scale), $cy - (24 * $scale), 30 * $scale, 30 * $scale)
+    $graphics.DrawLine($trailPen, $cx, $cy + (78 * $scale), $cx, $cy + (128 * $scale))
+
+    $ship.Dispose()
+    $shipBrush.Dispose()
+    $coreBrush.Dispose()
+    $trailPen.Dispose()
+}
+
+function Add-DriftNode($graphics, $cx, $cy, $size) {
+    $brush = New-Brush "#50D6C7"
+    $core = New-Brush "#0C3B46"
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $path.AddPolygon(@(
+        [System.Drawing.PointF]::new($cx, $cy - $size),
+        [System.Drawing.PointF]::new($cx + $size, $cy),
+        [System.Drawing.PointF]::new($cx, $cy + $size),
+        [System.Drawing.PointF]::new($cx - $size, $cy)
+    ))
+    $graphics.FillPath($brush, $path)
+    $graphics.FillEllipse($core, $cx - ($size * 0.28), $cy - ($size * 0.28), $size * 0.56, $size * 0.56)
+    $path.Dispose()
+    $brush.Dispose()
+    $core.Dispose()
+}
+
+function Add-PulseSeed($graphics, $cx, $cy, $width, $height) {
+    $shell = New-Brush "#FFC857"
+    $core = New-Brush "#453212"
+    $ring = New-Pen "#FFF3B0" 4
+    $graphics.FillEllipse($shell, $cx - ($width / 2), $cy - ($height / 2), $width, $height)
+    $graphics.FillEllipse($core, $cx - 16, $cy - 16, 32, 32)
+    $graphics.DrawArc($ring, $cx - ($width / 2) + 8, $cy - ($height / 2) + 10, $width - 16, $height - 20, 20, 240)
+    $shell.Dispose()
+    $core.Dispose()
+    $ring.Dispose()
 }
 
 $outputDirectory = Split-Path -Parent $OutputPath
@@ -104,47 +83,51 @@ $bitmap = New-Object System.Drawing.Bitmap 1024, 500, ([System.Drawing.Imaging.P
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
 $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#4B68A5"))
+$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#07131E"))
 
-$navy = New-Brush "#2E477C"
-$white = New-Brush "#FFFFFF"
-$gold = New-Brush "#FFC531"
+$background = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+    [System.Drawing.RectangleF]::new(0, 0, 1024, 500),
+    [System.Drawing.ColorTranslator]::FromHtml("#07131E"),
+    [System.Drawing.ColorTranslator]::FromHtml("#092621"),
+    [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
+)
+$graphics.FillRectangle($background, 0, 0, 1024, 500)
 
-Add-RoundedRectangle $graphics $navy 610 62 314 314 42
-Add-RoundedRectangle $graphics $white 590 42 314 314 42
+$currentPen = New-Pen "#1F6C80" 3
+$pulsePen = New-Pen "#B7FFF6" 7
+$enemyPulsePen = New-Pen "#FF6B6B" 5
 
-$tileSize = 82
-$gap = 20
-$startX = 624
-$startY = 76
-Add-Tile $graphics $startX $startY $tileSize "right" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) $startY $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "left" "#47C3B8" "#2E477C"
-Add-Tile $graphics $startX ($startY + $tileSize + $gap) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + $tileSize + $gap) $tileSize "left" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + $tileSize + $gap) $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize "right" "#F06C8E" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "left" "#FFC531" "#2E477C"
+for ($y = -60; $y -lt 560; $y += 96) {
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $path.AddBezier(
+        [System.Drawing.PointF]::new(-30, $y),
+        [System.Drawing.PointF]::new(260, $y + 82),
+        [System.Drawing.PointF]::new(700, $y - 22),
+        [System.Drawing.PointF]::new(1054, $y + 36)
+    )
+    $graphics.DrawPath($currentPen, $path)
+    $path.Dispose()
+}
 
-Add-RoundedRectangle $graphics $gold 78 94 122 122 28
-Add-RoundedRectangle $graphics $white 104 120 70 70 16
-Add-Arrow $graphics 139 155 44 "right" "#4B68A5"
+Add-SignalShip $graphics 690 306 1.18
+Add-DriftNode $graphics 814 132 35
+Add-DriftNode $graphics 900 218 28
+Add-PulseSeed $graphics 774 222 62 74
 
-Add-Text $graphics "Arrow Puzzle" "Segoe UI" 76 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 230
-Add-Text $graphics "Tap arrows. Clear the board." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#F7F2E8" 80 324
+$graphics.DrawArc($pulsePen, 610, 118, 292, 230, 205, 118)
+$graphics.DrawLine($pulsePen, 604, 374, 942, 174)
+$graphics.DrawLine($enemyPulsePen, 774, 262, 774, 332)
 
-$sparkPen = New-Pen "#FFC531" 8
-$graphics.DrawLine($sparkPen, 456, 106, 500, 106)
-$graphics.DrawLine($sparkPen, 478, 84, 478, 128)
-$sparkPen.Dispose()
+Add-Text $graphics "Signal Reef" "Segoe UI" 78 ([System.Drawing.FontStyle]::Bold) "#EAF7F4" 72 142
+Add-Text $graphics "Bounce signal shots through short wave runs" "Segoe UI" 32 ([System.Drawing.FontStyle]::Regular) "#B7FFF6" 78 244
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 
-$navy.Dispose()
-$white.Dispose()
-$gold.Dispose()
+$currentPen.Dispose()
+$pulsePen.Dispose()
+$enemyPulsePen.Dispose()
+$background.Dispose()
 $graphics.Dispose()
 $bitmap.Dispose()
 
-Write-Host "Generated Play feature graphic at $OutputPath"
+Write-Host "Generated Signal Reef Play feature graphic at $OutputPath"

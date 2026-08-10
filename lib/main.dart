@@ -1,60 +1,48 @@
 import 'package:flutter/material.dart';
 
-import 'features/arrow_puzzle/application/puzzle_controller.dart';
-import 'features/arrow_puzzle/application/game_telemetry.dart';
-import 'features/arrow_puzzle/data/local_level_pack.dart';
-import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'features/arrow_puzzle/domain/player_progress.dart';
-import 'features/arrow_puzzle/domain/board_position.dart';
-import 'features/arrow_puzzle/domain/puzzle_cell.dart';
-import 'features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'features/arrow_puzzle/presentation/pages/home_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_select_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_complete_page.dart';
-import 'features/arrow_puzzle/presentation/pages/puzzle_page.dart';
-import 'features/arrow_puzzle/presentation/pages/settings_page.dart';
-import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
+import 'features/signal_reef/application/signal_reef_controller.dart';
+import 'features/signal_reef/application/signal_reef_telemetry.dart';
+import 'features/signal_reef/data/signal_reef_save_store.dart';
+import 'features/signal_reef/domain/save_data.dart';
+import 'features/signal_reef/presentation/pages/signal_reef_home_page.dart';
+import 'features/signal_reef/presentation/pages/signal_reef_play_page.dart';
+import 'features/signal_reef/presentation/pages/signal_reef_result_page.dart';
+import 'features/signal_reef/presentation/pages/signal_reef_settings_page.dart';
+import 'features/signal_reef/presentation/theme/signal_reef_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final progressStore = SharedPreferencesPuzzleProgressStore();
-  final initialProgress = await progressStore.load();
+  final saveStore = SharedPreferencesSignalReefSaveStore();
+  final initialSave = await saveStore.load();
 
-  runApp(
-    ArrowPuzzleApp(
-      progressStore: progressStore,
-      initialProgress: initialProgress,
-    ),
-  );
+  runApp(SignalReefApp(saveStore: saveStore, initialSave: initialSave));
 }
 
-class ArrowPuzzleApp extends StatefulWidget {
-  const ArrowPuzzleApp({
+class SignalReefApp extends StatefulWidget {
+  const SignalReefApp({
     super.key,
-    required this.progressStore,
-    required this.initialProgress,
+    required this.saveStore,
+    required this.initialSave,
   });
 
-  final PuzzleProgressStore progressStore;
-  final PlayerProgress initialProgress;
+  final SignalReefSaveStore saveStore;
+  final SignalReefSaveData initialSave;
 
   @override
-  State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
+  State<SignalReefApp> createState() => _SignalReefAppState();
 }
 
-class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
-  late final PuzzleController _controller;
+class _SignalReefAppState extends State<SignalReefApp> {
+  late final SignalReefController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = PuzzleController(
-      engine: const PuzzleEngine(),
-      levels: localLevelPack,
-      progressStore: widget.progressStore,
-      initialProgress: widget.initialProgress,
-      telemetry: const NoOpGameTelemetry(),
+    _controller = SignalReefController(
+      saveStore: widget.saveStore,
+      initialSave: widget.initialSave,
+      telemetry: const NoOpSignalReefTelemetry(),
     );
   }
 
@@ -70,9 +58,9 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
       animation: _controller,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Arrow Puzzle',
+          title: 'Signal Reef',
           debugShowCheckedModeBanner: false,
-          theme: ArrowPuzzleTheme.light(),
+          theme: SignalReefTheme.dark(),
           home: _buildHome(),
         );
       },
@@ -81,31 +69,12 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
 
   Widget _buildHome() {
     return switch (_controller.screen) {
-      PuzzleScreen.home => HomePage(controller: _controller),
-      PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
-      PuzzleScreen.settings => SettingsPage(controller: _controller),
-      PuzzleScreen.playing => PuzzlePage(controller: _controller),
-      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
+      SignalReefScreen.home => SignalReefHomePage(controller: _controller),
+      SignalReefScreen.settings => SignalReefSettingsPage(
+        controller: _controller,
+      ),
+      SignalReefScreen.playing => SignalReefPlayPage(controller: _controller),
+      SignalReefScreen.result => SignalReefResultPage(controller: _controller),
     };
   }
-}
-
-IconData arrowIcon(PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => Icons.arrow_upward_rounded,
-    PuzzleCell.down => Icons.arrow_downward_rounded,
-    PuzzleCell.left => Icons.arrow_back_rounded,
-    PuzzleCell.right => Icons.arrow_forward_rounded,
-    PuzzleCell.empty => Icons.circle_outlined,
-  };
-}
-
-Alignment exitAlignment(BoardPosition _, PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => const Alignment(0, -6),
-    PuzzleCell.down => const Alignment(0, 6),
-    PuzzleCell.left => const Alignment(-6, 0),
-    PuzzleCell.right => const Alignment(6, 0),
-    PuzzleCell.empty => Alignment.center,
-  };
 }

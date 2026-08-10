@@ -56,6 +56,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "flame",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/flame-1.38.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///C:/flutter/packages/flutter",
       "packageUri": "lib/",
@@ -120,6 +126,12 @@
       "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "ordered_set",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/ordered_set-8.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
     },
     {
       "name": "path",
@@ -266,7 +278,7 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "arrow_puzzle_tap_puzzle_games",
+      "name": "signal_reef_space_shooter",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.12"

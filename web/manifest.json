@@ -1,11 +1,11 @@
 {
-    "name": "arrow_puzzle_tap_puzzle_games",
-    "short_name": "arrow_puzzle_tap_puzzle_games",
+    "name": "Signal Reef",
+    "short_name": "Signal Reef",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "An original arcade space shooter with bouncing signal shots.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

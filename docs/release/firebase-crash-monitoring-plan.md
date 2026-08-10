@@ -1,6 +1,6 @@
-# Firebase And Crash Monitoring Plan
+# Signal Reef Firebase And Crash Monitoring Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current Decision
 
@@ -10,21 +10,23 @@ Reason: the game has no real Firebase project/config yet, and adding Firebase pl
 
 ## What Is Implemented Now
 
-The app now has a no-op `GameTelemetry` boundary in code.
+The app has a no-op `SignalReefTelemetry` boundary in code.
 
 Tracked internal event names:
 
-- `app_open`
-- `screen_view`
-- `level_start`
-- `level_complete`
-- `level_retry`
-- `hint_claim`
-- `hint_use`
-- `settings_sound_toggle`
-- `settings_haptics_toggle`
+- `game_start`
+- `wave_start`
+- `wave_complete`
+- `player_damage`
+- `player_death`
+- `game_win`
+- `game_restart`
+- `pause_open`
+- `pause_resume`
+- `settings_changed`
+- `best_score_updated`
 
-Current adapter: `NoOpGameTelemetry`
+Current adapter: `NoOpSignalReefTelemetry`
 
 This means no event data is sent anywhere in the current build.
 
@@ -33,8 +35,8 @@ This means no event data is sent anywhere in the current build.
 Only add Firebase Analytics after these are ready:
 
 - Firebase project created.
-- Android app registered with package `com.childhood.arrowpuzzle`.
-- iOS app registered with bundle ID `com.childhood.arrowpuzzle`, if iOS remains in scope.
+- Android app registered with package `com.childhood.signalreef`.
+- iOS app registered with bundle ID `com.childhood.signalreef`, if iOS remains in scope.
 - `flutterfire configure` can create real `firebase_options.dart`.
 - Privacy policy and Play Data safety are updated for Analytics behavior.
 - Tester build confirms events appear in Firebase DebugView.
@@ -65,9 +67,9 @@ flutterfire configure
 
 Expected adapter file:
 
-- `lib/features/arrow_puzzle/application/firebase_game_telemetry.dart`
+- `lib/features/signal_reef/application/firebase_signal_reef_telemetry.dart`
 
-The adapter should translate `GameTelemetryEvent` to Firebase Analytics events and keep the event/property names already defined in `game_telemetry.dart`.
+The adapter should translate `SignalReefTelemetryEvent` to Firebase Analytics events and keep the event/property names already defined in `signal_reef_telemetry.dart`.
 
 ## Do Not Collect
 

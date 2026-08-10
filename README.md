@@ -1,6 +1,6 @@
-# arrow_puzzle_tap_puzzle_games
+# Signal Reef
 
-A new Flutter project.
+An original Flutter and Flame arcade space shooter prototype.
 
 ## Getting Started
 
