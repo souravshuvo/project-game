@@ -1,6 +1,6 @@
 # Post-Test Learning Note
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 Fill this after internal or closed testing.
 
@@ -14,35 +14,39 @@ Fill this after internal or closed testing.
 
 ## What Worked
 
-- 
+-
 
 ## What Confused Players
 
-- 
+-
 
 ## Bugs Or Stability Issues
 
-- 
+-
 
 ## Levels To Improve
 
-- 
+-
+
+## Gameplay Signals
+
+- Level 1 completion:
+- First five level completion:
+- Restart count:
+- Fail count:
+- Highest tray fill:
+- Covered-tile tap confusion:
+- Day 1 return:
 
 ## Monetization Signal
 
 - Keep ad-free:
-- Rewarded hints:
+- Rewarded undo:
+- Rewarded shuffle:
+- Rewarded hint:
+- Rewarded extra tray slot:
+- Rewarded continue:
 - Interstitials:
-- Paid/IAP:
-
-## Metrics To Check
-
-- Level 1 completion:
-- Level 2 unlock:
-- First 5 level completion:
-- Hint claim:
-- Hint use:
-- Day 1 return:
 
 ## Decision
 
@@ -52,4 +56,4 @@ Fill this after internal or closed testing.
 
 ## Next Update Scope
 
-- 
+-

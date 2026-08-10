@@ -1,5 +1,5 @@
 class BoardPosition {
-  const BoardPosition(this.row, this.col);
+  const BoardPosition({required this.row, required this.col});
 
   final int row;
   final int col;

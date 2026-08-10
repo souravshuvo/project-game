@@ -1,11 +1,11 @@
 {
-    "name": "arrow_puzzle_tap_puzzle_games",
-    "short_name": "arrow_puzzle_tap_puzzle_games",
+    "name": "Larder Labels",
+    "short_name": "Larder Labels",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F1F7F4",
+    "theme_color": "#276B63",
+    "description": "An original offline triple tile match puzzle.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

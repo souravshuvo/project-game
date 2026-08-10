@@ -11,6 +11,7 @@ function New-Pen($hex, $width) {
     $pen = New-Object System.Drawing.Pen ([System.Drawing.ColorTranslator]::FromHtml($hex)), $width
     $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
     $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
     return $pen
 }
 
@@ -31,78 +32,50 @@ function Add-RoundedRectangle($graphics, $brush, $x, $y, $width, $height, $radiu
     $path.Dispose()
 }
 
-function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
-    $pen = New-Pen $hex ([Math]::Max(2, $size * 0.11))
-    $brush = New-Brush $hex
-    $half = $size / 2
-    $shaft = $size * 0.22
-    $head = $size * 0.24
+function Add-LabelTile($graphics, $x, $y, $size, $fillHex, $text) {
+    $fillBrush = New-Brush $fillHex
+    $linePen = New-Pen "#16443F" ([Math]::Max(1, $size * 0.035))
+    $textBrush = New-Brush "#16443F"
+    $font = New-Object System.Drawing.Font("Segoe UI", [Math]::Max(6, $size * 0.22), [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
 
-    switch ($direction) {
-        "right" {
-            $graphics.DrawLine($pen, $x - $shaft, $y, $x + $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x + $half - $head, $y - $head),
-                [System.Drawing.PointF]::new($x + $half, $y),
-                [System.Drawing.PointF]::new($x + $half - $head, $y + $head)
-            )
-        }
-        "left" {
-            $graphics.DrawLine($pen, $x + $shaft, $y, $x - $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $half + $head, $y - $head),
-                [System.Drawing.PointF]::new($x - $half, $y),
-                [System.Drawing.PointF]::new($x - $half + $head, $y + $head)
-            )
-        }
-        "down" {
-            $graphics.DrawLine($pen, $x, $y - $shaft, $x, $y + $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y + $half - $head),
-                [System.Drawing.PointF]::new($x, $y + $half),
-                [System.Drawing.PointF]::new($x + $head, $y + $half - $head)
-            )
-        }
-        default {
-            $graphics.DrawLine($pen, $x, $y + $shaft, $x, $y - $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y - $half + $head),
-                [System.Drawing.PointF]::new($x, $y - $half),
-                [System.Drawing.PointF]::new($x + $head, $y - $half + $head)
-            )
-        }
-    }
+    Add-RoundedRectangle $graphics $fillBrush $x $y $size $size ([Math]::Max(3, $size * 0.18))
 
-    $graphics.FillPolygon($brush, $points)
-    $pen.Dispose()
-    $brush.Dispose()
+    $format = New-Object System.Drawing.StringFormat
+    $format.Alignment = [System.Drawing.StringAlignment]::Center
+    $format.LineAlignment = [System.Drawing.StringAlignment]::Center
+    $rect = [System.Drawing.RectangleF]::new($x, $y - ($size * 0.08), $size, $size)
+    $graphics.DrawString($text, $font, $textBrush, $rect, $format)
+    $graphics.DrawLine($linePen, $x + ($size * 0.24), $y + ($size * 0.72), $x + ($size * 0.76), $y + ($size * 0.72))
+
+    $format.Dispose()
+    $font.Dispose()
+    $textBrush.Dispose()
+    $linePen.Dispose()
+    $fillBrush.Dispose()
 }
 
-function New-ArrowPuzzleIcon($path, $size) {
+function New-LarderLabelsIcon($path, $size) {
     $bitmap = New-Object System.Drawing.Bitmap $size, $size
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#4B68A5"))
+    $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+    $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#276B63"))
 
     $scale = $size / 192.0
-    $accentBrush = New-Brush "#FFC531"
-    $whiteBrush = New-Brush "#FFFFFF"
-    $shadowBrush = New-Brush "#2E477C"
+    $surfaceBrush = New-Brush "#F1F7F4"
+    $shadowBrush = New-Brush "#16443F"
+    $accentBrush = New-Brush "#F0B429"
 
-    Add-RoundedRectangle $graphics $shadowBrush (18 * $scale) (24 * $scale) (156 * $scale) (150 * $scale) (28 * $scale)
-    Add-RoundedRectangle $graphics $whiteBrush (16 * $scale) (18 * $scale) (156 * $scale) (150 * $scale) (28 * $scale)
+    Add-RoundedRectangle $graphics $shadowBrush (20 * $scale) (26 * $scale) (152 * $scale) (146 * $scale) (28 * $scale)
+    Add-RoundedRectangle $graphics $surfaceBrush (16 * $scale) (18 * $scale) (152 * $scale) (146 * $scale) (28 * $scale)
 
     $tile = 48 * $scale
-    $radius = 12 * $scale
-    Add-RoundedRectangle $graphics $accentBrush (38 * $scale) (38 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $whiteBrush (106 * $scale) (38 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $whiteBrush (38 * $scale) (106 * $scale) $tile $tile $radius
-    Add-RoundedRectangle $graphics $accentBrush (106 * $scale) (106 * $scale) $tile $tile $radius
+    Add-LabelTile $graphics (38 * $scale) (38 * $scale) $tile "#E9F6EE" "JAR"
+    Add-LabelTile $graphics (106 * $scale) (38 * $scale) $tile "#E2F7F2" "TEA"
+    Add-LabelTile $graphics (38 * $scale) (106 * $scale) $tile "#FFF5D8" "OAT"
+    Add-LabelTile $graphics (106 * $scale) (106 * $scale) $tile "#FFE9E5" "TIN"
 
-    Add-Arrow $graphics (62 * $scale) (62 * $scale) (28 * $scale) "right" "#4B68A5"
-    Add-Arrow $graphics (130 * $scale) (62 * $scale) (28 * $scale) "down" "#4B68A5"
-    Add-Arrow $graphics (62 * $scale) (130 * $scale) (28 * $scale) "up" "#4B68A5"
-    Add-Arrow $graphics (130 * $scale) (130 * $scale) (28 * $scale) "left" "#4B68A5"
+    Add-RoundedRectangle $graphics $accentBrush (78 * $scale) (78 * $scale) (36 * $scale) (36 * $scale) (10 * $scale)
 
     $directory = Split-Path -Parent $path
     if (!(Test-Path $directory)) {
@@ -111,7 +84,7 @@ function New-ArrowPuzzleIcon($path, $size) {
     $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
 
     $accentBrush.Dispose()
-    $whiteBrush.Dispose()
+    $surfaceBrush.Dispose()
     $shadowBrush.Dispose()
     $graphics.Dispose()
     $bitmap.Dispose()
@@ -126,7 +99,7 @@ $androidIcons = @{
 }
 
 foreach ($entry in $androidIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-LarderLabelsIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
 $iosIcons = @{
@@ -148,7 +121,19 @@ $iosIcons = @{
 }
 
 foreach ($entry in $iosIcons.GetEnumerator()) {
-    New-ArrowPuzzleIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-LarderLabelsIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
-Write-Host "Generated Arrow Puzzle launcher icons."
+$webIcons = @{
+    "web/favicon.png" = 32
+    "web/icons/Icon-192.png" = 192
+    "web/icons/Icon-512.png" = 512
+    "web/icons/Icon-maskable-192.png" = 192
+    "web/icons/Icon-maskable-512.png" = 512
+}
+
+foreach ($entry in $webIcons.GetEnumerator()) {
+    New-LarderLabelsIcon (Join-Path $Root $entry.Key) $entry.Value
+}
+
+Write-Host "Generated Larder Labels launcher icons."

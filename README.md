@@ -1,17 +1,37 @@
-# arrow_puzzle_tap_puzzle_games
+# Larder Labels
 
-A new Flutter project.
+An original offline Flutter triple tile match puzzle prototype.
 
-## Getting Started
+## Version 1 Scope
 
-This project is a starting point for a Flutter application.
+- Five small handcrafted pantry-label levels.
+- Tap uncovered label tiles to move them into a 7-slot tray.
+- Three matching labels clear automatically.
+- Higher-layer tiles block lower tiles in the same board cell.
+- Win when every tile is cleared.
+- Fail when the tray is full after match resolution.
+- Restart resets the current level deterministically.
+- Next advances through the session-only local level pack after a win.
 
-A few resources to get you started if this is your first Flutter project:
+Version 1 does not include ads, boosters, shop, login, cloud sync, map
+progression, story, live events, analytics, Firebase, AdMob, purchases, or
+external services.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Originality Notes
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The current theme, tile names, layout data, and placeholder visuals are original
+to this repository. Do not copy names, art, UI, icons, screenshots, tile sets,
+level layouts, boosters, characters, music, or branding from existing triple
+match, tile match, mahjong-style, or puzzle apps.
+
+## Manual QA Focus
+
+1. Launch a fresh install.
+2. Confirm the first screen is the playable puzzle, not a landing page.
+3. Tap three matching labels and confirm the tray clears that triple.
+4. Tap a covered lower-layer tile and confirm it does not move until the top
+   tile is cleared.
+5. Fill the tray with non-matching labels and confirm fail messaging is clear.
+6. Use Restart and confirm board, tray, moves, score, and status reset.
+7. Complete all five levels using the in-app Next button after each win.
+8. Confirm no ads, network prompts, login, shop, or unavailable features appear.

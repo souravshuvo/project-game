@@ -1,45 +1,61 @@
 # Monetization Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-10
 
 ## Current Decision
 
-Do not add monetization SDKs in the current build.
+Do not add monetization SDKs in current v1.
 
-Reason: the first testing goal is to validate whether the puzzle loop is fun, readable, and replayable. Monetization should not distort early tester feedback.
+Reason: the first testing goal is to validate whether the puzzle loop is fun,
+readable, fair, and replayable. Monetization should not distort early tester
+feedback.
 
 ## Options
 
-| Option | Pros | Risks | Phase 6 Decision |
+| Option | Pros | Risks | V1 Decision |
 | --- | --- | --- | --- |
-| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Recommended for first internal test |
-| Rewarded ads for extra hints | Natural fit with current hint system | Needs AdMob, consent/policy review, pacing design | Consider after first tester feedback |
-| Interstitial ads between levels | Easy revenue path | Can hurt retention and reviews in puzzle games | Defer |
-| Paid app | Simple product experience | Higher friction for unknown new game | Defer |
-| In-app purchase hint packs | Cleaner than forced ads | Needs billing setup, product economy, refund support | Defer |
+| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Recommended |
+| Rewarded undo | Easy to understand and player-friendly | Needs undo stack and ad SDK | Later |
+| Rewarded shuffle | Good recovery option | Can make level design less meaningful | Later |
+| Rewarded hint | Helps stuck players | Needs good hint logic | Later |
+| Rewarded extra tray slot | Strong rescue moment | Balance risk if overused | Later |
+| Rewarded continue after fail | Clear value at fail state | Must not feel coercive | Later |
+| Interstitials between levels | Simple revenue path | Can hurt retention and reviews | Defer |
+| In-app purchases | Cleaner than forced ads | Needs store products and economy | Defer |
 
-## Recommended First Monetization Test
+## Rewarded Ad Direction Later
 
-If testers like the core loop, test rewarded hints first:
+If testers like the core loop, test one optional rewarded feature first:
 
-- Keep one free daily hint.
-- Offer one optional rewarded hint when hint balance is zero.
-- Never show ads after every tap or during active puzzle solving.
-- Cap ad prompts so the game still feels calm.
+- Start with rewarded continue after tray full or rewarded undo.
+- Never show ads during active puzzle solving.
+- Never reward ad clicks.
+- Never encourage clicking ads.
+- Keep all ad choices optional.
+- Add frequency caps before live ads.
 
-## AdMob Gate
+## Interstitial Direction Later
 
-Only add AdMob after:
+Interstitials are not appropriate for current v1. If added much later, show only
+at natural level-end transitions, never on app launch, never mid-puzzle, and
+never after every level.
 
+## Frequency Caps Later
+
+- Rewarded ads: player-initiated only.
+- Interstitials: no more than one per 3 completed levels and no more than one
+  every 4 minutes.
+- No interstitial before Level 4.
+- No ad immediately after a failed level.
+
+## Ad SDK Gate
+
+Only add an ad SDK after:
+
+- Core loop and first levels test well.
 - Monetization choice is final for the next update.
-- AdMob account and app IDs exist.
-- Android and iOS app IDs are added to platform config.
+- Real app IDs and test ad units exist.
 - Test ads are verified before any live ad unit is used.
-- Privacy policy, Data safety, and Ads declaration are updated.
+- Privacy policy, Data safety, Ads declaration, and target-audience status are
+  updated.
 - Child-directed status is confirmed before serving ads.
-
-## Official References
-
-- Google Mobile Ads Flutter setup: https://developers.google.com/admob/flutter/quick-start
-- Flutter Google Mobile Ads cookbook: https://docs.flutter.dev/cookbook/plugins/google-mobile-ads
-- Google Play App content declarations: https://support.google.com/googleplay/android-developer/answer/9859455

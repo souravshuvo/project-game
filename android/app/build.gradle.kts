@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.childhood.arrowpuzzle"
+    namespace = "com.childhood.larderlabels"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.childhood.arrowpuzzle"
+        applicationId = "com.childhood.larderlabels"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -26,9 +26,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Production release signing must be configured before Play upload.
+            // Keep release unsigned until a real upload keystore is wired here.
         }
     }
 }

@@ -33,66 +33,40 @@ function Add-RoundedRectangle($graphics, $brush, $x, $y, $width, $height, $radiu
     $path.Dispose()
 }
 
-function Add-Arrow($graphics, $x, $y, $size, $direction, $hex) {
-    $pen = New-Pen $hex ([Math]::Max(4, $size * 0.11))
-    $brush = New-Brush $hex
-    $half = $size / 2
-    $shaft = $size * 0.22
-    $head = $size * 0.24
-
-    switch ($direction) {
-        "right" {
-            $graphics.DrawLine($pen, $x - $shaft, $y, $x + $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x + $half - $head, $y - $head),
-                [System.Drawing.PointF]::new($x + $half, $y),
-                [System.Drawing.PointF]::new($x + $half - $head, $y + $head)
-            )
-        }
-        "left" {
-            $graphics.DrawLine($pen, $x + $shaft, $y, $x - $shaft, $y)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $half + $head, $y - $head),
-                [System.Drawing.PointF]::new($x - $half, $y),
-                [System.Drawing.PointF]::new($x - $half + $head, $y + $head)
-            )
-        }
-        "down" {
-            $graphics.DrawLine($pen, $x, $y - $shaft, $x, $y + $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y + $half - $head),
-                [System.Drawing.PointF]::new($x, $y + $half),
-                [System.Drawing.PointF]::new($x + $head, $y + $half - $head)
-            )
-        }
-        default {
-            $graphics.DrawLine($pen, $x, $y + $shaft, $x, $y - $shaft)
-            $points = @(
-                [System.Drawing.PointF]::new($x - $head, $y - $half + $head),
-                [System.Drawing.PointF]::new($x, $y - $half),
-                [System.Drawing.PointF]::new($x + $head, $y - $half + $head)
-            )
-        }
-    }
-
-    $graphics.FillPolygon($brush, $points)
-    $pen.Dispose()
-    $brush.Dispose()
-}
-
-function Add-Tile($graphics, $x, $y, $size, $direction, $fillHex, $arrowHex) {
-    $brush = New-Brush $fillHex
-    Add-RoundedRectangle $graphics $brush $x $y $size $size 18
-    Add-Arrow $graphics ($x + ($size / 2)) ($y + ($size / 2)) ($size * 0.5) $direction $arrowHex
-    $brush.Dispose()
-}
-
 function Add-Text($graphics, $text, $fontName, $size, $style, $hex, $x, $y) {
     $font = New-Object System.Drawing.Font($fontName, $size, $style, [System.Drawing.GraphicsUnit]::Pixel)
     $brush = New-Brush $hex
     $graphics.DrawString($text, $font, $brush, $x, $y)
     $brush.Dispose()
     $font.Dispose()
+}
+
+function Add-LabelTile($graphics, $x, $y, $size, $fillHex, $borderHex, $text, $textHex) {
+    $fillBrush = New-Brush $fillHex
+    $borderPen = New-Pen $borderHex 5
+    $textBrush = New-Brush $textHex
+    $font = New-Object System.Drawing.Font("Segoe UI", [Math]::Max(14, $size * 0.22), [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+    $smallPen = New-Pen $textHex ([Math]::Max(2, $size * 0.035))
+
+    $path = New-RoundedRectanglePath $x $y $size $size ([Math]::Max(8, $size * 0.12))
+    $graphics.FillPath($fillBrush, $path)
+    $graphics.DrawPath($borderPen, $path)
+    $path.Dispose()
+
+    $format = New-Object System.Drawing.StringFormat
+    $format.Alignment = [System.Drawing.StringAlignment]::Center
+    $format.LineAlignment = [System.Drawing.StringAlignment]::Center
+    $rect = [System.Drawing.RectangleF]::new($x, $y - ($size * 0.07), $size, $size)
+    $graphics.DrawString($text, $font, $textBrush, $rect, $format)
+    $graphics.DrawLine($smallPen, $x + ($size * 0.22), $y + ($size * 0.70), $x + ($size * 0.78), $y + ($size * 0.70))
+    $graphics.DrawLine($smallPen, $x + ($size * 0.32), $y + ($size * 0.80), $x + ($size * 0.68), $y + ($size * 0.80))
+
+    $format.Dispose()
+    $font.Dispose()
+    $smallPen.Dispose()
+    $textBrush.Dispose()
+    $borderPen.Dispose()
+    $fillBrush.Dispose()
 }
 
 $outputDirectory = Split-Path -Parent $OutputPath
@@ -104,47 +78,44 @@ $bitmap = New-Object System.Drawing.Bitmap 1024, 500, ([System.Drawing.Imaging.P
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
 $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#4B68A5"))
+$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#276B63"))
 
-$navy = New-Brush "#2E477C"
-$white = New-Brush "#FFFFFF"
-$gold = New-Brush "#FFC531"
+$panel = New-Brush "#F1F7F4"
+$deep = New-Brush "#16443F"
+$amber = New-Brush "#F0B429"
 
-Add-RoundedRectangle $graphics $navy 610 62 314 314 42
-Add-RoundedRectangle $graphics $white 590 42 314 314 42
+Add-RoundedRectangle $graphics $deep 604 58 332 332 34
+Add-RoundedRectangle $graphics $panel 584 38 332 332 34
 
-$tileSize = 82
-$gap = 20
-$startX = 624
-$startY = 76
-Add-Tile $graphics $startX $startY $tileSize "right" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) $startY $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "left" "#47C3B8" "#2E477C"
-Add-Tile $graphics $startX ($startY + $tileSize + $gap) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + $tileSize + $gap) $tileSize "left" "#FFC531" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + $tileSize + $gap) $tileSize "down" "#F7F2E8" "#2E477C"
-Add-Tile $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize "right" "#F06C8E" "#2E477C"
-Add-Tile $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "up" "#F7F2E8" "#2E477C"
-Add-Tile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "left" "#FFC531" "#2E477C"
+$tileSize = 86
+$gap = 18
+$startX = 622
+$startY = 72
+Add-LabelTile $graphics $startX $startY $tileSize "#E9F6EE" "#8ACAA4" "JAR" "#276B43"
+Add-LabelTile $graphics ($startX + $tileSize + $gap) $startY $tileSize "#EAF1FF" "#9BB8F1" "NOTE" "#345AA6"
+Add-LabelTile $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "#FFE9E5" "#FFA59B" "TIN" "#B54138"
+Add-LabelTile $graphics $startX ($startY + $tileSize + $gap) $tileSize "#FFF5D8" "#F0C24D" "FLR" "#926C00"
+Add-LabelTile $graphics ($startX + $tileSize + $gap) ($startY + $tileSize + $gap) $tileSize "#E2F7F2" "#77CDBE" "TEA" "#176B62"
+Add-LabelTile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + $tileSize + $gap) $tileSize "#F2EEFF" "#C0AFE8" "SEED" "#6848A8"
+Add-LabelTile $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize "#FFEFD6" "#FFB55D" "HNY" "#B15E00"
+Add-LabelTile $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "#E9F3F7" "#93C9DD" "RIB" "#2B6D88"
+Add-LabelTile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "#F3F1E6" "#D4C981" "OAT" "#6C6642"
 
-Add-RoundedRectangle $graphics $gold 78 94 122 122 28
-Add-RoundedRectangle $graphics $white 104 120 70 70 16
-Add-Arrow $graphics 139 155 44 "right" "#4B68A5"
+Add-LabelTile $graphics 84 88 126 "#FFF5D8" "#F0C24D" "3x" "#16443F"
+Add-Text $graphics "Larder Labels" "Segoe UI" 74 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 226
+Add-Text $graphics "Match three. Clear the shelf." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#E3F2EA" 80 320
 
-Add-Text $graphics "Arrow Puzzle" "Segoe UI" 76 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 230
-Add-Text $graphics "Tap arrows. Clear the board." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#F7F2E8" 80 324
-
-$sparkPen = New-Pen "#FFC531" 8
-$graphics.DrawLine($sparkPen, 456, 106, 500, 106)
-$graphics.DrawLine($sparkPen, 478, 84, 478, 128)
+$sparkPen = New-Pen "#F0B429" 8
+$graphics.DrawLine($sparkPen, 456, 112, 500, 112)
+$graphics.DrawLine($sparkPen, 478, 90, 478, 134)
 $sparkPen.Dispose()
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 
-$navy.Dispose()
-$white.Dispose()
-$gold.Dispose()
+$panel.Dispose()
+$deep.Dispose()
+$amber.Dispose()
 $graphics.Dispose()
 $bitmap.Dispose()
 
-Write-Host "Generated Play feature graphic at $OutputPath"
+Write-Host "Generated Larder Labels Play feature graphic at $OutputPath"
