@@ -1,17 +1,19 @@
-# rapid_jump
+# Rooftop Curve
 
-A new Flutter project.
+An original Flutter football puzzle game about one-shot rooftop free kicks.
 
-## Getting Started
+## Current v1 Scope
 
-This project is a starting point for a Flutter application.
+- One offline challenge mode.
+- Five starter shot scenarios.
+- Drag-to-aim, power, and curve controls.
+- Goal, saved, missed, blocked, and too-weak results.
+- Retry, next challenge, attempts, and in-session stars.
+- No ads, no online play, no shop, no official teams, no real players, and no real leagues.
 
-A few resources to get you started if this is your first Flutter project:
+## Manual QA Focus
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Confirm every starter challenge is scoreable.
+- Confirm the help panel does not block drag input.
+- Confirm result messages match the actual outcome.
+- Confirm small phone screens keep the ball, goal, HUD, and buttons readable.

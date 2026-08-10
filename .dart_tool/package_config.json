@@ -44,10 +44,16 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "flame",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/flame-1.38.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///C:/flutter/packages/flutter",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.10"
     },
     {
       "name": "flutter_lints",
@@ -59,7 +65,7 @@
       "name": "flutter_test",
       "rootUri": "file:///C:/flutter/packages/flutter_test",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.10"
     },
     {
       "name": "leak_tracker",
@@ -99,9 +105,15 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.17.0",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "ordered_set",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/ordered_set-8.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
     },
     {
       "name": "path",
@@ -113,7 +125,7 @@
       "name": "sky_engine",
       "rootUri": "file:///C:/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.10"
     },
     {
       "name": "source_span",
@@ -147,7 +159,7 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.10",
+      "rootUri": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.11",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -171,8 +183,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.11.5",
+  "generatorVersion": "3.12.2",
   "flutterRoot": "file:///C:/flutter",
-  "flutterVersion": "3.41.7",
+  "flutterVersion": "3.44.8",
   "pubCache": "file:///C:/Users/shuvo/AppData/Local/Pub/Cache"
 }
