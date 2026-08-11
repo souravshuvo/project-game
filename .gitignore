@@ -1,0 +1,15 @@
+# Flutter/Dart generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# Local signing secrets
+android/key.properties
+*.jks
+*.keystore
+
+# Local editor/OS files
+.DS_Store
+Thumbs.db
