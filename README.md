@@ -1,17 +1,33 @@
-# rapid_jump
+# Rapid Jump
 
-A new Flutter project.
+Rapid Jump is an offline Flutter Sholo Guti / 16 Beads game.
 
-## Getting Started
+## Version 1 Scope
 
-This project is a starting point for a Flutter application.
+- Local two-player mode.
+- Player vs bot mode.
+- Validated 37-node board graph.
+- 16 beads per player.
+- Legal move and capture highlighting.
+- Optional multi-capture chains.
+- Rule-safe hints.
+- Full-turn undo.
+- In-memory settings and match history.
+- No ads, accounts, online play, shop, chat, or leaderboard.
 
-A few resources to get you started if this is your first Flutter project:
+## Manual QA
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+1. Open the app and start a local match.
+2. Confirm Player 1 starts from the bottom and Player 2 starts from the top.
+3. Select beads and confirm only legal moves/captures highlight.
+4. Make normal moves and captures.
+5. Continue or end an optional capture chain.
+6. Use undo before game over.
+7. Restart the match.
+8. Start a bot match and confirm the bot moves only after Player 1.
+9. Change settings and confirm theme/hint behavior changes.
+10. Complete a match and confirm it appears in match history.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Release Notes
+
+This repository intentionally keeps version 1 offline and dependency-light. Release signing, Play Console data safety, content rating, and real store assets must be completed outside the source code before production release.
