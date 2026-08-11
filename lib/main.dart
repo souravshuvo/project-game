@@ -1,49 +1,41 @@
 import 'package:flutter/material.dart';
 
-import 'features/arrow_puzzle/application/puzzle_controller.dart';
-import 'features/arrow_puzzle/application/game_telemetry.dart';
-import 'features/arrow_puzzle/data/local_level_pack.dart';
-import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'features/arrow_puzzle/domain/player_progress.dart';
-import 'features/arrow_puzzle/domain/board_position.dart';
-import 'features/arrow_puzzle/domain/puzzle_cell.dart';
-import 'features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'features/arrow_puzzle/presentation/pages/home_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_select_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_complete_page.dart';
-import 'features/arrow_puzzle/presentation/pages/puzzle_page.dart';
-import 'features/arrow_puzzle/presentation/pages/settings_page.dart';
-import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
+import 'features/match_puzzle/application/puzzle_controller.dart';
+import 'features/match_puzzle/data/local_level_pack.dart';
+import 'features/match_puzzle/data/local_progress_store.dart';
+import 'features/match_puzzle/domain/player_progress.dart';
+import 'features/match_puzzle/domain/puzzle_engine.dart';
+import 'features/match_puzzle/presentation/pages/puzzle_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final progressStore = SharedPreferencesPuzzleProgressStore();
+  final progressStore = SharedPreferencesMatchProgressStore();
   final initialProgress = await progressStore.load();
 
   runApp(
-    ArrowPuzzleApp(
+    SignalWorkshopApp(
       progressStore: progressStore,
       initialProgress: initialProgress,
     ),
   );
 }
 
-class ArrowPuzzleApp extends StatefulWidget {
-  const ArrowPuzzleApp({
+class SignalWorkshopApp extends StatefulWidget {
+  const SignalWorkshopApp({
     super.key,
     required this.progressStore,
     required this.initialProgress,
   });
 
-  final PuzzleProgressStore progressStore;
+  final MatchProgressStore progressStore;
   final PlayerProgress initialProgress;
 
   @override
-  State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
+  State<SignalWorkshopApp> createState() => _SignalWorkshopAppState();
 }
 
-class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
+class _SignalWorkshopAppState extends State<SignalWorkshopApp> {
   late final PuzzleController _controller;
 
   @override
@@ -54,7 +46,6 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
       levels: localLevelPack,
       progressStore: widget.progressStore,
       initialProgress: widget.initialProgress,
-      telemetry: const NoOpGameTelemetry(),
     );
   }
 
@@ -66,46 +57,18 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return MaterialApp(
-          title: 'Arrow Puzzle',
-          debugShowCheckedModeBanner: false,
-          theme: ArrowPuzzleTheme.light(),
-          home: _buildHome(),
-        );
-      },
+    return MaterialApp(
+      title: 'Signal Workshop',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3E6B5A)),
+        textTheme: Typography.material2021().black.apply(
+          bodyColor: const Color(0xFF1D2B2A),
+          displayColor: const Color(0xFF1D2B2A),
+        ),
+      ),
+      home: PuzzlePage(controller: _controller),
     );
   }
-
-  Widget _buildHome() {
-    return switch (_controller.screen) {
-      PuzzleScreen.home => HomePage(controller: _controller),
-      PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
-      PuzzleScreen.settings => SettingsPage(controller: _controller),
-      PuzzleScreen.playing => PuzzlePage(controller: _controller),
-      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
-    };
-  }
-}
-
-IconData arrowIcon(PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => Icons.arrow_upward_rounded,
-    PuzzleCell.down => Icons.arrow_downward_rounded,
-    PuzzleCell.left => Icons.arrow_back_rounded,
-    PuzzleCell.right => Icons.arrow_forward_rounded,
-    PuzzleCell.empty => Icons.circle_outlined,
-  };
-}
-
-Alignment exitAlignment(BoardPosition _, PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => const Alignment(0, -6),
-    PuzzleCell.down => const Alignment(0, 6),
-    PuzzleCell.left => const Alignment(-6, 0),
-    PuzzleCell.right => const Alignment(6, 0),
-    PuzzleCell.empty => Alignment.center,
-  };
 }

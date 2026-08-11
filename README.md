@@ -1,6 +1,27 @@
-# arrow_puzzle_tap_puzzle_games
+# Signal Workshop
 
-A new Flutter project.
+A small offline Flutter match puzzle game.
+
+## Version 1
+
+- 20 offline 6x6 levels
+- Five abstract tile types: Pulse, Coil, Lens, Node, Spark
+- Adjacent swap match-3 rules
+- Deterministic removal, gravity, refill, cascades, and reshuffle handling
+- Collection goals, move limits, win, lose, restart, next level, and level select
+- Local progress for unlocked and completed levels
+- No ads, boosters, blockers, shop, map progression, login, or cloud sync
+
+## Manual Test
+
+1. Refresh dependencies if your local Flutter metadata is stale: `flutter pub get`
+2. Run the app: `flutter run`
+3. Swap adjacent tiles that create a row or column of 3+ matching tiles.
+4. Confirm valid swaps spend one move and invalid swaps do not.
+5. Watch matched tiles clear, tiles fall, and new tiles refill.
+6. Use restart to reload the original level.
+7. Complete the Pulse and Coil goals to win, or run out of moves to lose.
+8. Continue through the next level and confirm progress unlocks are saved.
 
 ## Getting Started
 

@@ -1,64 +1,39 @@
-# Play Store Metadata Draft
+# Signal Workshop Store Metadata Draft
 
-Last updated: 2026-08-02
+## App Name
 
-## App Identity
-
-- App title: Arrow Puzzle
-- Package name: `com.childhood.arrowpuzzle`
-- Category: Game / Puzzle
-- Default language: English (United States)
-- Current version: `1.0.0+1`
-- Developer name: Childhood
-- Target audience draft: General puzzle-game audience. Do not mark as child-directed unless the full Families/children policy review is completed.
+Signal Workshop
 
 ## Short Description
 
-Tap arrows in the right order and clear every puzzle board.
+Swap signal tiles and complete compact offline puzzles.
 
-Character count: 60 / 80
+## Full Description Outline
 
-## Full Description
+Signal Workshop is a calm offline match puzzle about arranging abstract signal
+tiles.
 
-Arrow Puzzle is a calm, focused tap puzzle game where every arrow needs a clear path off the board.
+Swap adjacent tiles to match Pulse, Coil, Lens, Node, and Spark pieces. Complete
+each collection goal before your moves run out.
 
-Study the lanes, choose the arrows that can escape, and clear each board in the right order. Early levels teach the basics, while later boards add wider grids, chained dependencies, and trickier paths.
+Version 1 includes:
 
-Features:
+- 20 offline levels
+- Compact 6x6 boards
+- Clear collection goals
+- Deterministic puzzle logic
+- Local level progress
+- No ads, shop, login, cloud sync, or live events
 
-- Simple one-touch puzzle controls
-- 20 handcrafted prototype levels
-- Level unlock progression
-- Best-move tracking for replay goals
-- Daily level and daily hint loop
-- Sound and haptic settings
-- Clean, lightweight gameplay with no login required
+## Screenshot Plan
 
-Arrow Puzzle is designed for quick puzzle sessions, careful scanning, and satisfying board-clearing moments.
+Use real screenshots from the final build only:
 
-## Keywords To Use Carefully
+1. Level 1 start board.
+2. A selected tile before a swap.
+3. A mid-level board after goals have changed.
+4. A low-moves board.
+5. A level win state.
+6. A level select menu with only real unlocked/completed states.
 
-- arrow puzzle
-- tap puzzle
-- logic puzzle
-- board puzzle
-- casual puzzle
-
-Avoid keyword stuffing or repeating phrases unnaturally in the title or description.
-
-## Graphics Checklist
-
-- App icon: generated in Android and iOS launcher assets.
-- Feature graphic needed: 1024 x 500 PNG/JPEG, no alpha.
-- Phone screenshots needed: at least 2 required; 3+ portrait screenshots recommended for games.
-- Current screenshot capture script: `tool/capture_store_screenshots.ps1`
-- Screenshot source folder after capture: `store_assets/screenshots/phone/`
-
-## Review Notes Draft
-
-No login is required. All current content is available through normal gameplay progression. The game stores progress locally on-device and does not currently include ads, analytics, account creation, purchases, or external network features.
-
-## Official References
-
-- Google Play store listing best practices: https://support.google.com/googleplay/android-developer/answer/13393723
-- Google Play preview asset requirements: https://support.google.com/googleplay/android-developer/answer/9866151
+Do not show unavailable boosters, blockers, maps, rewards, shops, or events.
