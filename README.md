@@ -1,17 +1,19 @@
-# rapid_jump
+# Magnetic Marbles
 
-A new Flutter project.
+Original offline Flutter crowd-control arcade game.
 
-## Getting Started
+## Manual test
 
-This project is a starting point for a Flutter application.
+1. Start the Flutter app.
+2. Tap **Play**.
+3. Hold and drag on the playfield to launch marbles.
+4. Steer through math gates and grow the marble crowd.
+5. Let the crowd collide with enemy clusters.
+6. Confirm win, lose, retry, and next-level flow across the five v1 levels.
 
-A few resources to get you started if this is your first Flutter project:
+## Release notes
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Version 1 is offline only.
+- No ads, shop, login, leaderboard, cloud sync, or live events are included.
+- Release signing requires `android/key.properties` with an upload key before
+  building a Play artifact.
