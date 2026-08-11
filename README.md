@@ -1,17 +1,28 @@
-# arrow_puzzle_tap_puzzle_games
+# Trail Arena
 
-A new Flutter project.
+An original offline Flutter snake arena game.
 
-## Getting Started
+Version 1 focuses on the core loop: steer, collect food, grow, avoid your own
+trail and simple offline bots, then retry for a better local score.
 
-This project is a starting point for a Flutter application.
+## Current Scope
 
-A few resources to get you started if this is your first Flutter project:
+- Offline play only.
+- One arena.
+- One controllable glowing trail.
+- Two simple bots.
+- Food, growth, score, best score, pause, game over, and retry.
+- No ads, login, shop, skins, cloud sync, or online multiplayer.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Manual QA
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Fresh install opens to the main menu.
+- Play starts with a short ready countdown.
+- Drag inside the arena to steer.
+- Food increases score and trail length.
+- Boundary, self-trail, bot-trail, and bot-head collisions end the run.
+- Pause/resume works, including app backgrounding.
+- Retry starts a clean run.
+- Best score persists between app launches.
+
+Do not add monetization until gameplay has been tested and tuned.

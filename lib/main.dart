@@ -1,111 +1,36 @@
 import 'package:flutter/material.dart';
 
-import 'features/arrow_puzzle/application/puzzle_controller.dart';
-import 'features/arrow_puzzle/application/game_telemetry.dart';
-import 'features/arrow_puzzle/data/local_level_pack.dart';
-import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
-import 'features/arrow_puzzle/domain/player_progress.dart';
-import 'features/arrow_puzzle/domain/board_position.dart';
-import 'features/arrow_puzzle/domain/puzzle_cell.dart';
-import 'features/arrow_puzzle/domain/puzzle_engine.dart';
-import 'features/arrow_puzzle/presentation/pages/home_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_select_page.dart';
-import 'features/arrow_puzzle/presentation/pages/level_complete_page.dart';
-import 'features/arrow_puzzle/presentation/pages/puzzle_page.dart';
-import 'features/arrow_puzzle/presentation/pages/settings_page.dart';
-import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
+import 'features/trail_arena/presentation/screens/trail_arena_game_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final progressStore = SharedPreferencesPuzzleProgressStore();
-  final initialProgress = await progressStore.load();
-
-  runApp(
-    ArrowPuzzleApp(
-      progressStore: progressStore,
-      initialProgress: initialProgress,
-    ),
-  );
+void main() {
+  runApp(const TrailArenaApp());
 }
 
-class ArrowPuzzleApp extends StatefulWidget {
-  const ArrowPuzzleApp({
-    super.key,
-    required this.progressStore,
-    required this.initialProgress,
-  });
-
-  final PuzzleProgressStore progressStore;
-  final PlayerProgress initialProgress;
-
-  @override
-  State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
-}
-
-class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
-  late final PuzzleController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = PuzzleController(
-      engine: const PuzzleEngine(),
-      levels: localLevelPack,
-      progressStore: widget.progressStore,
-      initialProgress: widget.initialProgress,
-      telemetry: const NoOpGameTelemetry(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class TrailArenaApp extends StatelessWidget {
+  const TrailArenaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return MaterialApp(
-          title: 'Arrow Puzzle',
-          debugShowCheckedModeBanner: false,
-          theme: ArrowPuzzleTheme.light(),
-          home: _buildHome(),
-        );
-      },
+    return MaterialApp(
+      title: 'Trail Arena',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2DD08A),
+          brightness: Brightness.dark,
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF65F0B4),
+            foregroundColor: const Color(0xFF102116),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        useMaterial3: true,
+      ),
+      home: const TrailArenaGameScreen(),
     );
   }
-
-  Widget _buildHome() {
-    return switch (_controller.screen) {
-      PuzzleScreen.home => HomePage(controller: _controller),
-      PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
-      PuzzleScreen.settings => SettingsPage(controller: _controller),
-      PuzzleScreen.playing => PuzzlePage(controller: _controller),
-      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
-    };
-  }
-}
-
-IconData arrowIcon(PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => Icons.arrow_upward_rounded,
-    PuzzleCell.down => Icons.arrow_downward_rounded,
-    PuzzleCell.left => Icons.arrow_back_rounded,
-    PuzzleCell.right => Icons.arrow_forward_rounded,
-    PuzzleCell.empty => Icons.circle_outlined,
-  };
-}
-
-Alignment exitAlignment(BoardPosition _, PuzzleCell cell) {
-  return switch (cell) {
-    PuzzleCell.up => const Alignment(0, -6),
-    PuzzleCell.down => const Alignment(0, 6),
-    PuzzleCell.left => const Alignment(-6, 0),
-    PuzzleCell.right => const Alignment(6, 0),
-    PuzzleCell.empty => Alignment.center,
-  };
 }

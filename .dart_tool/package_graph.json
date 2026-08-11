@@ -1,10 +1,10 @@
 {
   "roots": [
-    "arrow_puzzle_tap_puzzle_games"
+    "trail_arena"
   ],
   "packages": [
     {
-      "name": "arrow_puzzle_tap_puzzle_games",
+      "name": "trail_arena",
       "version": "1.0.0+1",
       "dependencies": [
         "cupertino_icons",
