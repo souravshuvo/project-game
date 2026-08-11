@@ -65,16 +65,19 @@ class _SettingsSwitch extends StatelessWidget {
     return ArrowPuzzleCard(
       padding: EdgeInsets.zero,
       shadow: true,
-      child: SwitchListTile(
-        secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      child: Material(
+        color: Colors.transparent,
+        child: SwitchListTile(
+          secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          title: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          value: value,
+          onChanged: onChanged,
         ),
-        value: value,
-        onChanged: onChanged,
       ),
     );
   }

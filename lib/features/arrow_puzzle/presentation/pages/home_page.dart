@@ -1,71 +1,100 @@
 import 'package:flutter/material.dart';
 
+import '../../application/game_ads.dart';
 import '../../application/puzzle_controller.dart';
 import '../theme/arrow_puzzle_theme.dart';
+import '../widgets/arrow_puzzle_ad_banner.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, required this.controller});
+  HomePage({super.key, required this.controller, GameAds? ads})
+    : ads = ads ?? NoOpGameAds.instance;
 
   final PuzzleController controller;
+  final GameAds ads;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GameBackdrop(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    onPressed: controller.showSettings,
-                    icon: const Icon(Icons.settings_rounded),
-                    tooltip: 'Settings',
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxHeight < 720;
+
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: EdgeInsets.all(compact ? 16 : 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            onPressed: controller.showSettings,
+                            icon: const Icon(Icons.settings_rounded),
+                            tooltip: 'Settings',
+                          ),
+                        ),
+                        SizedBox(height: compact ? 12 : 36),
+                        Center(
+                          child: ArrowPuzzleBrandMark(size: compact ? 78 : 92),
+                        ),
+                        SizedBox(height: compact ? 16 : 22),
+                        Text(
+                          'Arrow Puzzle',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: ArrowPuzzleColors.primaryDark,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tap arrows with clear paths and slide them off the board.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: ArrowPuzzleColors.mutedInk,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: compact ? 24 : 40),
+                        FilledButton.icon(
+                          onPressed: controller.play,
+                          icon: const Icon(Icons.play_arrow_rounded),
+                          label: Text(
+                            'Continue Level ${controller.resumeLevelNumber}',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: controller.showLevelSelect,
+                          icon: const Icon(Icons.grid_view_rounded),
+                          label: const Text('Level Select'),
+                        ),
+                        const SizedBox(height: 16),
+                        _DailyCard(controller: controller),
+                        const SizedBox(height: 12),
+                        AnimatedBuilder(
+                          animation: ads,
+                          builder: (context, _) {
+                            return _HintCard(controller: controller, ads: ads);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        ArrowPuzzleAdBanner(ads: ads, placement: 'home_bottom'),
+                        SizedBox(height: compact ? 18 : 34),
+                        _ProgressCard(controller: controller),
+                      ],
+                    ),
                   ),
                 ),
-                const Spacer(),
-                const Center(child: ArrowPuzzleBrandMark(size: 92)),
-                const SizedBox(height: 22),
-                Text(
-                  'Arrow Puzzle',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: ArrowPuzzleColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Tap arrows with clear paths and slide them off the board.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: ArrowPuzzleColors.mutedInk,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                FilledButton.icon(
-                  onPressed: controller.play,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text('Continue Level ${controller.resumeLevelNumber}'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: controller.showLevelSelect,
-                  icon: const Icon(Icons.grid_view_rounded),
-                  label: const Text('Level Select'),
-                ),
-                const SizedBox(height: 16),
-                _DailyCard(controller: controller),
-                const SizedBox(height: 12),
-                _HintCard(controller: controller),
-                const Spacer(),
-                _ProgressCard(controller: controller),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -138,13 +167,15 @@ class _DailyCard extends StatelessWidget {
 }
 
 class _HintCard extends StatelessWidget {
-  const _HintCard({required this.controller});
+  const _HintCard({required this.controller, required this.ads});
 
   final PuzzleController controller;
+  final GameAds ads;
 
   @override
   Widget build(BuildContext context) {
     final canClaim = controller.canClaimDailyHint;
+    final canWatchRewardedAd = !canClaim && ads.rewardedHintReady;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ArrowPuzzleCard(
@@ -166,23 +197,48 @@ class _HintCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  canClaim ? 'Ready now' : 'Banked for later',
+                  canClaim
+                      ? 'Ready now'
+                      : canWatchRewardedAd
+                      ? 'Optional ad for one more'
+                      : 'Banked for later',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
           ),
           IconButton(
-            onPressed: canClaim ? controller.claimDailyHint : null,
+            onPressed: canClaim
+                ? controller.claimDailyHint
+                : canWatchRewardedAd
+                ? _watchRewardedHint
+                : null,
             icon: Icon(
-              canClaim ? Icons.add_circle_rounded : Icons.check_rounded,
+              canClaim
+                  ? Icons.add_circle_rounded
+                  : canWatchRewardedAd
+                  ? Icons.play_circle_rounded
+                  : Icons.check_rounded,
             ),
             color: colorScheme.primary,
-            tooltip: 'Claim hint',
+            tooltip: canWatchRewardedAd ? 'Watch ad for hint' : 'Claim hint',
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _watchRewardedHint() async {
+    bool earned;
+    try {
+      earned = await ads.showRewardedHint(placement: 'home_hint');
+    } on Object catch (error) {
+      debugPrint('Rewarded hint skipped after error: $error');
+      earned = false;
+    }
+    if (earned) {
+      controller.grantRewardedHint(placement: 'home_hint');
+    }
   }
 }
 

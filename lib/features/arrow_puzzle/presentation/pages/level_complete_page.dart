@@ -2,90 +2,174 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../application/game_ads.dart';
 import '../../application/puzzle_controller.dart';
 import '../theme/arrow_puzzle_theme.dart';
+import '../widgets/arrow_puzzle_ad_banner.dart';
 
-class LevelCompletePage extends StatelessWidget {
-  const LevelCompletePage({super.key, required this.controller});
+class LevelCompletePage extends StatefulWidget {
+  LevelCompletePage({super.key, required this.controller, GameAds? ads})
+    : ads = ads ?? NoOpGameAds.instance;
 
   final PuzzleController controller;
+  final GameAds ads;
+
+  @override
+  State<LevelCompletePage> createState() => _LevelCompletePageState();
+}
+
+class _LevelCompletePageState extends State<LevelCompletePage> {
+  var _continuing = false;
 
   @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final ads = widget.ads;
     final colorScheme = Theme.of(context).colorScheme;
+    final isFinalLevel = controller.isLastLevel;
+    final allLevelsClear = isFinalLevel && controller.hasCompletedAllLevels;
 
     return Scaffold(
       body: GameBackdrop(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
-                _ClearBadge(color: colorScheme.primary),
-                const SizedBox(height: 24),
-                Text(
-                  'Level ${controller.currentLevelNumber} Clear',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: ArrowPuzzleColors.primaryDark,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxHeight < 720;
+
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: EdgeInsets.all(compact ? 18 : 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: compact ? 8 : 20),
+                        _ClearBadge(
+                          color: allLevelsClear
+                              ? ArrowPuzzleColors.mint
+                              : colorScheme.primary,
+                          size: compact ? 108 : 132,
+                        ),
+                        SizedBox(height: compact ? 18 : 24),
+                        Text(
+                          allLevelsClear
+                              ? 'All Levels Clear'
+                              : 'Level ${controller.currentLevelNumber} Clear',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: ArrowPuzzleColors.primaryDark,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          allLevelsClear
+                              ? 'Every board in this pack is complete.'
+                              : 'Completed in ${controller.moveCount} moves',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: ArrowPuzzleColors.mutedInk,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        SizedBox(height: compact ? 16 : 20),
+                        _CompletionStats(controller: controller),
+                        const SizedBox(height: 12),
+                        AnimatedBuilder(
+                          animation: ads,
+                          builder: (context, _) {
+                            return _PostClearBoostCard(
+                              controller: controller,
+                              ads: ads,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        ArrowPuzzleAdBanner(
+                          ads: ads,
+                          placement: 'level_complete',
+                        ),
+                        SizedBox(height: compact ? 24 : 40),
+                        FilledButton.icon(
+                          onPressed: _continuing
+                              ? null
+                              : () => _continueAfterOptionalAd(
+                                  isFinalLevel: isFinalLevel,
+                                ),
+                          icon: Icon(
+                            isFinalLevel
+                                ? Icons.home_rounded
+                                : Icons.arrow_forward_rounded,
+                          ),
+                          label: Text(
+                            isFinalLevel ? 'Back Home' : 'Next Level',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: controller.retryLevel,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Replay Level'),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton.icon(
+                          onPressed: controller.showLevelSelect,
+                          icon: const Icon(Icons.grid_view_rounded),
+                          label: const Text('Level Select'),
+                        ),
+                        SizedBox(height: compact ? 8 : 20),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Completed in ${controller.moveCount} moves',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: ArrowPuzzleColors.mutedInk,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _CompletionStats(controller: controller),
-                const SizedBox(height: 12),
-                _PostClearBoostCard(controller: controller),
-                const SizedBox(height: 40),
-                FilledButton.icon(
-                  onPressed: controller.isLastLevel
-                      ? controller.backHome
-                      : controller.nextLevel,
-                  icon: Icon(
-                    controller.isLastLevel
-                        ? Icons.home_rounded
-                        : Icons.arrow_forward_rounded,
-                  ),
-                  label: Text(
-                    controller.isLastLevel ? 'Back Home' : 'Next Level',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: controller.retryLevel,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Replay Level'),
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: controller.showLevelSelect,
-                  icon: const Icon(Icons.grid_view_rounded),
-                  label: const Text('Level Select'),
-                ),
-                const Spacer(),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
+
+  Future<void> _continueAfterOptionalAd({required bool isFinalLevel}) async {
+    if (_continuing) {
+      return;
+    }
+
+    setState(() => _continuing = true);
+    try {
+      await widget.ads.maybeShowInterstitial(
+        placement: isFinalLevel ? 'level_complete_home' : 'level_complete_next',
+        levelNumber: widget.controller.currentLevelNumber,
+      );
+    } on Object catch (error) {
+      debugPrint('Interstitial skipped after error: $error');
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (isFinalLevel) {
+      widget.controller.backHome();
+    } else {
+      widget.controller.nextLevel();
+    }
+
+    if (mounted) {
+      setState(() => _continuing = false);
+    }
+  }
 }
 
 class _ClearBadge extends StatelessWidget {
-  const _ClearBadge({required this.color});
+  const _ClearBadge({required this.color, required this.size});
 
   final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -100,11 +184,15 @@ class _ClearBadge extends StatelessWidget {
         );
       },
       child: SizedBox.square(
-        dimension: 132,
+        dimension: size,
         child: CustomPaint(
           painter: _CelebrationBurstPainter(),
           child: Center(
-            child: Icon(Icons.check_circle_rounded, size: 96, color: color),
+            child: Icon(
+              Icons.check_circle_rounded,
+              size: size * 0.72,
+              color: color,
+            ),
           ),
         ),
       ),
@@ -187,13 +275,15 @@ class _CompletionStats extends StatelessWidget {
 }
 
 class _PostClearBoostCard extends StatelessWidget {
-  const _PostClearBoostCard({required this.controller});
+  const _PostClearBoostCard({required this.controller, required this.ads});
 
   final PuzzleController controller;
+  final GameAds ads;
 
   @override
   Widget build(BuildContext context) {
     final canClaim = controller.canClaimDailyHint;
+    final canWatchRewardedAd = !canClaim && ads.rewardedHintReady;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ArrowPuzzleCard(
@@ -208,6 +298,8 @@ class _PostClearBoostCard extends StatelessWidget {
             child: Text(
               canClaim
                   ? 'Claim daily hint'
+                  : canWatchRewardedAd
+                  ? 'Watch ad for one hint'
                   : '${controller.hintCount} hints ready',
               style: Theme.of(
                 context,
@@ -215,12 +307,35 @@ class _PostClearBoostCard extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: canClaim ? controller.claimDailyHint : null,
-            child: Text(canClaim ? 'Claim' : 'Done'),
+            onPressed: canClaim
+                ? controller.claimDailyHint
+                : canWatchRewardedAd
+                ? _watchRewardedHint
+                : null,
+            child: Text(
+              canClaim
+                  ? 'Claim'
+                  : canWatchRewardedAd
+                  ? 'Watch'
+                  : 'Done',
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _watchRewardedHint() async {
+    bool earned;
+    try {
+      earned = await ads.showRewardedHint(placement: 'complete_hint');
+    } on Object catch (error) {
+      debugPrint('Rewarded hint skipped after error: $error');
+      earned = false;
+    }
+    if (earned) {
+      controller.grantRewardedHint(placement: 'complete_hint');
+    }
   }
 }
 

@@ -1,42 +1,61 @@
 # Monetization Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-11
 
 ## Current Decision
 
-Do not add monetization SDKs in the current build.
+AdMob is implemented for a production-safe v1 monetization test.
 
-Reason: the first testing goal is to validate whether the puzzle loop is fun, readable, and replayable. Monetization should not distort early tester feedback.
+The app defaults to Google test ads. Do not switch to production ad units until AdMob app IDs, privacy policy, Play Console Data safety, and manual ad QA are complete.
 
-## Options
+## Implemented Placements
 
-| Option | Pros | Risks | Phase 6 Decision |
-| --- | --- | --- | --- |
-| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Recommended for first internal test |
-| Rewarded ads for extra hints | Natural fit with current hint system | Needs AdMob, consent/policy review, pacing design | Consider after first tester feedback |
-| Interstitial ads between levels | Easy revenue path | Can hurt retention and reviews in puzzle games | Defer |
-| Paid app | Simple product experience | Higher friction for unknown new game | Defer |
-| In-app purchase hint packs | Cleaner than forced ads | Needs billing setup, product economy, refund support | Defer |
+- Banner: home screen bottom, placement `home_bottom`.
+- Banner: level-complete screen, placement `level_complete`.
+- Interstitial: only after tapping Continue on the level-complete screen, never during active puzzle play.
+- Rewarded: optional one-hint reward from home and level-complete screens. The hint is granted only from the rewarded-ad completion callback, not from ad click or ad start.
 
-## Recommended First Monetization Test
+## Frequency Caps
 
-If testers like the core loop, test rewarded hints first:
+Interstitial ads are capped in `MobileGameAds`:
 
-- Keep one free daily hint.
-- Offer one optional rewarded hint when hint balance is zero.
-- Never show ads after every tap or during active puzzle solving.
-- Cap ad prompts so the game still feels calm.
+- Minimum level interval: every 4th cleared level only.
+- Per-session cap: 5 interstitials.
+- Cooldown: 2 minutes between interstitials.
+- Per-level guard: at most one interstitial for the same level number.
+- Failure behavior: load/show failure is logged and gameplay proceeds.
 
-## AdMob Gate
+## Test And Production Separation
 
-Only add AdMob after:
+Default runtime:
 
-- Monetization choice is final for the next update.
-- AdMob account and app IDs exist.
-- Android and iOS app IDs are added to platform config.
-- Test ads are verified before any live ad unit is used.
-- Privacy policy, Data safety, and Ads declaration are updated.
-- Child-directed status is confirmed before serving ads.
+- `ARROW_PUZZLE_ADS_ENV=test`
+- Android AdMob app ID default: `ca-app-pub-3940256099942544~3347511713`
+- iOS AdMob app ID default: `ca-app-pub-3940256099942544~1458002511`
+- Google demo banner, interstitial, and rewarded unit IDs are used in test mode.
+
+Production runtime requires:
+
+- `--dart-define=ARROW_PUZZLE_ADS_ENV=production`
+- `--dart-define=ADMOB_ANDROID_BANNER_UNIT_ID=...`
+- `--dart-define=ADMOB_ANDROID_INTERSTITIAL_UNIT_ID=...`
+- `--dart-define=ADMOB_ANDROID_REWARDED_UNIT_ID=...`
+- iOS equivalents when iOS is in scope.
+- Android Gradle property `ADMOB_ANDROID_APP_ID=...` for the real AdMob app ID.
+- iOS `ADMOB_IOS_APP_ID=...` in xcconfig or CI build settings.
+
+Use `--dart-define=ARROW_PUZZLE_ADS_ENABLED=false` to disable ads completely for QA builds.
+
+## Production Gate
+
+Before live ads:
+
+- Verify Google demo ads show in an internal test build.
+- Confirm no ads appear on the active puzzle screen.
+- Confirm interstitials appear only from the level-complete Continue action.
+- Confirm ad failure/offline mode still allows Continue, Replay, Level Select, and Home.
+- Update hosted privacy policy, Play Console Data safety, and Ads declaration.
+- Confirm target audience/child-directed settings before serving ads.
 
 ## Official References
 

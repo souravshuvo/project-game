@@ -78,6 +78,10 @@ void main() {
     }
   });
 
+  test('production level pack reaches the v1 content target', () {
+    expect(localLevelPack.length, 60);
+  });
+
   test('sample levels use unique ids', () {
     final ids = localLevelPack.map((level) => level.id).toSet();
 
@@ -88,6 +92,49 @@ void main() {
     final ids = localLevelPack.map((level) => level.id).toList();
 
     expect(ids, List.generate(localLevelPack.length, (index) => index + 1));
+  });
+
+  test('sample levels use unique board layouts', () {
+    final layouts = localLevelPack.map((level) => level.rows.join('/')).toSet();
+
+    expect(layouts.length, localLevelPack.length);
+  });
+
+  test('sample levels stay within mobile-friendly board bounds', () {
+    for (final level in localLevelPack) {
+      final board = engine.parse(level);
+
+      expect(
+        board.rowCount,
+        inInclusiveRange(4, 9),
+        reason: 'Level ${level.id} ${level.name} has unsupported row count.',
+      );
+      expect(
+        board.colCount,
+        inInclusiveRange(4, 9),
+        reason: 'Level ${level.id} ${level.name} has unsupported column count.',
+      );
+      expect(
+        level.name.trim(),
+        isNotEmpty,
+        reason: 'Level ${level.id} needs a display name.',
+      );
+      expect(
+        level.lesson.trim(),
+        isNotEmpty,
+        reason: 'Level ${level.id} needs a lesson.',
+      );
+    }
+  });
+
+  test('late-game production levels are meaningfully denser', () {
+    for (final level in localLevelPack.skip(50)) {
+      expect(
+        _arrowCount(level),
+        greaterThanOrEqualTo(12),
+        reason: 'Level ${level.id} ${level.name} should feel late-game.',
+      );
+    }
   });
 
   test('all levels contain at least one valid first move', () {
@@ -112,4 +159,8 @@ void main() {
 
     expect(engine.parse(level).toRows(), ['R.']);
   });
+}
+
+int _arrowCount(PuzzleLevel level) {
+  return level.rows.join().split('').where((symbol) => symbol != '.').length;
 }

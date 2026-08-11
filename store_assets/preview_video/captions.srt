@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:02,500
+Clear every arrow
+
+2
+00:00:02,500 --> 00:00:06,000
+Tap clear paths
+
+3
+00:00:06,000 --> 00:00:10,500
+Plan the order
+
+4
+00:00:10,500 --> 00:00:14,000
+Hints when needed
+
+5
+00:00:14,000 --> 00:00:17,500
+60 handcrafted levels
+
+6
+00:00:17,500 --> 00:00:21,500
+Replay for better moves
+
+7
+00:00:21,500 --> 00:00:24,000
+Arrow Puzzle

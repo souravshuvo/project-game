@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../main.dart';
@@ -18,11 +20,15 @@ class PuzzlePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: controller.backHome,
-          icon: const Icon(Icons.home_rounded),
-          tooltip: 'Home',
+          onPressed: () => _showPauseMenu(context),
+          icon: const Icon(Icons.pause_rounded),
+          tooltip: 'Pause',
         ),
-        title: Text('Level ${controller.currentLevelNumber}: ${level.name}'),
+        title: Text(
+          'Level ${controller.currentLevelNumber}: ${level.name}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             onPressed: controller.canUseHint ? controller.useHint : null,
@@ -36,6 +42,11 @@ class PuzzlePage extends StatelessWidget {
             onPressed: controller.retryLevel,
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Retry',
+          ),
+          IconButton(
+            onPressed: () => _showPauseMenu(context),
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
           ),
         ],
       ),
@@ -84,6 +95,177 @@ class PuzzlePage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showPauseMenu(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) {
+        return _PauseMenu(controller: controller);
+      },
+    );
+  }
+}
+
+class _PauseMenu extends StatelessWidget {
+  const _PauseMenu({required this.controller});
+
+  final PuzzleController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    void closeAndRun(VoidCallback action) {
+      Navigator.of(context).pop();
+      action();
+    }
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Paused',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: ArrowPuzzleColors.primaryDark,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Level ${controller.currentLevelNumber} - ${controller.currentLevel.name}',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ArrowPuzzleColors.mutedInk,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('Continue'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _PauseAction(
+                      icon: Icons.refresh_rounded,
+                      label: 'Restart',
+                      onTap: () => closeAndRun(controller.retryLevel),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _PauseAction(
+                      icon: Icons.grid_view_rounded,
+                      label: 'Levels',
+                      onTap: () => closeAndRun(controller.showLevelSelect),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _PauseAction(
+                      icon: Icons.home_rounded,
+                      label: 'Home',
+                      onTap: () => closeAndRun(controller.backHome),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              ArrowPuzzleCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _PauseToggle(
+                      icon: Icons.volume_up_rounded,
+                      title: 'Sound',
+                      value: controller.soundEnabled,
+                      onChanged: controller.toggleSound,
+                    ),
+                    const Divider(height: 1),
+                    _PauseToggle(
+                      icon: Icons.vibration_rounded,
+                      title: 'Haptics',
+                      value: controller.hapticsEnabled,
+                      onChanged: controller.toggleHaptics,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PauseAction extends StatelessWidget {
+  const _PauseAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: FittedBox(child: Text(label)),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+}
+
+class _PauseToggle extends StatelessWidget {
+  const _PauseToggle({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: SwitchListTile(
+        secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        value: value,
+        onChanged: onChanged,
       ),
     );
   }
@@ -165,58 +347,74 @@ class PuzzleBoardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final board = controller.board;
-    final side = MediaQuery.sizeOf(context).shortestSide - 36;
-    final boardSide = side.clamp(260.0, 520.0);
 
     return AnimatedScale(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       scale: controller.hintedPosition == null ? 1 : 1.01,
-      child: SizedBox.square(
-        dimension: boardSide,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: ArrowPuzzleColors.line),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: board.colCount,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-              ),
-              itemCount: board.rowCount * board.colCount,
-              itemBuilder: (context, index) {
-                final row = index ~/ board.colCount;
-                final col = index % board.colCount;
-                final position = BoardPosition(row, col);
-                final cell = board.cellAt(position);
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth = constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width - 36;
+          final availableHeight = constraints.hasBoundedHeight
+              ? constraints.maxHeight
+              : MediaQuery.sizeOf(context).height - 220;
+          final maxSide = math.min(availableWidth, availableHeight);
+          final boardSide = maxSide.clamp(180.0, 520.0).toDouble();
+          final denseBoard = math.max(board.rowCount, board.colCount) >= 7;
+          final gridGap = denseBoard ? 5.0 : 8.0;
+          final boardPadding = denseBoard ? 8.0 : 12.0;
 
-                return ArrowTile(
-                  cell: cell,
-                  position: position,
-                  isInvalid: controller.lastInvalidTap == position,
-                  isHinted: controller.hintedPosition == position,
-                  removedCell: controller.lastRemovedPosition == position
-                      ? controller.lastRemovedCell
-                      : null,
-                  onTap: cell.isArrow ? () => controller.tap(position) : null,
-                );
-              },
+          return SizedBox.square(
+            dimension: boardSide,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: ArrowPuzzleColors.line),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(boardPadding),
+                child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: board.colCount,
+                    mainAxisSpacing: gridGap,
+                    crossAxisSpacing: gridGap,
+                  ),
+                  itemCount: board.rowCount * board.colCount,
+                  itemBuilder: (context, index) {
+                    final row = index ~/ board.colCount;
+                    final col = index % board.colCount;
+                    final position = BoardPosition(row, col);
+                    final cell = board.cellAt(position);
+
+                    return ArrowTile(
+                      cell: cell,
+                      position: position,
+                      isInvalid: controller.lastInvalidTap == position,
+                      isHinted: controller.hintedPosition == position,
+                      removedCell: controller.lastRemovedPosition == position
+                          ? controller.lastRemovedCell
+                          : null,
+                      onTap: cell.isArrow
+                          ? () => controller.tap(position)
+                          : null,
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -284,36 +482,41 @@ class _ArrowTileState extends State<ArrowTile> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final removedCell = widget.removedCell;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_shakeController, _slideController]),
-        builder: (context, child) {
-          final shake = widget.isInvalid
-              ? _shakeOffset(_shakeController.value)
-              : Offset.zero;
+    return Semantics(
+      button: widget.cell.isArrow,
+      label: widget.cell.isArrow ? '${widget.cell.name} arrow' : 'Empty space',
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_shakeController, _slideController]),
+          builder: (context, child) {
+            final shake = widget.isInvalid
+                ? _shakeOffset(_shakeController.value)
+                : Offset.zero;
 
-          if (removedCell != null) {
-            final end = exitAlignment(widget.position, removedCell);
-            final progress = Curves.easeOutCubic.transform(
-              _slideController.value,
-            );
-            return Transform.translate(
-              offset:
-                  shake + Offset(end.x * 48 * progress, end.y * 48 * progress),
-              child: Transform.scale(
-                scale: 1 + 0.08 * (1 - progress),
-                child: Opacity(
-                  opacity: 1 - progress,
-                  child: _TileFace(cell: removedCell),
+            if (removedCell != null) {
+              final end = exitAlignment(widget.position, removedCell);
+              final progress = Curves.easeOutCubic.transform(
+                _slideController.value,
+              );
+              return Transform.translate(
+                offset:
+                    shake +
+                    Offset(end.x * 48 * progress, end.y * 48 * progress),
+                child: Transform.scale(
+                  scale: 1 + 0.08 * (1 - progress),
+                  child: Opacity(
+                    opacity: 1 - progress,
+                    child: _TileFace(cell: removedCell),
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          return Transform.translate(offset: shake, child: child);
-        },
-        child: _TileFace(cell: widget.cell, isHinted: widget.isHinted),
+            return Transform.translate(offset: shake, child: child);
+          },
+          child: _TileFace(cell: widget.cell, isHinted: widget.isHinted),
+        ),
       ),
     );
   }
@@ -334,31 +537,43 @@ class _TileFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _colorsFor(cell);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: isHinted ? const Color(0xFFFFF9C7) : colors.background,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isHinted ? const Color(0xFFFFC531) : colors.border,
-          width: isHinted ? 3 : 2,
-        ),
-        boxShadow: isHinted
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFFFC531).withValues(alpha: 0.35),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
-      ),
-      child: Center(
-        child: cell.isArrow
-            ? Icon(arrowIcon(cell), color: colors.foreground, size: 32)
-            : const SizedBox.shrink(),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileSide = math.min(constraints.maxWidth, constraints.maxHeight);
+        final radius = (tileSide * 0.18).clamp(8.0, 18.0).toDouble();
+        final iconSize = (tileSide * 0.48).clamp(20.0, 34.0).toDouble();
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: isHinted ? const Color(0xFFFFF9C7) : colors.background,
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: isHinted ? const Color(0xFFFFC531) : colors.border,
+              width: isHinted ? 3 : 2,
+            ),
+            boxShadow: isHinted
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFFC531).withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: cell.isArrow
+                ? Icon(
+                    arrowIcon(cell),
+                    color: colors.foreground,
+                    size: iconSize,
+                  )
+                : const SizedBox.shrink(),
+          ),
+        );
+      },
     );
   }
 

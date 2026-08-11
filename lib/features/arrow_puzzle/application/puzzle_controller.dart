@@ -32,6 +32,8 @@ class PuzzleController extends ChangeNotifier {
       GameTelemetryEvents.appOpen(
         totalLevels: levels.length,
         unlockedLevelCount: unlockedLevelCount,
+        completedLevelCount: completedLevelCount,
+        streakDays: streakDays,
       ),
     );
     _trackScreenView();
@@ -52,7 +54,11 @@ class PuzzleController extends ChangeNotifier {
   BoardPosition? _lastRemovedPosition;
   BoardPosition? _hintedPosition;
   PuzzleCell? _lastRemovedCell;
+  late DateTime _levelStartedAt;
+  var _currentLevelArrowCount = 0;
   var _moveCount = 0;
+  var _invalidTapCount = 0;
+  var _hintUseCount = 0;
 
   PuzzleScreen get screen => _screen;
 
@@ -69,6 +75,8 @@ class PuzzleController extends ChangeNotifier {
   int get moveCount => _moveCount;
 
   int get completedLevelCount => _progress.completedLevelIds.length;
+
+  bool get hasCompletedAllLevels => completedLevelCount >= totalLevels;
 
   int get unlockedLevelCount => _progress.unlockedLevelIndex + 1;
 
@@ -204,6 +212,7 @@ class PuzzleController extends ChangeNotifier {
 
     _hintedPosition = validMoves.first;
     _progress = _progress.copyWith(hintCount: _progress.hintCount - 1);
+    _hintUseCount++;
     _playValidFeedback();
     telemetry.track(
       GameTelemetryEvents.hintUse(
@@ -216,12 +225,29 @@ class PuzzleController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void grantRewardedHint({required String placement}) {
+    _progress = _progress.copyWith(hintCount: min(_progress.hintCount + 1, 99));
+    _playValidFeedback();
+    telemetry.track(
+      GameTelemetryEvents.rewardedHintGrant(
+        levelNumber: currentLevelNumber,
+        hintBalance: _progress.hintCount,
+        placement: placement,
+      ),
+    );
+    _saveProgress();
+    notifyListeners();
+  }
+
   void retryLevel() {
     telemetry.track(
       GameTelemetryEvents.levelRetry(
         levelId: currentLevel.id,
         levelNumber: currentLevelNumber,
         moveCount: _moveCount,
+        invalidTapCount: _invalidTapCount,
+        hintUseCount: _hintUseCount,
+        durationSeconds: _levelDurationSeconds,
       ),
     );
     _loadCurrentLevel();
@@ -252,7 +278,17 @@ class PuzzleController extends ChangeNotifier {
 
     if (!engine.canRemove(_board, position)) {
       _lastInvalidTap = position;
+      _invalidTapCount++;
       _playInvalidFeedback();
+      telemetry.track(
+        GameTelemetryEvents.levelInvalidTap(
+          levelId: currentLevel.id,
+          levelNumber: currentLevelNumber,
+          moveCount: _moveCount,
+          invalidTapCount: _invalidTapCount,
+          validMoveCount: validMoves.length,
+        ),
+      );
       notifyListeners();
       return;
     }
@@ -275,11 +311,15 @@ class PuzzleController extends ChangeNotifier {
 
   void _loadCurrentLevel() {
     _board = engine.parse(currentLevel);
+    _currentLevelArrowCount = _arrowCount(_board);
     _lastInvalidTap = null;
     _lastRemovedPosition = null;
     _hintedPosition = null;
     _lastRemovedCell = null;
+    _levelStartedAt = _now();
     _moveCount = 0;
+    _invalidTapCount = 0;
+    _hintUseCount = 0;
   }
 
   void _recordCompletion() {
@@ -310,10 +350,27 @@ class PuzzleController extends ChangeNotifier {
         levelId: levelId,
         levelNumber: currentLevelNumber,
         moveCount: _moveCount,
+        invalidTapCount: _invalidTapCount,
+        hintUseCount: _hintUseCount,
+        durationSeconds: _levelDurationSeconds,
         isDailyLevel: _currentLevelIndex == dailyChallengeLevelIndex,
         unlockedLevelCount: unlockedLevelCount,
+        boardRows: currentLevel.rows.length,
+        boardCols: currentLevel.rows.first.length,
+        arrowCount: _currentLevelArrowCount,
       ),
     );
+  }
+
+  int get _levelDurationSeconds {
+    return max(0, _now().difference(_levelStartedAt).inSeconds);
+  }
+
+  int _arrowCount(PuzzleBoard board) {
+    return board.cells
+        .expand((row) => row)
+        .where((cell) => cell.isArrow)
+        .length;
   }
 
   int _updatedStreak(String today) {
@@ -389,6 +446,10 @@ class PuzzleController extends ChangeNotifier {
         levelId: currentLevel.id,
         levelNumber: currentLevelNumber,
         source: source,
+        boardRows: currentLevel.rows.length,
+        boardCols: currentLevel.rows.first.length,
+        arrowCount: _currentLevelArrowCount,
+        validMoveCount: validMoves.length,
       ),
     );
   }

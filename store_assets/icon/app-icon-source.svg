@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Arrow Puzzle app icon source">
+  <rect width="512" height="512" fill="#4B68A5"/>
+  <path d="M132 160h248c28 0 50 22 50 50v146c0 28-22 50-50 50H132c-28 0-50-22-50-50V210c0-28 22-50 50-50z" fill="#263B6D" opacity=".34"/>
+  <path d="M116 134h248c28 0 50 22 50 50v146c0 28-22 50-50 50H116c-28 0-50-22-50-50V184c0-28 22-50 50-50z" fill="#FFFFFF"/>
+  <path d="M146 168h142c28 0 50 22 50 50v78c0 28-22 50-50 50H146c-28 0-50-22-50-50v-78c0-28 22-50 50-50z" fill="#FFC531"/>
+  <path d="M183 221h76" fill="none" stroke="#2E477C" stroke-width="24" stroke-linecap="round"/>
+  <path d="M241 195l39 38-39 38" fill="none" stroke="#2E477C" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M316 196h34c11 0 20 9 20 20v34" fill="none" stroke="#DCE4F4" stroke-width="14" stroke-linecap="round"/>
+  <path d="M158 304h34c11 0 20 9 20 20v16" fill="none" stroke="#DCE4F4" stroke-width="14" stroke-linecap="round"/>
+  <path d="M327 302h31" fill="none" stroke="#2E477C" stroke-width="16" stroke-linecap="round"/>
+  <path d="M352 278l27 31-27 31" fill="none" stroke="#2E477C" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

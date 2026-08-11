@@ -1,0 +1,8 @@
+time_start,time_end,shot,source_screen,real_action,on_screen_text,notes
+0.0,2.5,Gameplay hook,PuzzlePage early level,Tap a valid clear-path arrow and show slide-off animation,Clear every arrow,Start with real gameplay instead of a logo.
+2.5,6.0,Rule clarity,PuzzlePage early level,Tap two or three valid arrows with open lanes,Tap clear paths,Use only real legal moves from shipped levels.
+6.0,10.5,Planning moment,PuzzlePage denser level,Pause briefly over a denser board and tap the correct next move,Plan the order,Use real mid or late level data.
+10.5,14.0,Hint support,PuzzlePage hint state,Use real hint button and show highlighted arrow,Hints when needed,No fake highlight overlays.
+14.0,17.5,Progression,LevelSelectPage,Show actual 60-level progression grid,60 handcrafted levels,Use real unlocked/progress state from app.
+17.5,21.5,Completion,LevelCompletePage,Show clear screen with moves stats Replay and Next Level,Replay for better moves,No interstitial or rewarded ad surface.
+21.5,24.0,Brand outro,Feature graphic or icon,Hold clean brand frame,Arrow Puzzle,No install CTA.

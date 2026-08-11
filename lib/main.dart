@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'features/arrow_puzzle/application/puzzle_controller.dart';
+import 'features/arrow_puzzle/application/app_runtime_services.dart';
+import 'features/arrow_puzzle/application/game_ads.dart';
 import 'features/arrow_puzzle/application/game_telemetry.dart';
+import 'features/arrow_puzzle/application/puzzle_controller.dart';
 import 'features/arrow_puzzle/data/local_level_pack.dart';
 import 'features/arrow_puzzle/data/puzzle_progress_store.dart';
 import 'features/arrow_puzzle/domain/player_progress.dart';
@@ -18,6 +20,7 @@ import 'features/arrow_puzzle/presentation/theme/arrow_puzzle_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final runtimeServices = await AppRuntimeServices.initialize();
   final progressStore = SharedPreferencesPuzzleProgressStore();
   final initialProgress = await progressStore.load();
 
@@ -25,6 +28,8 @@ Future<void> main() async {
     ArrowPuzzleApp(
       progressStore: progressStore,
       initialProgress: initialProgress,
+      telemetry: runtimeServices.telemetry,
+      ads: runtimeServices.ads,
     ),
   );
 }
@@ -34,10 +39,14 @@ class ArrowPuzzleApp extends StatefulWidget {
     super.key,
     required this.progressStore,
     required this.initialProgress,
+    required this.telemetry,
+    required this.ads,
   });
 
   final PuzzleProgressStore progressStore;
   final PlayerProgress initialProgress;
+  final GameTelemetry telemetry;
+  final GameAds ads;
 
   @override
   State<ArrowPuzzleApp> createState() => _ArrowPuzzleAppState();
@@ -54,13 +63,16 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
       levels: localLevelPack,
       progressStore: widget.progressStore,
       initialProgress: widget.initialProgress,
-      telemetry: const NoOpGameTelemetry(),
+      telemetry: widget.telemetry,
     );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    if (!identical(widget.ads, NoOpGameAds.instance)) {
+      widget.ads.dispose();
+    }
     super.dispose();
   }
 
@@ -81,11 +93,14 @@ class _ArrowPuzzleAppState extends State<ArrowPuzzleApp> {
 
   Widget _buildHome() {
     return switch (_controller.screen) {
-      PuzzleScreen.home => HomePage(controller: _controller),
+      PuzzleScreen.home => HomePage(controller: _controller, ads: widget.ads),
       PuzzleScreen.levelSelect => LevelSelectPage(controller: _controller),
       PuzzleScreen.settings => SettingsPage(controller: _controller),
       PuzzleScreen.playing => PuzzlePage(controller: _controller),
-      PuzzleScreen.complete => LevelCompletePage(controller: _controller),
+      PuzzleScreen.complete => LevelCompletePage(
+        controller: _controller,
+        ads: widget.ads,
+      ),
     };
   }
 }

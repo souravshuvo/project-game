@@ -32,6 +32,27 @@ void main() {
     expect(store.saved?.completedLevelIds, {1});
   });
 
+  test('final level completion marks the level pack complete', () {
+    final store = _MemoryProgressStore();
+    final controller = PuzzleController(
+      engine: const PuzzleEngine(),
+      levels: const [
+        PuzzleLevel(id: 1, name: 'One', rows: ['R'], lesson: 'Go right.'),
+      ],
+      progressStore: store,
+      initialProgress: PlayerProgress.initial(),
+      enableFeedback: false,
+      now: () => DateTime(2026, 8, 2),
+    );
+
+    controller.play();
+    controller.tap(const BoardPosition(0, 0));
+
+    expect(controller.screen, PuzzleScreen.complete);
+    expect(controller.hasCompletedAllLevels, isTrue);
+    expect(controller.unlockedLevelCount, 1);
+  });
+
   test('settings toggles persist through controller', () {
     final store = _MemoryProgressStore();
     final controller = _buildController(store);
@@ -88,6 +109,54 @@ void main() {
     expect(completeEvent.parameters['level_number'], 1);
     expect(completeEvent.parameters['move_count'], 1);
     expect(completeEvent.parameters['is_daily_level'], isA<bool>());
+  });
+
+  test('rewarded hint grant records placement and updates saved balance', () {
+    final store = _MemoryProgressStore();
+    final telemetry = _RecordingGameTelemetry();
+    final controller = _buildController(
+      store,
+      initialProgress: PlayerProgress.initial().copyWith(hintCount: 0),
+      telemetry: telemetry,
+    );
+
+    controller.grantRewardedHint(placement: 'home_hint');
+
+    expect(controller.hintCount, 1);
+    expect(store.saved?.hintCount, 1);
+
+    final event = telemetry.events.firstWhere(
+      (event) => event.name == 'rewarded_hint_grant',
+    );
+    expect(event.parameters['placement'], 'home_hint');
+    expect(event.parameters['hint_balance'], 1);
+  });
+
+  test('invalid taps are counted for level difficulty telemetry', () {
+    final store = _MemoryProgressStore();
+    final telemetry = _RecordingGameTelemetry();
+    final controller = PuzzleController(
+      engine: const PuzzleEngine(),
+      levels: const [
+        PuzzleLevel(id: 1, name: 'Blocked', rows: ['RR'], lesson: 'Blocked.'),
+      ],
+      progressStore: store,
+      initialProgress: PlayerProgress.initial(),
+      enableFeedback: false,
+      telemetry: telemetry,
+      now: () => DateTime(2026, 8, 2),
+    );
+
+    controller.play();
+    controller.tap(const BoardPosition(0, 0));
+
+    expect(controller.lastInvalidTap, const BoardPosition(0, 0));
+
+    final event = telemetry.events.firstWhere(
+      (event) => event.name == 'level_invalid_tap',
+    );
+    expect(event.parameters['invalid_tap_count'], 1);
+    expect(event.parameters['valid_move_count'], 1);
   });
 }
 
