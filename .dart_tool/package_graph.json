@@ -1,10 +1,10 @@
 {
   "roots": [
-    "arrow_puzzle_tap_puzzle_games"
+    "pocket_observatory_xo"
   ],
   "packages": [
     {
-      "name": "arrow_puzzle_tap_puzzle_games",
+      "name": "pocket_observatory_xo",
       "version": "1.0.0+1",
       "dependencies": [
         "cupertino_icons",
