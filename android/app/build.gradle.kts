@@ -13,8 +13,10 @@ if (hasReleaseKeystore) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
+val defaultAdMobAndroidAppId = "ca-app-pub-3940256099942544~3347511713"
+
 android {
-    namespace = "com.childhood.pocketobservatory"
+    namespace = "com.childhood.tiktaktoe"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -24,13 +26,15 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.childhood.pocketobservatory"
+        applicationId = "com.childhood.tiktaktoe"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["ADMOB_ANDROID_APP_ID"] =
+            providers.gradleProperty("ADMOB_ANDROID_APP_ID").getOrElse(defaultAdMobAndroidAppId)
     }
 
     signingConfigs {

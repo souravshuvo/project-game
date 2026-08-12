@@ -1,15 +1,15 @@
 # Production V1 Release Checklist
 
-Last updated: 2026-08-10
+Last updated: 2026-08-12
 
 ## Identity Lock
 
-- [x] App name: `Pocket Observatory XO`
-- [x] Android launcher label: `Pocket Observatory`
-- [x] iOS display name: `Pocket Observatory`
-- [x] Android application ID: `com.childhood.pocketobservatory`
-- [x] Android namespace: `com.childhood.pocketobservatory`
-- [x] iOS bundle ID: `com.childhood.pocketobservatory`
+- [x] App name: `Tik Tak Toe`
+- [x] Android launcher label: `Tik Tak Toe`
+- [x] iOS display name: `Tik Tak Toe`
+- [x] Android application ID: `com.childhood.tiktaktoe`
+- [x] Android namespace: `com.childhood.tiktaktoe`
+- [x] iOS bundle ID: `com.childhood.tiktaktoe`
 - [ ] Confirm this package/bundle ID is final before the first Play Console upload. Package names cannot be reused for a different app after publishing.
 
 ## Build Readiness
@@ -17,6 +17,7 @@ Last updated: 2026-08-10
 - [ ] Run `dart format` after final edits.
 - [ ] Run `flutter analyze`.
 - [ ] Run `flutter test`.
+- [ ] Run `flutter pub get` after AdMob/Firebase dependency changes.
 - [ ] Build signed release `.aab`.
 - [ ] Install and smoke-test release build on a physical Android phone.
 - [ ] Confirm Android SDK platform 36 is installed locally.
@@ -41,8 +42,8 @@ Last updated: 2026-08-10
 
 ## Store Assets
 
-- [x] Asset generation scripts updated for Pocket Observatory XO.
-- [ ] Regenerate launcher icons with `tool/generate_phase4_assets.ps1`.
+- [x] Asset generation scripts updated for Tik Tak Toe.
+- [x] Regenerate launcher icons with `tool/generate_phase4_assets.ps1`.
 - [ ] Regenerate feature graphic with `tool/generate_store_feature_graphic.ps1`.
 - [ ] Capture real gameplay screenshots with `tool/capture_store_screenshots.ps1`.
 - [ ] Review screenshots for actual shipped gameplay only.
@@ -52,8 +53,8 @@ Last updated: 2026-08-10
 ## Play Console App Content
 
 - [ ] Privacy policy hosted at a public URL.
-- [ ] Data safety form completed.
-- [ ] Ads declaration completed: no ads in v1.
+- [ ] Data safety form completed for Google Mobile Ads and Firebase Analytics if enabled.
+- [ ] Ads declaration completed: yes if AdMob remains enabled.
 - [ ] App access declaration completed: no login required.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
@@ -70,7 +71,9 @@ Last updated: 2026-08-10
 
 ## Do Not Add In V1
 
-- Ads
+- Banner ads
+- Rewarded ads
+- More aggressive interstitial placements
 - Online multiplayer
 - Login or cloud sync
 - Leaderboards

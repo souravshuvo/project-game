@@ -1,4 +1,4 @@
-# Pocket Observatory XO
+# Tik Tak Toe
 
 An original Flutter tic tac toe game with a calm star-map presentation, local two-player play, and one balanced AI opponent.
 
@@ -16,6 +16,6 @@ An original Flutter tic tac toe game with a calm star-map presentation, local tw
 
 ## Release Notes
 
-Release planning lives in `docs/release/`. Store assets must be generated from the actual Pocket Observatory build and screenshots must show real gameplay only.
+Release planning lives in `docs/release/`. Store assets must be generated from the actual Tik Tak Toe build and screenshots must show real gameplay only.
 
 The app is not production-ready until analysis, tests, signed release build, physical-device QA, real screenshots, and Play Console app content checks are complete.

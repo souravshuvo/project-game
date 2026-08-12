@@ -2,6 +2,8 @@ Add-Type -AssemblyName System.Drawing
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+$PlayStoreIconPath = Join-Path $Root "store_assets/app_icon/play-store-icon.png"
+$IconSourcePath = Join-Path $Root "store_assets/app_icon/icon-source-1024.png"
 
 function New-Brush($hex) {
     return New-Object System.Drawing.SolidBrush ([System.Drawing.ColorTranslator]::FromHtml($hex))
@@ -47,8 +49,13 @@ function Add-O($graphics, $x, $y, $size, $hex) {
     $pen.Dispose()
 }
 
-function New-PocketObservatoryIcon($path, $size) {
-    $bitmap = New-Object System.Drawing.Bitmap $size, $size
+function New-TikTakToeIcon($path, $size, [bool] $WithAlpha) {
+    $pixelFormat = if ($WithAlpha) {
+        [System.Drawing.Imaging.PixelFormat]::Format32bppArgb
+    } else {
+        [System.Drawing.Imaging.PixelFormat]::Format24bppRgb
+    }
+    $bitmap = New-Object System.Drawing.Bitmap $size, $size, $pixelFormat
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#17151F"))
@@ -56,8 +63,9 @@ function New-PocketObservatoryIcon($path, $size) {
     $scale = $size / 192.0
     $panelBrush = New-Brush "#F8F2E7"
     $goldBrush = New-Brush "#E9B64E"
-    $inkBrush = New-Brush "#24202E"
+    $shadowBrush = New-Brush "#24202E"
 
+    Add-RoundedRectangle $graphics $shadowBrush (24 * $scale) (26 * $scale) (148 * $scale) (148 * $scale) (22 * $scale)
     Add-RoundedRectangle $graphics $goldBrush (20 * $scale) (20 * $scale) (152 * $scale) (152 * $scale) (18 * $scale)
     Add-RoundedRectangle $graphics $panelBrush (28 * $scale) (28 * $scale) (136 * $scale) (136 * $scale) (12 * $scale)
 
@@ -68,13 +76,12 @@ function New-PocketObservatoryIcon($path, $size) {
     $graphics.DrawLine($linePen, 30 * $scale, 119 * $scale, 162 * $scale, 119 * $scale)
     $linePen.Dispose()
 
-    Add-X $graphics (34 * $scale) (34 * $scale) (38 * $scale) "#7465B8"
-    Add-O $graphics (82 * $scale) (82 * $scale) (38 * $scale) "#4DB7A8"
-    Add-X $graphics (120 * $scale) (120 * $scale) (38 * $scale) "#7465B8"
+    Add-X $graphics (34 * $scale) (34 * $scale) (38 * $scale) "#E9B64E"
+    Add-O $graphics (120 * $scale) (120 * $scale) (38 * $scale) "#4DB7A8"
 
     $sparkPen = New-Pen "#E9B64E" ([Math]::Max(1, 4 * $scale))
-    $graphics.DrawLine($sparkPen, 132 * $scale, 48 * $scale, 154 * $scale, 48 * $scale)
-    $graphics.DrawLine($sparkPen, 143 * $scale, 37 * $scale, 143 * $scale, 59 * $scale)
+    $graphics.DrawLine($sparkPen, 128 * $scale, 52 * $scale, 154 * $scale, 52 * $scale)
+    $graphics.DrawLine($sparkPen, 141 * $scale, 39 * $scale, 141 * $scale, 65 * $scale)
     $sparkPen.Dispose()
 
     $directory = Split-Path -Parent $path
@@ -85,10 +92,13 @@ function New-PocketObservatoryIcon($path, $size) {
 
     $panelBrush.Dispose()
     $goldBrush.Dispose()
-    $inkBrush.Dispose()
+    $shadowBrush.Dispose()
     $graphics.Dispose()
     $bitmap.Dispose()
 }
+
+New-TikTakToeIcon $PlayStoreIconPath 512 $true
+New-TikTakToeIcon $IconSourcePath 1024 $false
 
 $androidIcons = @{
     "android/app/src/main/res/mipmap-mdpi/ic_launcher.png" = 48
@@ -99,7 +109,7 @@ $androidIcons = @{
 }
 
 foreach ($entry in $androidIcons.GetEnumerator()) {
-    New-PocketObservatoryIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-TikTakToeIcon (Join-Path $Root $entry.Key) $entry.Value $false
 }
 
 $iosIcons = @{
@@ -121,7 +131,7 @@ $iosIcons = @{
 }
 
 foreach ($entry in $iosIcons.GetEnumerator()) {
-    New-PocketObservatoryIcon (Join-Path $Root $entry.Key) $entry.Value
+    New-TikTakToeIcon (Join-Path $Root $entry.Key) $entry.Value $false
 }
 
-Write-Host "Generated Pocket Observatory launcher icons."
+Write-Host "Generated Tik Tak Toe Play Store and launcher icons."

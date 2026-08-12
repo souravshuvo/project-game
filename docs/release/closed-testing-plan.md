@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Goal
 
-Use real players to confirm whether Pocket Observatory XO is understandable, satisfying, stable, accessible, and worth expanding before production release.
+Use real players to confirm whether Tik Tak Toe is understandable, satisfying, stable, accessible, and worth expanding before production release.
 
 ## Recommended Track Order
 

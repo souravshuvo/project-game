@@ -1,6 +1,6 @@
 param(
     [string] $DeviceId = "",
-    [string] $Package = "com.childhood.pocketobservatory",
+    [string] $Package = "com.childhood.tiktaktoe",
     [string] $OutputDirectory = "store_assets/screenshots/phone",
     [int] $StartupDelaySeconds = 8
 )

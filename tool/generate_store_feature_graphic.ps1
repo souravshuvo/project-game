@@ -107,7 +107,7 @@ $winPen.Dispose()
 
 Add-RoundedRectangle $graphics $gold 76 94 96 96 18
 Add-X $graphics 76 94 96 "#17151F"
-Add-Text $graphics "Pocket Observatory XO" "Segoe UI" 60 ([System.Drawing.FontStyle]::Bold) "#F8F2E7" 76 222
+Add-Text $graphics "Tik Tak Toe" "Segoe UI" 60 ([System.Drawing.FontStyle]::Bold) "#F8F2E7" 76 222
 Add-Text $graphics "A calm star-map tic tac toe duel." "Segoe UI" 32 ([System.Drawing.FontStyle]::Regular) "#C9C0B5" 80 304
 
 $sparkPen = New-Pen "#E9B64E" 6

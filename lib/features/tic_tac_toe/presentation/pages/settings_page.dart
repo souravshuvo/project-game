@@ -37,6 +37,24 @@ class SettingsPage extends StatelessWidget {
                 value: controller.hapticsEnabled,
                 onChanged: controller.toggleHaptics,
               ),
+              const SizedBox(height: 12),
+              ObservatoryPanel(
+                padding: EdgeInsets.zero,
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.help_outline_rounded,
+                    color: PocketObservatoryColors.gold,
+                  ),
+                  title: Text(
+                    'How to Play',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: controller.showHelp,
+                ),
+              ),
             ],
           ),
         ),

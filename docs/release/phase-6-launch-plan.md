@@ -1,15 +1,15 @@
 # Production V1 Launch Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-12
 
 ## Goal
 
-Prepare Pocket Observatory XO for internal and closed testing without rushing SDKs, ads, or production release before the app has real signing, store assets, and tester evidence.
+Prepare Tik Tak Toe for internal and closed testing without rushing production release before the app has real signing, store assets, SDK QA, and tester evidence.
 
 ## Current Decisions
 
-- Keep v1 privacy-light: no network SDKs.
-- Keep v1 ad-free.
+- Keep v1 monetization light: only capped post-match interstitials if AdMob remains enabled.
+- Keep analytics privacy-scoped: Firebase events only when real Firebase config is supplied, with no personal input collected.
 - Use one balanced AI difficulty.
 - Do not add variants before polish and QA.
 - Use internal testing first, then closed testing, then production.
@@ -20,9 +20,9 @@ Prepare Pocket Observatory XO for internal and closed testing without rushing SD
 | --- | --- | --- |
 | Release signing | Wired, secrets missing | Create private keystore and local key.properties |
 | Android target SDK | Configured for 36 | Confirm local SDK and successful release build |
-| Analytics events | No-op boundary | Add real SDK only after privacy review |
+| Analytics events | Firebase-capable boundary | Verify DebugView with real Firebase config |
 | Crash monitoring | Deferred | Add after Firebase setup, if approved |
-| Monetization | Deferred | Stay ad-free through first closed test |
+| Monetization | Capped post-match interstitials | Keep test ads until AdMob QA and Data safety are complete |
 | Store assets | Scripts updated | Regenerate and review real gameplay assets |
 | Internal testing | Pending | Upload signed `.aab` |
 | Closed testing | Pending | Recruit testers and collect structured feedback |
@@ -43,7 +43,7 @@ Prepare Pocket Observatory XO for internal and closed testing without rushing SD
 ## Recommended Order
 
 1. Run formatting, analysis, and tests.
-2. Generate Pocket Observatory icons and feature graphic.
+2. Generate Tik Tak Toe icons and feature graphic.
 3. Capture real gameplay screenshots.
 4. Configure Android release signing secrets locally.
 5. Build signed release `.aab`.

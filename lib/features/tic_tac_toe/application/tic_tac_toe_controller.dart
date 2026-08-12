@@ -4,53 +4,69 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../ai/tic_tac_toe_ai_strategy.dart';
+import '../data/tic_tac_toe_match_history_store.dart';
 import '../data/tic_tac_toe_settings_store.dart';
 import '../domain/game_score.dart';
+import '../domain/match_format.dart';
+import '../domain/match_record.dart';
 import '../domain/round_outcome.dart';
 import '../domain/tic_tac_toe_engine.dart';
 import '../domain/tic_tac_toe_mark.dart';
 import '../domain/tic_tac_toe_round.dart';
 import 'game_mode.dart';
+import 'tic_tac_toe_ad_service.dart';
 import 'tic_tac_toe_settings.dart';
 import 'tic_tac_toe_telemetry.dart';
 
-enum TicTacToeScreen { setup, playing, settings }
+enum TicTacToeScreen { setup, playing, settings, help }
 
 class TicTacToeController extends ChangeNotifier {
   TicTacToeController({
     required this.engine,
     required this.aiStrategy,
     required this.settingsStore,
+    required this.matchHistoryStore,
     required TicTacToeSettings initialSettings,
+    List<MatchRecord> initialRecentMatches = const [],
     this.telemetry = const NoOpTicTacToeTelemetry(),
+    this.adService = const NoOpTicTacToeAdService(),
     this.enableFeedback = true,
     this.aiDelay = const Duration(milliseconds: 520),
-  }) : _settings = initialSettings {
+  }) : _settings = initialSettings,
+       _recentMatches = _trimHistory(initialRecentMatches) {
     telemetry.track(TicTacToeTelemetryEvents.appOpened());
   }
 
+  static const maxRecentMatches = 10;
   static const humanMark = TicTacToeMark.x;
   static const aiMark = TicTacToeMark.o;
 
   final TicTacToeEngine engine;
   final TicTacToeAiStrategy aiStrategy;
   final TicTacToeSettingsStore settingsStore;
+  final TicTacToeMatchHistoryStore matchHistoryStore;
   final TicTacToeTelemetry telemetry;
+  final TicTacToeAdService adService;
   final bool enableFeedback;
   final Duration aiDelay;
 
   TicTacToeScreen _screen = TicTacToeScreen.setup;
-  TicTacToeScreen _returnScreen = TicTacToeScreen.setup;
+  TicTacToeScreen _settingsReturnScreen = TicTacToeScreen.setup;
+  TicTacToeScreen _helpReturnScreen = TicTacToeScreen.setup;
   TicTacToeSettings _settings;
   GameMode _mode = GameMode.localTwoPlayer;
+  MatchFormat _matchFormat = MatchFormat.singleRound;
   GameScore _score = const GameScore.zero();
+  List<MatchRecord> _recentMatches;
   TicTacToeMark _startingMark = TicTacToeMark.x;
   TicTacToeRound _round = TicTacToeRound.fresh();
   bool _isAiThinking = false;
   bool _isDisposed = false;
+  bool _isMatchComplete = false;
   int? _lastMoveIndex;
   int? _lastInvalidIndex;
   var _invalidTapSequence = 0;
+  var _completedMatchesThisSession = 0;
   Timer? _aiTimer;
 
   TicTacToeScreen get screen => _screen;
@@ -63,7 +79,27 @@ class TicTacToeController extends ChangeNotifier {
 
   GameMode get mode => _mode;
 
+  MatchFormat get matchFormat => _matchFormat;
+
   GameScore get score => _score;
+
+  bool get isMatchComplete => _isMatchComplete;
+
+  TicTacToeMark? get matchWinner {
+    if (!_isMatchComplete) {
+      return null;
+    }
+    if (_score.xWins >= _matchFormat.targetWins) {
+      return TicTacToeMark.x;
+    }
+    if (_score.oWins >= _matchFormat.targetWins) {
+      return TicTacToeMark.o;
+    }
+
+    return null;
+  }
+
+  List<MatchRecord> get recentMatches => List.unmodifiable(_recentMatches);
 
   TicTacToeRound get round => _round;
 
@@ -85,12 +121,24 @@ class TicTacToeController extends ChangeNotifier {
     }
 
     _mode = mode;
-    _score = const GameScore.zero();
-    _startingMark = TicTacToeMark.x;
-    _round = TicTacToeRound.fresh(startingMark: _startingMark);
-    _clearTransientState();
+    _resetCurrentMatch();
     telemetry.track(
       TicTacToeTelemetryEvents.modeSelected(mode: _mode.analyticsName),
+    );
+    notifyListeners();
+  }
+
+  void selectMatchFormat(MatchFormat format) {
+    if (_matchFormat == format) {
+      return;
+    }
+
+    _matchFormat = format;
+    _resetCurrentMatch();
+    telemetry.track(
+      TicTacToeTelemetryEvents.matchFormatSelected(
+        matchFormat: _matchFormat.analyticsName,
+      ),
     );
     notifyListeners();
   }
@@ -103,22 +151,30 @@ class TicTacToeController extends ChangeNotifier {
   }
 
   void changeMode() {
-    _cancelAiMove();
     _screen = TicTacToeScreen.setup;
-    _startingMark = TicTacToeMark.x;
-    _round = TicTacToeRound.fresh(startingMark: _startingMark);
-    _clearTransientState();
+    _resetCurrentMatch();
     notifyListeners();
   }
 
   void showSettings() {
-    _returnScreen = _screen;
+    _settingsReturnScreen = _screen;
     _screen = TicTacToeScreen.settings;
     notifyListeners();
   }
 
   void closeSettings() {
-    _screen = _returnScreen;
+    _screen = _settingsReturnScreen;
+    notifyListeners();
+  }
+
+  void showHelp() {
+    _helpReturnScreen = _screen;
+    _screen = TicTacToeScreen.help;
+    notifyListeners();
+  }
+
+  void closeHelp() {
+    _screen = _helpReturnScreen;
     notifyListeners();
   }
 
@@ -146,6 +202,7 @@ class TicTacToeController extends ChangeNotifier {
       telemetry.track(
         TicTacToeTelemetryEvents.invalidCellTapped(
           mode: _mode.analyticsName,
+          matchFormat: _matchFormat.analyticsName,
           cellIndex: cellIndex,
         ),
       );
@@ -159,12 +216,18 @@ class TicTacToeController extends ChangeNotifier {
 
   void restartRound() {
     _cancelAiMove();
+    final completedMatch = _isMatchComplete;
     telemetry.track(
       TicTacToeTelemetryEvents.rematchTapped(mode: _mode.analyticsName),
     );
 
     if (_round.isOver) {
       _startingMark = _startingMark.opponent;
+    }
+
+    if (completedMatch) {
+      _score = const GameScore.zero();
+      _isMatchComplete = false;
     }
 
     _round = TicTacToeRound.fresh(startingMark: _startingMark);
@@ -176,6 +239,7 @@ class TicTacToeController extends ChangeNotifier {
 
   void resetScore() {
     _score = const GameScore.zero();
+    _isMatchComplete = false;
     telemetry.track(
       TicTacToeTelemetryEvents.scoreReset(mode: _mode.analyticsName),
     );
@@ -264,6 +328,7 @@ class TicTacToeController extends ChangeNotifier {
     telemetry.track(
       TicTacToeTelemetryEvents.moveMade(
         mode: _mode.analyticsName,
+        matchFormat: _matchFormat.analyticsName,
         moveIndex: _round.moveCount,
         cellIndex: cellIndex,
         playerType: playerType,
@@ -273,17 +338,43 @@ class TicTacToeController extends ChangeNotifier {
 
     if (_round.outcome.isOver) {
       _score = _score.record(_round.outcome);
+      _isMatchComplete = _didCompleteMatch(_round.outcome);
+      if (_isMatchComplete) {
+        _completedMatchesThisSession++;
+        _recordCompletedMatch(_round.outcome);
+        telemetry.track(
+          TicTacToeTelemetryEvents.matchCompleted(
+            mode: _mode.analyticsName,
+            matchFormat: _matchFormat.analyticsName,
+            result: _round.outcome.status.name,
+            winnerType: _winnerType(_round.outcome),
+            roundsPlayed: _score.totalRounds,
+            xWins: _score.xWins,
+            oWins: _score.oWins,
+            draws: _score.draws,
+            completedMatchesThisSession: _completedMatchesThisSession,
+            aiDifficulty: _aiDifficultyName,
+          ),
+        );
+      }
       telemetry.track(
         TicTacToeTelemetryEvents.roundEnded(
           mode: _mode.analyticsName,
+          matchFormat: _matchFormat.analyticsName,
+          roundNumber: _score.totalRounds,
           result: _round.outcome.status.name,
           winnerType: _winnerType(_round.outcome),
           moveCount: _round.moveCount,
+          aiDifficulty: _aiDifficultyName,
         ),
       );
     }
 
     notifyListeners();
+
+    if (_isMatchComplete) {
+      _queuePostMatchAd();
+    }
   }
 
   String _winnerType(RoundOutcome outcome) {
@@ -304,9 +395,89 @@ class TicTacToeController extends ChangeNotifier {
     telemetry.track(
       TicTacToeTelemetryEvents.roundStarted(
         mode: _mode.analyticsName,
+        matchFormat: _matchFormat.analyticsName,
+        roundNumber: _score.totalRounds + 1,
         startingPlayer: _startingMark.symbol,
+        aiDifficulty: _aiDifficultyName,
       ),
     );
+  }
+
+  String get _aiDifficultyName {
+    return _mode == GameMode.vsAi ? 'balanced' : 'none';
+  }
+
+  void _queuePostMatchAd() {
+    unawaited(
+      adService
+          .onMatchCompleted(
+            completedMatchesThisSession: _completedMatchesThisSession,
+            canShowNow: _canShowPostMatchAdNow,
+          )
+          .catchError((Object error, StackTrace stackTrace) {
+            if (kDebugMode) {
+              debugPrint('Failed to handle post-match ad: $error');
+            }
+          }),
+    );
+  }
+
+  bool _canShowPostMatchAdNow() {
+    return !_isDisposed &&
+        _screen == TicTacToeScreen.playing &&
+        _round.isOver &&
+        _isMatchComplete &&
+        !_isAiThinking;
+  }
+
+  bool _didCompleteMatch(RoundOutcome outcome) {
+    if (!outcome.isOver) {
+      return false;
+    }
+    if (_matchFormat == MatchFormat.singleRound) {
+      return true;
+    }
+    final winner = outcome.winner;
+    if (winner == null) {
+      return false;
+    }
+
+    return _score.winsFor(winner) >= _matchFormat.targetWins;
+  }
+
+  void _recordCompletedMatch(RoundOutcome outcome) {
+    final record = MatchRecord(
+      completedAt: DateTime.now(),
+      modeName: _mode.analyticsName,
+      modeLabel: _mode.label,
+      format: _matchFormat,
+      score: _score,
+      winner: outcome.winner,
+    );
+    _recentMatches = _trimHistory([record, ..._recentMatches]);
+    unawaited(
+      matchHistoryStore.saveRecentMatches(_recentMatches).catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        if (kDebugMode) {
+          debugPrint('Failed to save tic tac toe match history: $error');
+        }
+      }),
+    );
+  }
+
+  void _resetCurrentMatch() {
+    _cancelAiMove();
+    _score = const GameScore.zero();
+    _startingMark = TicTacToeMark.x;
+    _round = TicTacToeRound.fresh(startingMark: _startingMark);
+    _isMatchComplete = false;
+    _clearTransientState();
+  }
+
+  static List<MatchRecord> _trimHistory(List<MatchRecord> records) {
+    return records.take(maxRecentMatches).toList(growable: false);
   }
 
   void _clearTransientState() {
@@ -364,6 +535,7 @@ class TicTacToeController extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _cancelAiMove();
+    adService.dispose();
     super.dispose();
   }
 }

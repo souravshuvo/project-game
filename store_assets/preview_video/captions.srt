@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:03,000
+Pick a quick X/O match
+
+2
+00:00:03,000 --> 00:00:08,000
+Pass-and-play rounds
+
+3
+00:00:08,000 --> 00:00:13,000
+One balanced AI opponent
+
+4
+00:00:13,000 --> 00:00:18,000
+Clear results
+
+5
+00:00:18,000 --> 00:00:23,000
+Local history and controls
+
+6
+00:00:23,000 --> 00:00:26,500
+Tik Tak Toe

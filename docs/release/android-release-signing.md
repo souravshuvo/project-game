@@ -31,7 +31,7 @@ Copy-Item android/key.properties.example android/key.properties
 - Keep the upload keystore backed up in a private password manager or secure drive.
 - Do not commit `android/key.properties`, `.jks`, or `.keystore` files.
 - Build and upload an Android App Bundle, not only an APK.
-- Confirm the Play Console package name is `com.childhood.pocketobservatory`.
+- Confirm the Play Console package name is `com.childhood.tiktaktoe`.
 - Confirm target SDK API 36 is acceptable for the intended release date.
 
 ## Build Command

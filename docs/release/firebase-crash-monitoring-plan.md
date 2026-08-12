@@ -33,8 +33,8 @@ This means no event data is sent anywhere in the current build.
 Only add Firebase Analytics after:
 
 - Firebase project is created.
-- Android app is registered with package `com.childhood.pocketobservatory`.
-- iOS app is registered with bundle ID `com.childhood.pocketobservatory`, if iOS remains in scope.
+- Android app is registered with package `com.childhood.tiktaktoe`.
+- iOS app is registered with bundle ID `com.childhood.tiktaktoe`, if iOS remains in scope.
 - `flutterfire configure` can create real `firebase_options.dart`.
 - Privacy policy and Play Data safety are updated for Analytics behavior.
 - Tester build confirms events appear in Firebase DebugView.

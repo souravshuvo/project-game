@@ -14,6 +14,8 @@ class GameScore {
   final int oWins;
   final int draws;
 
+  int get totalRounds => xWins + oWins + draws;
+
   GameScore record(RoundOutcome outcome) {
     return switch (outcome.status) {
       RoundStatus.playing => this,
@@ -32,5 +34,12 @@ class GameScore {
       oWins: oWins ?? this.oWins,
       draws: draws ?? this.draws,
     );
+  }
+
+  int winsFor(TicTacToeMark mark) {
+    return switch (mark) {
+      TicTacToeMark.x => xWins,
+      TicTacToeMark.o => oWins,
+    };
   }
 }

@@ -14,6 +14,12 @@ class GamePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryActionLabel = controller.isMatchComplete
+        ? 'New Match'
+        : controller.round.outcome.isOver
+        ? 'Next Round'
+        : 'Restart';
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -21,8 +27,15 @@ class GamePage extends StatelessWidget {
           icon: const Icon(Icons.grid_view_rounded),
           tooltip: 'Change mode',
         ),
-        title: Text(controller.mode.label),
+        title: Text(
+          '${controller.mode.label} - ${controller.matchFormat.shortLabel}',
+        ),
         actions: [
+          IconButton(
+            onPressed: controller.showHelp,
+            icon: const Icon(Icons.help_outline_rounded),
+            tooltip: 'How to play',
+          ),
           IconButton(
             onPressed: controller.showSettings,
             icon: const Icon(Icons.tune_rounded),
@@ -69,15 +82,11 @@ class GamePage extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: controller.restartRound,
                             icon: Icon(
-                              controller.round.outcome.isOver
+                              controller.isMatchComplete
                                   ? Icons.replay_rounded
                                   : Icons.refresh_rounded,
                             ),
-                            label: Text(
-                              controller.round.outcome.isOver
-                                  ? 'Rematch'
-                                  : 'Restart',
-                            ),
+                            label: Text(primaryActionLabel),
                           ),
                           OutlinedButton.icon(
                             onPressed: controller.resetScore,
@@ -107,32 +116,37 @@ class _ScoreStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final oLabel = controller.mode == GameMode.vsAi ? 'AI O' : 'Player O';
 
-    return Row(
-      children: [
-        Expanded(
-          child: _ScoreTile(
-            label: 'Player X',
-            value: controller.score.xWins,
-            color: PocketObservatoryColors.violet,
+    return Semantics(
+      container: true,
+      label:
+          '${controller.matchFormat.label} score. Player X ${controller.score.xWins}. $oLabel ${controller.score.oWins}. Draws ${controller.score.draws}.',
+      child: Row(
+        children: [
+          Expanded(
+            child: _ScoreTile(
+              label: 'Player X',
+              value: controller.score.xWins,
+              color: PocketObservatoryColors.violet,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ScoreTile(
-            label: oLabel,
-            value: controller.score.oWins,
-            color: PocketObservatoryColors.teal,
+          const SizedBox(width: 10),
+          Expanded(
+            child: _ScoreTile(
+              label: oLabel,
+              value: controller.score.oWins,
+              color: PocketObservatoryColors.teal,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ScoreTile(
-            label: 'Draws',
-            value: controller.score.draws,
-            color: PocketObservatoryColors.gold,
+          const SizedBox(width: 10),
+          Expanded(
+            child: _ScoreTile(
+              label: 'Draws',
+              value: controller.score.draws,
+              color: PocketObservatoryColors.gold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -166,11 +180,20 @@ class _ScoreTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            '$value',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w900,
+          TweenAnimationBuilder<double>(
+            key: ValueKey('$label-$value'),
+            tween: Tween(begin: 1.16, end: 1),
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, child) {
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: Text(
+              '$value',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -187,6 +210,7 @@ class _TurnBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = _turnText();
+    final helperText = _helperText();
 
     return ObservatoryPanel(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -197,19 +221,40 @@ class _TurnBanner extends StatelessWidget {
           Icon(_turnIcon(), color: PocketObservatoryColors.ink),
           const SizedBox(width: 12),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: Semantics(
-                key: ValueKey(text),
-                liveRegion: true,
-                label: text,
-                child: Text(
-                  text,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: PocketObservatoryColors.ink,
-                    fontWeight: FontWeight.w900,
+            child: Semantics(
+              liveRegion: true,
+              label: '$text. $helperText',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Text(
+                      text,
+                      key: ValueKey(text),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: PocketObservatoryColors.ink,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 3),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Text(
+                      helperText,
+                      key: ValueKey(helperText),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: PocketObservatoryColors.mutedInk,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -237,6 +282,9 @@ class _TurnBanner extends StatelessWidget {
       return 'Draw';
     }
     if (outcome.status == RoundStatus.won) {
+      if (controller.isMatchComplete) {
+        return _matchWinnerText();
+      }
       return '${outcome.winner?.symbol ?? ''} wins';
     }
     if (controller.isAiThinking) {
@@ -249,6 +297,39 @@ class _TurnBanner extends StatelessWidget {
     }
 
     return '${controller.round.currentMark.symbol} turn';
+  }
+
+  String _helperText() {
+    final outcome = controller.round.outcome;
+    if (controller.isMatchComplete) {
+      return 'Match saved. Start a new match when ready.';
+    }
+    if (outcome.isOver && controller.matchFormat.targetWins > 1) {
+      return 'Use Next Round to continue the match.';
+    }
+    if (outcome.isOver) {
+      return 'Use New Match to keep playing.';
+    }
+    if (controller.isAiThinking) {
+      return 'Board is locked until O appears.';
+    }
+    if (controller.mode == GameMode.vsAi) {
+      return 'Tap an open cell to place X.';
+    }
+
+    return 'Tap an open cell, then pass the device.';
+  }
+
+  String _matchWinnerText() {
+    final winner = controller.matchWinner;
+    if (winner == null) {
+      return 'Match draw';
+    }
+    if (controller.mode == GameMode.vsAi) {
+      return winner == TicTacToeController.humanMark ? 'You won' : 'AI won';
+    }
+
+    return '${winner.symbol} wins';
   }
 }
 
@@ -265,23 +346,53 @@ class _ResultPanel extends StatelessWidget {
       container: true,
       liveRegion: true,
       label: message,
-      child: ObservatoryPanel(
-        color: PocketObservatoryColors.panelSoft,
-        borderColor: PocketObservatoryColors.gold,
-        child: Row(
-          children: [
-            Icon(_icon(), color: PocketObservatoryColors.ink),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: PocketObservatoryColors.ink,
-                  fontWeight: FontWeight.w900,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.96, end: 1),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutBack,
+        builder: (context, scale, child) {
+          return Transform.scale(scale: scale, child: child);
+        },
+        child: ObservatoryPanel(
+          color: PocketObservatoryColors.panelSoft,
+          borderColor: PocketObservatoryColors.gold,
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: PocketObservatoryColors.gold.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(_icon(), color: PocketObservatoryColors.ink),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: PocketObservatoryColors.ink,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _subtitle(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: PocketObservatoryColors.mutedInk,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -295,6 +406,19 @@ class _ResultPanel extends StatelessWidget {
 
   String _message() {
     final outcome = controller.round.outcome;
+    if (controller.isMatchComplete) {
+      final winner = controller.matchWinner;
+      if (winner == null) {
+        return 'Match saved as a draw.';
+      }
+      if (controller.mode == GameMode.vsAi) {
+        return winner == TicTacToeController.humanMark
+            ? 'You won the match.'
+            : 'AI won the match.';
+      }
+
+      return 'Player ${winner.symbol} won the match.';
+    }
     if (outcome.status == RoundStatus.draw) {
       return 'No winner this round.';
     }
@@ -305,5 +429,16 @@ class _ResultPanel extends StatelessWidget {
     }
 
     return '${outcome.winner?.symbol ?? ''} won this round.';
+  }
+
+  String _subtitle() {
+    if (controller.isMatchComplete) {
+      return 'Saved to recent matches.';
+    }
+    if (controller.matchFormat.targetWins > 1) {
+      return 'Next Round keeps the current match score.';
+    }
+
+    return 'New Match starts fast and alternates the first mark.';
   }
 }

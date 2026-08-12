@@ -1,4 +1,4 @@
-package com.childhood.pocketobservatory
+package com.childhood.tiktaktoe
 
 import io.flutter.embedding.android.FlutterActivity
 

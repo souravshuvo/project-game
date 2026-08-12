@@ -1,0 +1,21 @@
+Tik Tak Toe preview video optional voiceover
+
+Use only if the final mix sounds better with narration. Captions must still work without audio.
+
+0.0-3.0s
+Choose a quick X/O match.
+
+3.0-8.0s
+Tap an open cell, then pass the turn.
+
+8.0-13.0s
+Or face one balanced AI opponent.
+
+13.0-18.0s
+Wins, draws, and scores stay easy to read.
+
+18.0-23.0s
+Recent matches and controls stay local.
+
+23.0-26.5s
+Tik Tak Toe.
