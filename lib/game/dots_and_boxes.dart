@@ -179,6 +179,30 @@ class DotsAndBoxesGame {
 
   bool get isGameOver => _claimedBoxes.length == totalBoxes;
 
+  List<BoardLine> get openLines {
+    final lines = <BoardLine>[];
+
+    for (var row = 0; row <= rows; row += 1) {
+      for (var column = 0; column < columns; column += 1) {
+        final line = BoardLine.horizontal(row, column);
+        if (!_drawnLines.contains(line)) {
+          lines.add(line);
+        }
+      }
+    }
+
+    for (var row = 0; row < rows; row += 1) {
+      for (var column = 0; column <= columns; column += 1) {
+        final line = BoardLine.vertical(row, column);
+        if (!_drawnLines.contains(line)) {
+          lines.add(line);
+        }
+      }
+    }
+
+    return List<BoardLine>.unmodifiable(lines);
+  }
+
   int scoreFor(Player player) {
     return _claimedBoxes.values.where((owner) => owner == player).length;
   }
@@ -297,6 +321,32 @@ class DotsAndBoxesGame {
       BoardLine.vertical(box.row, box.column),
       BoardLine.vertical(box.row, box.column + 1),
     ];
+  }
+
+  int drawnSideCountForBox(BoxCoordinate box) {
+    return linesForBox(box).where(_drawnLines.contains).length;
+  }
+
+  int completedBoxesForLine(BoardLine line) {
+    if (!isLineInBounds(line) || _drawnLines.contains(line)) {
+      return 0;
+    }
+
+    var count = 0;
+    for (final box in boxesAdjacentTo(line)) {
+      if (_claimedBoxes.containsKey(box)) {
+        continue;
+      }
+
+      final wouldComplete = linesForBox(box).every((side) {
+        return side == line || _drawnLines.contains(side);
+      });
+      if (wouldComplete) {
+        count += 1;
+      }
+    }
+
+    return count;
   }
 
   bool _isBoxComplete(BoxCoordinate box) {

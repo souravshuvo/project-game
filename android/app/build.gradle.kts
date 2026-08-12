@@ -1,6 +1,7 @@
 import java.io.FileInputStream
 import java.util.Properties
 import org.gradle.api.GradleException
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
@@ -9,12 +10,20 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 val hasReleaseKeystore = keystorePropertiesFile.exists()
 if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+val adMobAndroidAppId = providers.gradleProperty("ADMOB_ANDROID_APP_ID")
+    .orElse("ca-app-pub-3940256099942544~3347511713")
+    .get()
 
 android {
     namespace = "com.childhood.dotsandboxes"
@@ -26,10 +35,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "com.childhood.dotsandboxes"
         // You can update the following values to match your application needs.
@@ -38,6 +43,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["adMobApplicationId"] = adMobAndroidAppId
     }
 
     signingConfigs {
@@ -64,14 +70,21 @@ flutter {
     source = "../.."
 }
 
-gradle.taskGraph.whenReady { graph ->
-    val isReleaseTask = graph.allTasks.any { task ->
-        task.name.contains("Release", ignoreCase = true)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
-    if (isReleaseTask && !hasReleaseKeystore) {
-        throw GradleException(
-            "Missing android/key.properties. Copy android/key.properties.example " +
-                "to android/key.properties and fill it with upload-keystore values."
-        )
+}
+
+tasks.matching {
+    it.name.contains("Release", ignoreCase = true)
+}.configureEach {
+    doFirst {
+        if (!hasReleaseKeystore) {
+            throw GradleException(
+                "Missing android/key.properties. Copy android/key.properties.example " +
+                    "to android/key.properties and fill it with upload-keystore values."
+            )
+        }
     }
 }

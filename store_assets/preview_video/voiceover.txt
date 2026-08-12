@@ -1,0 +1,35 @@
+Optional voiceover guide
+
+Use only if a natural licensed voice recording is available. The final video can
+also be captions-only.
+
+0.00-2.50
+Draw a line.
+
+2.50-5.50
+Take turns on one device.
+
+5.50-9.00
+Close a box to score.
+
+9.00-12.00
+Score, and keep your turn.
+
+12.00-15.50
+Practice against casual or tactical bots.
+
+15.50-19.00
+Watch the board. Plan the next capture.
+
+19.00-22.00
+Finish the match and check the final score.
+
+22.00-24.00
+Dots and Boxes.
+
+Voice direction:
+
+- Warm, calm, family-friendly.
+- No hype voice.
+- No install or download call to action.
+- No ranking, award, download, price, or sale claims.

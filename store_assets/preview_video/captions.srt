@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:02,500
+Draw the first line
+
+2
+00:00:02,500 --> 00:00:05,500
+Take turns on one device
+
+3
+00:00:05,500 --> 00:00:09,000
+Close boxes to score
+
+4
+00:00:09,000 --> 00:00:12,000
+Score and keep turn
+
+5
+00:00:12,000 --> 00:00:15,500
+Practice against bots
+
+6
+00:00:15,500 --> 00:00:19,000
+Plan the next capture
+
+7
+00:00:19,000 --> 00:00:22,000
+Final score, quick rematch
+
+8
+00:00:22,000 --> 00:00:24,000
+Dots and Boxes
