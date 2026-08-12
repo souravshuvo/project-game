@@ -1,15 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import 'logic_game_ui.dart';
 
 class AnimalFinderGameScreen extends StatefulWidget {
-  const AnimalFinderGameScreen({super.key, this.onCompleted});
+  const AnimalFinderGameScreen({
+    required this.audioCue,
+    super.key,
+    this.onCompleted,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
 
+  static int get contentCount => _AnimalFinderGameScreenState.contentCount;
+
   @override
-  State<AnimalFinderGameScreen> createState() =>
-      _AnimalFinderGameScreenState();
+  State<AnimalFinderGameScreen> createState() => _AnimalFinderGameScreenState();
 }
 
 class _AnimalChoice {
@@ -83,7 +92,64 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
         _AnimalChoice('hippo', '🦛'),
       ],
     ),
+    _AnimalRound(
+      target: _AnimalChoice('bee', '\u{1F41D}'),
+      choices: [
+        _AnimalChoice('butterfly', '\u{1F98B}'),
+        _AnimalChoice('bee', '\u{1F41D}'),
+        _AnimalChoice('ladybug', '\u{1F41E}'),
+        _AnimalChoice('snail', '\u{1F40C}'),
+        _AnimalChoice('ant', '\u{1F41C}'),
+        _AnimalChoice('worm', '\u{1FAB1}'),
+      ],
+    ),
+    _AnimalRound(
+      target: _AnimalChoice('horse', '\u{1F434}'),
+      choices: [
+        _AnimalChoice('goat', '\u{1F410}'),
+        _AnimalChoice('sheep', '\u{1F411}'),
+        _AnimalChoice('horse', '\u{1F434}'),
+        _AnimalChoice('cow', '\u{1F42E}'),
+        _AnimalChoice('pig', '\u{1F437}'),
+        _AnimalChoice('dog', '\u{1F436}'),
+      ],
+    ),
+    _AnimalRound(
+      target: _AnimalChoice('shark', '\u{1F988}'),
+      choices: [
+        _AnimalChoice('whale', '\u{1F433}'),
+        _AnimalChoice('fish', '\u{1F420}'),
+        _AnimalChoice('dolphin', '\u{1F42C}'),
+        _AnimalChoice('crab', '\u{1F980}'),
+        _AnimalChoice('shark', '\u{1F988}'),
+        _AnimalChoice('turtle', '\u{1F422}'),
+      ],
+    ),
+    _AnimalRound(
+      target: _AnimalChoice('kangaroo', '\u{1F998}'),
+      choices: [
+        _AnimalChoice('deer', '\u{1F98C}'),
+        _AnimalChoice('llama', '\u{1F999}'),
+        _AnimalChoice('camel', '\u{1F42A}'),
+        _AnimalChoice('kangaroo', '\u{1F998}'),
+        _AnimalChoice('sloth', '\u{1F9A5}'),
+        _AnimalChoice('otter', '\u{1F9A6}'),
+      ],
+    ),
+    _AnimalRound(
+      target: _AnimalChoice('unicorn', '\u{1F984}'),
+      choices: [
+        _AnimalChoice('horse', '\u{1F434}'),
+        _AnimalChoice('unicorn', '\u{1F984}'),
+        _AnimalChoice('dragon', '\u{1F409}'),
+        _AnimalChoice('dinosaur', '\u{1F995}'),
+        _AnimalChoice('swan', '\u{1F9A2}'),
+        _AnimalChoice('flamingo', '\u{1F9A9}'),
+      ],
+    ),
   ];
+
+  static int get contentCount => _rounds.length;
 
   int _roundIndex = 0;
   String? _lastChoiceName;
@@ -92,6 +158,10 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
 
   _AnimalRound get _round => _rounds[_roundIndex];
   bool get _isLastRound => _roundIndex == _rounds.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   void _choose(_AnimalChoice choice) {
     if (_roundSolved) return;
@@ -102,13 +172,23 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
       _roundSolved = solved;
     });
 
-    if (solved && _isLastRound && !_completionSent) {
-      _completionSent = true;
-      widget.onCompleted?.call();
+    if (solved) {
+      if (_isLastRound) {
+        _playFeedback((cue) => cue.playWin());
+        if (!_completionSent) {
+          _completionSent = true;
+          widget.onCompleted?.call();
+        }
+      } else {
+        _playFeedback((cue) => cue.playReward());
+      }
+    } else {
+      _playFeedback((cue) => cue.playInvalidAction());
     }
   }
 
   void _continue() {
+    _playFeedback((cue) => cue.playTap());
     if (_isLastRound) {
       setState(() {
         _roundIndex = 0;
@@ -126,6 +206,16 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
     });
   }
 
+  void _restart() {
+    _playFeedback((cue) => cue.playRestart());
+    setState(() {
+      _roundIndex = 0;
+      _lastChoiceName = null;
+      _roundSolved = false;
+      _completionSent = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF16A687);
@@ -137,6 +227,7 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import '../logic/logic_game_ui.dart';
 
 class ShapeMatchGameScreen extends StatefulWidget {
-  const ShapeMatchGameScreen({this.onCompleted, super.key});
+  const ShapeMatchGameScreen({
+    required this.audioCue,
+    this.onCompleted,
+    super.key,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _ShapeMatchGameScreenState.contentCount;
 
   @override
   State<ShapeMatchGameScreen> createState() => _ShapeMatchGameScreenState();
@@ -105,7 +115,191 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
         color: Color(0xFF2CB9A0),
       ),
     ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'diamond',
+        icon: Icons.diamond_rounded,
+        color: Color(0xFF35A7FF),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'triangle',
+        icon: Icons.change_history_rounded,
+        color: Color(0xFFFF8A3D),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'circle',
+        icon: Icons.circle,
+        color: Color(0xFF2DBE88),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'star',
+        icon: Icons.star_rounded,
+        color: Color(0xFFFFC14F),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'hexagon',
+        icon: Icons.hexagon_rounded,
+        color: Color(0xFF7257E8),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'heart',
+        icon: Icons.favorite_rounded,
+        color: Color(0xFFFF5D7D),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'diamond',
+        icon: Icons.diamond_rounded,
+        color: Color(0xFF35A7FF),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'square',
+        icon: Icons.square_rounded,
+        color: Color(0xFF2CB9A0),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'circle',
+        icon: Icons.circle,
+        color: Color(0xFFFFA928),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'triangle',
+        icon: Icons.change_history_rounded,
+        color: Color(0xFFEF5DA8),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'hexagon',
+        icon: Icons.hexagon_rounded,
+        color: Color(0xFF8D57D9),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'star',
+        icon: Icons.star_rounded,
+        color: Color(0xFF43C8D9),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'heart',
+        icon: Icons.favorite_rounded,
+        color: Color(0xFFEC6F66),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'hexagon',
+        icon: Icons.hexagon_rounded,
+        color: Color(0xFF2DBE88),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'triangle',
+        icon: Icons.change_history_rounded,
+        color: Color(0xFFFF8A3D),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'diamond',
+        icon: Icons.diamond_rounded,
+        color: Color(0xFF35A7FF),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'square',
+        icon: Icons.square_rounded,
+        color: Color(0xFF43C8D9),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'circle',
+        icon: Icons.circle,
+        color: Color(0xFF7257E8),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'star',
+        icon: Icons.star_rounded,
+        color: Color(0xFFFFA928),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'heart',
+        icon: Icons.favorite_rounded,
+        color: Color(0xFFFF5D7D),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'diamond',
+        icon: Icons.diamond_rounded,
+        color: Color(0xFF2CB9A0),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'triangle',
+        icon: Icons.change_history_rounded,
+        color: Color(0xFFEC6F66),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'hexagon',
+        icon: Icons.hexagon_rounded,
+        color: Color(0xFF8D57D9),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'heart',
+        icon: Icons.favorite_rounded,
+        color: Color(0xFFFFC14F),
+      ),
+    ],
+    [
+      _ShapePiece(
+        id: 0,
+        name: 'circle',
+        icon: Icons.circle,
+        color: Color(0xFF2DBE88),
+      ),
+      _ShapePiece(
+        id: 1,
+        name: 'square',
+        icon: Icons.square_rounded,
+        color: Color(0xFF7257E8),
+      ),
+      _ShapePiece(
+        id: 2,
+        name: 'diamond',
+        icon: Icons.diamond_rounded,
+        color: Color(0xFF35A7FF),
+      ),
+      _ShapePiece(
+        id: 3,
+        name: 'star',
+        icon: Icons.star_rounded,
+        color: Color(0xFFFFA928),
+      ),
+    ],
   ];
+
+  static int get contentCount => _rounds.length;
 
   int _roundIndex = 0;
   late Set<int> _remainingIds;
@@ -117,6 +311,10 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
 
   List<_ShapePiece> get _pieces => _rounds[_roundIndex];
   bool get _isLastRound => _roundIndex == _rounds.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   @override
   void initState() {
@@ -141,6 +339,7 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
       _feedback = 'Now find the ${shape.name} home.';
       _feedbackTone = LogicFeedbackTone.neutral;
     });
+    _playFeedback((cue) => cue.playTap());
   }
 
   void _tapHome(int homeId) {
@@ -150,6 +349,7 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
         _feedback = 'Choose a shape first.';
         _feedbackTone = LogicFeedbackTone.encouragement;
       });
+      _playFeedback((cue) => cue.playInvalidAction());
       return;
     }
     _tryPlace(selectedId, homeId);
@@ -185,12 +385,18 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
     });
 
     if (completedNow && !_completionReported) {
+      _playFeedback((cue) => cue.playWin());
       _completionReported = true;
       widget.onCompleted?.call();
+    } else if (isCorrect) {
+      _playFeedback((cue) => cue.playReward());
+    } else {
+      _playFeedback((cue) => cue.playInvalidAction());
     }
   }
 
   void _continue() {
+    _playFeedback((cue) => cue.playTap());
     if (_isLastRound) {
       setState(() {
         _roundIndex = 0;
@@ -210,6 +416,19 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
       _selectedId = null;
       _roundSolved = false;
       _feedback = 'New shapes are ready.';
+      _feedbackTone = LogicFeedbackTone.neutral;
+    });
+  }
+
+  void _restart() {
+    _playFeedback((cue) => cue.playRestart());
+    setState(() {
+      _roundIndex = 0;
+      _remainingIds = _idsForRound(0);
+      _selectedId = null;
+      _roundSolved = false;
+      _completionReported = false;
+      _feedback = 'Drag a shape, or tap it and then tap its home.';
       _feedbackTone = LogicFeedbackTone.neutral;
     });
   }
@@ -334,6 +553,7 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

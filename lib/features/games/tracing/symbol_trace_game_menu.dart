@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/analytics/game_analytics.dart';
 import '../../../core/audio/letter_audio_cue.dart';
+import '../../tracing/data/progress_repository.dart';
 import '../../tracing/domain/trace_definition.dart';
 import '../../tracing/presentation/trace_screen.dart';
 import '../shared/kid_celebration.dart';
@@ -27,8 +31,11 @@ class SymbolTraceGameMenu extends StatefulWidget {
     required this.title,
     required this.subtitle,
     required this.symbolKind,
+    required this.gameId,
     required this.entries,
     required this.audioCue,
+    required this.progressRepository,
+    required this.analytics,
     this.onCompleted,
     super.key,
   });
@@ -36,8 +43,11 @@ class SymbolTraceGameMenu extends StatefulWidget {
   final String title;
   final String subtitle;
   final String symbolKind;
+  final String gameId;
   final List<TraceGameEntry> entries;
   final LetterAudioCue audioCue;
+  final ProgressRepository progressRepository;
+  final GameAnalytics analytics;
   final VoidCallback? onCompleted;
 
   @override
@@ -45,10 +55,39 @@ class SymbolTraceGameMenu extends StatefulWidget {
 }
 
 class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
-  final Set<String> _completedEntryIds = <String>{};
+  late Set<String> _completedEntryIds;
   bool _completionReported = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _completedEntryIds = _savedEntryIds();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reportCompletionIfNeeded();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant SymbolTraceGameMenu oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gameId != widget.gameId ||
+        oldWidget.entries.length != widget.entries.length) {
+      _completedEntryIds = _savedEntryIds();
+      _completionReported = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reportCompletionIfNeeded();
+      });
+    }
+  }
+
   Future<void> _openEntry(TraceGameEntry entry) async {
+    final entryIndex = _entryIndex(entry.id);
+    widget.analytics.contentStarted(
+      gameId: widget.gameId,
+      contentId: entry.id,
+      contentIndex: entryIndex,
+      contentTotal: widget.entries.length,
+    );
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: '/games/trace/${entry.id}'),
@@ -72,16 +111,46 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
     if (!_completedEntryIds.add(id)) {
       return;
     }
+    widget.analytics.contentCompleted(
+      gameId: widget.gameId,
+      contentId: id,
+      contentIndex: _entryIndex(id),
+      contentTotal: widget.entries.length,
+    );
+    unawaited(
+      widget.progressRepository
+          .markContentComplete(widget.gameId, id)
+          .catchError((Object _) {}),
+    );
 
-    final completedAll = _completedEntryIds.length == widget.entries.length;
     if (mounted) {
       setState(() {});
     }
 
-    if (completedAll && !_completionReported) {
-      _completionReported = true;
-      widget.onCompleted?.call();
+    _reportCompletionIfNeeded();
+  }
+
+  int _entryIndex(String id) {
+    final index = widget.entries.indexWhere((entry) => entry.id == id);
+    return index < 0 ? 0 : index + 1;
+  }
+
+  Set<String> _savedEntryIds() {
+    final knownIds = widget.entries.map((entry) => entry.id).toSet();
+    return widget.progressRepository
+        .completedContentIds(widget.gameId)
+        .where(knownIds.contains)
+        .toSet();
+  }
+
+  void _reportCompletionIfNeeded() {
+    if (!mounted ||
+        _completionReported ||
+        _completedEntryIds.length != widget.entries.length) {
+      return;
     }
+    _completionReported = true;
+    widget.onCompleted?.call();
   }
 
   @override

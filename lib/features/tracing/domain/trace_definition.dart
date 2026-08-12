@@ -173,40 +173,31 @@ final class TraceDefinition {
     return TraceDefinition(
       symbol: 'B',
       strokes: [
-        _traceStroke(
-          'spine',
-          const [
-            (0.31, 0.14),
-            (0.31, 0.32),
-            (0.31, 0.50),
-            (0.31, 0.68),
-            (0.31, 0.86),
-          ],
-        ),
-        _traceStroke(
-          'top-bowl',
-          const [
-            (0.31, 0.14),
-            (0.48, 0.14),
-            (0.64, 0.20),
-            (0.70, 0.32),
-            (0.64, 0.44),
-            (0.48, 0.50),
-            (0.31, 0.50),
-          ],
-        ),
-        _traceStroke(
-          'bottom-bowl',
-          const [
-            (0.31, 0.50),
-            (0.50, 0.50),
-            (0.68, 0.56),
-            (0.74, 0.69),
-            (0.68, 0.81),
-            (0.50, 0.86),
-            (0.31, 0.86),
-          ],
-        ),
+        _traceStroke('spine', const [
+          (0.31, 0.14),
+          (0.31, 0.32),
+          (0.31, 0.50),
+          (0.31, 0.68),
+          (0.31, 0.86),
+        ]),
+        _traceStroke('top-bowl', const [
+          (0.31, 0.14),
+          (0.48, 0.14),
+          (0.64, 0.20),
+          (0.70, 0.32),
+          (0.64, 0.44),
+          (0.48, 0.50),
+          (0.31, 0.50),
+        ]),
+        _traceStroke('bottom-bowl', const [
+          (0.31, 0.50),
+          (0.50, 0.50),
+          (0.68, 0.56),
+          (0.74, 0.69),
+          (0.68, 0.81),
+          (0.50, 0.86),
+          (0.31, 0.86),
+        ]),
       ],
     );
   }
@@ -216,22 +207,19 @@ final class TraceDefinition {
     return TraceDefinition(
       symbol: 'C',
       strokes: [
-        _traceStroke(
-          'curve',
-          const [
-            (0.73, 0.24),
-            (0.63, 0.16),
-            (0.49, 0.13),
-            (0.36, 0.18),
-            (0.27, 0.30),
-            (0.23, 0.50),
-            (0.27, 0.70),
-            (0.36, 0.82),
-            (0.49, 0.87),
-            (0.63, 0.84),
-            (0.73, 0.76),
-          ],
-        ),
+        _traceStroke('curve', const [
+          (0.73, 0.24),
+          (0.63, 0.16),
+          (0.49, 0.13),
+          (0.36, 0.18),
+          (0.27, 0.30),
+          (0.23, 0.50),
+          (0.27, 0.70),
+          (0.36, 0.82),
+          (0.49, 0.87),
+          (0.63, 0.84),
+          (0.73, 0.76),
+        ]),
       ],
     );
   }
@@ -241,21 +229,19 @@ final class TraceDefinition {
     return TraceDefinition(
       symbol: '1',
       strokes: [
-        _traceStroke(
-          'lead-in-and-down',
-          const [
-            (0.37, 0.29),
-            (0.47, 0.20),
-            (0.55, 0.13),
-            (0.55, 0.36),
-            (0.55, 0.60),
-            (0.55, 0.85),
-          ],
-        ),
-        _traceStroke(
-          'baseline',
-          const [(0.38, 0.85), (0.55, 0.85), (0.72, 0.85)],
-        ),
+        _traceStroke('lead-in-and-down', const [
+          (0.37, 0.29),
+          (0.47, 0.20),
+          (0.55, 0.13),
+          (0.55, 0.36),
+          (0.55, 0.60),
+          (0.55, 0.85),
+        ]),
+        _traceStroke('baseline', const [
+          (0.38, 0.85),
+          (0.55, 0.85),
+          (0.72, 0.85),
+        ]),
       ],
     );
   }
@@ -265,23 +251,20 @@ final class TraceDefinition {
     return TraceDefinition(
       symbol: '2',
       strokes: [
-        _traceStroke(
-          'curve-and-base',
-          const [
-            (0.29, 0.29),
-            (0.36, 0.18),
-            (0.50, 0.13),
-            (0.64, 0.17),
-            (0.72, 0.29),
-            (0.68, 0.42),
-            (0.58, 0.53),
-            (0.47, 0.63),
-            (0.36, 0.74),
-            (0.28, 0.85),
-            (0.50, 0.85),
-            (0.73, 0.85),
-          ],
-        ),
+        _traceStroke('curve-and-base', const [
+          (0.29, 0.29),
+          (0.36, 0.18),
+          (0.50, 0.13),
+          (0.64, 0.17),
+          (0.72, 0.29),
+          (0.68, 0.42),
+          (0.58, 0.53),
+          (0.47, 0.63),
+          (0.36, 0.74),
+          (0.28, 0.85),
+          (0.50, 0.85),
+          (0.73, 0.85),
+        ]),
       ],
     );
   }
@@ -291,24 +274,540 @@ final class TraceDefinition {
     return TraceDefinition(
       symbol: '3',
       strokes: [
-        _traceStroke(
-          'double-curve',
-          const [
-            (0.31, 0.23),
-            (0.41, 0.15),
-            (0.55, 0.13),
-            (0.68, 0.19),
-            (0.72, 0.31),
-            (0.67, 0.42),
-            (0.55, 0.50),
-            (0.67, 0.56),
-            (0.73, 0.68),
-            (0.69, 0.80),
-            (0.56, 0.87),
-            (0.41, 0.85),
-            (0.30, 0.77),
-          ],
-        ),
+        _traceStroke('double-curve', const [
+          (0.31, 0.23),
+          (0.41, 0.15),
+          (0.55, 0.13),
+          (0.68, 0.19),
+          (0.72, 0.31),
+          (0.67, 0.42),
+          (0.55, 0.50),
+          (0.67, 0.56),
+          (0.73, 0.68),
+          (0.69, 0.80),
+          (0.56, 0.87),
+          (0.41, 0.85),
+          (0.30, 0.77),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseD() {
+    return TraceDefinition(
+      symbol: 'D',
+      strokes: [
+        _traceStroke('spine', const [(0.30, 0.14), (0.30, 0.50), (0.30, 0.86)]),
+        _traceStroke('curve', const [
+          (0.30, 0.14),
+          (0.54, 0.15),
+          (0.72, 0.30),
+          (0.78, 0.50),
+          (0.72, 0.70),
+          (0.54, 0.85),
+          (0.30, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseE() {
+    return TraceDefinition(
+      symbol: 'E',
+      strokes: [
+        _traceStroke('spine', const [(0.72, 0.14), (0.30, 0.14), (0.30, 0.86)]),
+        _traceStroke('middle-arm', const [(0.30, 0.50), (0.58, 0.50)]),
+        _traceStroke('bottom-arm', const [(0.30, 0.86), (0.72, 0.86)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseF() {
+    return TraceDefinition(
+      symbol: 'F',
+      strokes: [
+        _traceStroke('spine', const [(0.72, 0.14), (0.30, 0.14), (0.30, 0.86)]),
+        _traceStroke('middle-arm', const [(0.30, 0.50), (0.62, 0.50)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseG() {
+    return TraceDefinition(
+      symbol: 'G',
+      strokes: [
+        _traceStroke('curve', const [
+          (0.74, 0.25),
+          (0.63, 0.16),
+          (0.48, 0.13),
+          (0.34, 0.19),
+          (0.24, 0.34),
+          (0.22, 0.52),
+          (0.29, 0.72),
+          (0.45, 0.86),
+          (0.65, 0.84),
+          (0.76, 0.72),
+          (0.76, 0.58),
+          (0.58, 0.58),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseH() {
+    return TraceDefinition(
+      symbol: 'H',
+      strokes: [
+        _traceStroke('left-post', const [
+          (0.28, 0.14),
+          (0.28, 0.50),
+          (0.28, 0.86),
+        ]),
+        _traceStroke('right-post', const [
+          (0.72, 0.14),
+          (0.72, 0.50),
+          (0.72, 0.86),
+        ]),
+        _traceStroke('bridge', const [
+          (0.28, 0.50),
+          (0.50, 0.50),
+          (0.72, 0.50),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseI() {
+    return TraceDefinition(
+      symbol: 'I',
+      strokes: [
+        _traceStroke('top-bar', const [
+          (0.32, 0.14),
+          (0.50, 0.14),
+          (0.68, 0.14),
+        ]),
+        _traceStroke('stem', const [(0.50, 0.14), (0.50, 0.50), (0.50, 0.86)]),
+        _traceStroke('bottom-bar', const [
+          (0.32, 0.86),
+          (0.50, 0.86),
+          (0.68, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseJ() {
+    return TraceDefinition(
+      symbol: 'J',
+      strokes: [
+        _traceStroke('top-bar', const [
+          (0.30, 0.14),
+          (0.52, 0.14),
+          (0.74, 0.14),
+        ]),
+        _traceStroke('hook', const [
+          (0.58, 0.14),
+          (0.58, 0.34),
+          (0.58, 0.58),
+          (0.55, 0.76),
+          (0.44, 0.86),
+          (0.30, 0.82),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseK() {
+    return TraceDefinition(
+      symbol: 'K',
+      strokes: [
+        _traceStroke('spine', const [(0.30, 0.14), (0.30, 0.50), (0.30, 0.86)]),
+        _traceStroke('upper-arm', const [
+          (0.70, 0.14),
+          (0.50, 0.34),
+          (0.30, 0.50),
+        ]),
+        _traceStroke('lower-arm', const [
+          (0.30, 0.50),
+          (0.52, 0.66),
+          (0.74, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseL() {
+    return TraceDefinition(
+      symbol: 'L',
+      strokes: [
+        _traceStroke('corner', const [
+          (0.32, 0.14),
+          (0.32, 0.38),
+          (0.32, 0.62),
+          (0.32, 0.86),
+          (0.52, 0.86),
+          (0.72, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseM() {
+    return TraceDefinition(
+      symbol: 'M',
+      strokes: [
+        _traceStroke('zigzag', const [
+          (0.22, 0.86),
+          (0.22, 0.50),
+          (0.22, 0.14),
+          (0.40, 0.46),
+          (0.50, 0.64),
+          (0.60, 0.46),
+          (0.78, 0.14),
+          (0.78, 0.50),
+          (0.78, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseN() {
+    return TraceDefinition(
+      symbol: 'N',
+      strokes: [
+        _traceStroke('left-post', const [
+          (0.28, 0.86),
+          (0.28, 0.50),
+          (0.28, 0.14),
+        ]),
+        _traceStroke('diagonal', const [
+          (0.28, 0.14),
+          (0.50, 0.50),
+          (0.72, 0.86),
+        ]),
+        _traceStroke('right-post', const [
+          (0.72, 0.86),
+          (0.72, 0.50),
+          (0.72, 0.14),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseO() {
+    return TraceDefinition(symbol: 'O', strokes: [_ovalStroke('oval')]);
+  }
+
+  factory TraceDefinition.uppercaseP() {
+    return TraceDefinition(
+      symbol: 'P',
+      strokes: [
+        _traceStroke('spine', const [(0.30, 0.86), (0.30, 0.50), (0.30, 0.14)]),
+        _traceStroke('bowl', const [
+          (0.30, 0.14),
+          (0.50, 0.14),
+          (0.68, 0.22),
+          (0.70, 0.36),
+          (0.60, 0.48),
+          (0.44, 0.52),
+          (0.30, 0.50),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseQ() {
+    return TraceDefinition(
+      symbol: 'Q',
+      strokes: [
+        _ovalStroke('oval'),
+        _traceStroke('tail', const [(0.58, 0.68), (0.68, 0.78), (0.76, 0.88)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseR() {
+    return TraceDefinition(
+      symbol: 'R',
+      strokes: [
+        _traceStroke('spine', const [(0.30, 0.86), (0.30, 0.50), (0.30, 0.14)]),
+        _traceStroke('bowl', const [
+          (0.30, 0.14),
+          (0.50, 0.14),
+          (0.68, 0.22),
+          (0.70, 0.36),
+          (0.58, 0.48),
+          (0.42, 0.52),
+          (0.30, 0.50),
+        ]),
+        _traceStroke('leg', const [(0.42, 0.52), (0.56, 0.68), (0.74, 0.86)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseS() {
+    return TraceDefinition(
+      symbol: 'S',
+      strokes: [
+        _traceStroke('curve', const [
+          (0.70, 0.22),
+          (0.58, 0.14),
+          (0.42, 0.14),
+          (0.30, 0.24),
+          (0.34, 0.38),
+          (0.50, 0.48),
+          (0.66, 0.58),
+          (0.70, 0.74),
+          (0.56, 0.86),
+          (0.38, 0.84),
+          (0.28, 0.76),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseT() {
+    return TraceDefinition(
+      symbol: 'T',
+      strokes: [
+        _traceStroke('top-bar', const [
+          (0.24, 0.16),
+          (0.50, 0.16),
+          (0.76, 0.16),
+        ]),
+        _traceStroke('stem', const [(0.50, 0.16), (0.50, 0.50), (0.50, 0.86)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseU() {
+    return TraceDefinition(
+      symbol: 'U',
+      strokes: [
+        _traceStroke('curve', const [
+          (0.28, 0.14),
+          (0.28, 0.42),
+          (0.30, 0.68),
+          (0.40, 0.84),
+          (0.50, 0.88),
+          (0.60, 0.84),
+          (0.70, 0.68),
+          (0.72, 0.42),
+          (0.72, 0.14),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseV() {
+    return TraceDefinition(
+      symbol: 'V',
+      strokes: [
+        _traceStroke('angle', const [
+          (0.24, 0.14),
+          (0.36, 0.44),
+          (0.50, 0.86),
+          (0.64, 0.44),
+          (0.76, 0.14),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseW() {
+    return TraceDefinition(
+      symbol: 'W',
+      strokes: [
+        _traceStroke('zigzag', const [
+          (0.18, 0.14),
+          (0.28, 0.86),
+          (0.42, 0.54),
+          (0.50, 0.86),
+          (0.58, 0.54),
+          (0.72, 0.86),
+          (0.82, 0.14),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseX() {
+    return TraceDefinition(
+      symbol: 'X',
+      strokes: [
+        _traceStroke('falling-diagonal', const [
+          (0.26, 0.14),
+          (0.50, 0.50),
+          (0.74, 0.86),
+        ]),
+        _traceStroke('rising-diagonal', const [
+          (0.74, 0.14),
+          (0.50, 0.50),
+          (0.26, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseY() {
+    return TraceDefinition(
+      symbol: 'Y',
+      strokes: [
+        _traceStroke('fork', const [(0.26, 0.14), (0.50, 0.46), (0.74, 0.14)]),
+        _traceStroke('stem', const [(0.50, 0.46), (0.50, 0.66), (0.50, 0.86)]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.uppercaseZ() {
+    return TraceDefinition(
+      symbol: 'Z',
+      strokes: [
+        _traceStroke('zigzag', const [
+          (0.26, 0.16),
+          (0.50, 0.16),
+          (0.74, 0.16),
+          (0.50, 0.50),
+          (0.26, 0.84),
+          (0.50, 0.84),
+          (0.74, 0.84),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberFour() {
+    return TraceDefinition(
+      symbol: '4',
+      strokes: [
+        _traceStroke('angle', const [(0.66, 0.14), (0.42, 0.54), (0.76, 0.54)]),
+        _traceStroke('downstroke', const [
+          (0.66, 0.14),
+          (0.66, 0.50),
+          (0.66, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberFive() {
+    return TraceDefinition(
+      symbol: '5',
+      strokes: [
+        _traceStroke('top-and-spine', const [
+          (0.70, 0.16),
+          (0.36, 0.16),
+          (0.32, 0.45),
+        ]),
+        _traceStroke('curve', const [
+          (0.32, 0.45),
+          (0.50, 0.42),
+          (0.68, 0.50),
+          (0.72, 0.68),
+          (0.62, 0.84),
+          (0.42, 0.86),
+          (0.28, 0.78),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberSix() {
+    return TraceDefinition(
+      symbol: '6',
+      strokes: [
+        _traceStroke('loop', const [
+          (0.66, 0.20),
+          (0.52, 0.14),
+          (0.36, 0.22),
+          (0.28, 0.42),
+          (0.30, 0.66),
+          (0.42, 0.84),
+          (0.60, 0.82),
+          (0.70, 0.66),
+          (0.62, 0.52),
+          (0.44, 0.52),
+          (0.32, 0.64),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberSeven() {
+    return TraceDefinition(
+      symbol: '7',
+      strokes: [
+        _traceStroke('top-and-slide', const [
+          (0.28, 0.16),
+          (0.52, 0.16),
+          (0.76, 0.16),
+          (0.62, 0.40),
+          (0.50, 0.62),
+          (0.38, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberEight() {
+    return TraceDefinition(
+      symbol: '8',
+      strokes: [
+        _traceStroke('double-loop', const [
+          (0.50, 0.12),
+          (0.66, 0.18),
+          (0.68, 0.36),
+          (0.50, 0.48),
+          (0.32, 0.36),
+          (0.34, 0.18),
+          (0.50, 0.12),
+          (0.66, 0.58),
+          (0.68, 0.78),
+          (0.50, 0.88),
+          (0.32, 0.78),
+          (0.34, 0.58),
+          (0.50, 0.48),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberNine() {
+    return TraceDefinition(
+      symbol: '9',
+      strokes: [
+        _traceStroke('loop-and-tail', const [
+          (0.62, 0.44),
+          (0.50, 0.52),
+          (0.36, 0.48),
+          (0.30, 0.32),
+          (0.38, 0.16),
+          (0.56, 0.14),
+          (0.70, 0.28),
+          (0.68, 0.52),
+          (0.58, 0.70),
+          (0.42, 0.86),
+        ]),
+      ],
+    );
+  }
+
+  factory TraceDefinition.numberTen() {
+    return TraceDefinition(
+      symbol: '10',
+      strokes: [
+        _traceStroke('one', const [(0.25, 0.28), (0.34, 0.18), (0.34, 0.84)]),
+        _traceStroke('zero', const [
+          (0.66, 0.14),
+          (0.80, 0.24),
+          (0.82, 0.50),
+          (0.80, 0.76),
+          (0.66, 0.86),
+          (0.52, 0.76),
+          (0.50, 0.50),
+          (0.52, 0.24),
+          (0.66, 0.14),
+        ]),
       ],
     );
   }
@@ -319,6 +818,36 @@ final class TraceDefinition {
   factory TraceDefinition.digit2() => TraceDefinition.numberTwo();
 
   factory TraceDefinition.digit3() => TraceDefinition.numberThree();
+
+  factory TraceDefinition.digit4() => TraceDefinition.numberFour();
+
+  factory TraceDefinition.digit5() => TraceDefinition.numberFive();
+
+  factory TraceDefinition.digit6() => TraceDefinition.numberSix();
+
+  factory TraceDefinition.digit7() => TraceDefinition.numberSeven();
+
+  factory TraceDefinition.digit8() => TraceDefinition.numberEight();
+
+  factory TraceDefinition.digit9() => TraceDefinition.numberNine();
+
+  factory TraceDefinition.digit10() => TraceDefinition.numberTen();
+}
+
+TraceStroke _ovalStroke(String id) {
+  return _traceStroke(id, const [
+    (0.50, 0.12),
+    (0.68, 0.18),
+    (0.78, 0.36),
+    (0.76, 0.58),
+    (0.64, 0.78),
+    (0.50, 0.88),
+    (0.36, 0.78),
+    (0.24, 0.58),
+    (0.22, 0.36),
+    (0.32, 0.18),
+    (0.50, 0.12),
+  ]);
 }
 
 TraceStroke _traceStroke(

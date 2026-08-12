@@ -161,14 +161,24 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
     );
   }
 
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(_audioCue).catchError((Object _) {}));
+  }
+
   void _onPointerDown(PointerDownEvent event, Size size) {
     if (_activePointer != null || _showCelebration) {
       return;
     }
     _activePointer = event.pointer;
+    late final TraceState nextState;
     setState(() {
-      _traceController.start(_normalize(event.localPosition, size));
+      nextState = _traceController.start(_normalize(event.localPosition, size));
     });
+    if (nextState.status == TraceStatus.tracing) {
+      _playFeedback((cue) => cue.playValidAction());
+    } else if (nextState.status == TraceStatus.offPath) {
+      _playFeedback((cue) => cue.playInvalidAction());
+    }
   }
 
   void _onPointerMove(PointerMoveEvent event, Size size) {
@@ -176,13 +186,23 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
       return;
     }
 
+    final previousStatus = _traceState.status;
+    final previousCheckpoints = _traceState.completedCheckpointCount;
+    late final TraceState nextState;
     setState(() {
-      _traceController.update(_normalize(event.localPosition, size));
+      nextState = _traceController.update(
+        _normalize(event.localPosition, size),
+      );
     });
 
-    if (_traceState.isCompleted) {
+    if (nextState.status == TraceStatus.offPath &&
+        previousStatus != TraceStatus.offPath) {
+      _playFeedback((cue) => cue.playInvalidAction());
+    } else if (nextState.isCompleted) {
       _activePointer = null;
       unawaited(_completeSymbol());
+    } else if (nextState.completedCheckpointCount > previousCheckpoints) {
+      _playFeedback((cue) => cue.playValidAction());
     }
   }
 
@@ -210,7 +230,7 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
     }
 
     try {
-      await _audioCue.playSuccess();
+      await _audioCue.playWin();
     } on Object {
       // Audio feedback must never block this fully offline activity.
     }
@@ -224,8 +244,6 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
 
   Future<void> _playSymbolCue() async {
     try {
-      // LetterAudioCue is the legacy offline hook. Catalog callers can supply
-      // it for consistent tap feedback; null intentionally stays silent.
       await _audioCue.playLetterA();
     } on Object {
       // Missing device audio cannot block tracing.
@@ -233,6 +251,7 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
   }
 
   void _resetTrace() {
+    _playFeedback((cue) => cue.playRestart());
     _activePointer = null;
     setState(() {
       _traceController.reset();
@@ -357,7 +376,7 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
           _TraceControl(
             key: const ValueKey('replay-audio-control'),
             icon: Icons.volume_up_rounded,
-            label: 'Hear ${widget.symbolKind.toLowerCase()} $_symbol',
+            label: 'Play sound cue',
             onPressed: () => unawaited(_playSymbolCue()),
           ),
           const SizedBox(width: 4),
@@ -481,6 +500,24 @@ class _SilentLetterAudioCue implements LetterAudioCue {
 
   @override
   Future<void> playSuccess() async {}
+
+  @override
+  Future<void> playTap() async {}
+
+  @override
+  Future<void> playValidAction() async {}
+
+  @override
+  Future<void> playInvalidAction() async {}
+
+  @override
+  Future<void> playReward() async {}
+
+  @override
+  Future<void> playWin() async {}
+
+  @override
+  Future<void> playRestart() async {}
 }
 
 class _TraceControl extends StatelessWidget {

@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import 'logic_game_ui.dart';
 
 class ColorSortGameScreen extends StatefulWidget {
-  const ColorSortGameScreen({super.key, this.onCompleted});
+  const ColorSortGameScreen({
+    required this.audioCue,
+    super.key,
+    this.onCompleted,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _ColorSortGameScreenState.contentCount;
 
   @override
   State<ColorSortGameScreen> createState() => _ColorSortGameScreenState();
@@ -46,38 +56,258 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
 
   static const _rounds = <List<_SortPiece>>[
     [
-      _SortPiece(id: 0, bucketId: 0, icon: Icons.favorite_rounded, label: 'heart'),
+      _SortPiece(
+        id: 0,
+        bucketId: 0,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
       _SortPiece(id: 1, bucketId: 1, icon: Icons.circle, label: 'circle'),
       _SortPiece(id: 2, bucketId: 2, icon: Icons.star_rounded, label: 'star'),
-      _SortPiece(id: 3, bucketId: 0, icon: Icons.square_rounded, label: 'square'),
+      _SortPiece(
+        id: 3,
+        bucketId: 0,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
       _SortPiece(id: 4, bucketId: 2, icon: Icons.circle, label: 'circle'),
-      _SortPiece(id: 5, bucketId: 1, icon: Icons.hexagon_rounded, label: 'hexagon'),
+      _SortPiece(
+        id: 5,
+        bucketId: 1,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
     ],
     [
-      _SortPiece(id: 0, bucketId: 2, icon: Icons.favorite_rounded, label: 'heart'),
+      _SortPiece(
+        id: 0,
+        bucketId: 2,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
       _SortPiece(id: 1, bucketId: 0, icon: Icons.star_rounded, label: 'star'),
-      _SortPiece(id: 2, bucketId: 1, icon: Icons.square_rounded, label: 'square'),
-      _SortPiece(id: 3, bucketId: 2, icon: Icons.hexagon_rounded, label: 'hexagon'),
-      _SortPiece(id: 4, bucketId: 1, icon: Icons.favorite_rounded, label: 'heart'),
+      _SortPiece(
+        id: 2,
+        bucketId: 1,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 3,
+        bucketId: 2,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(
+        id: 4,
+        bucketId: 1,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
       _SortPiece(id: 5, bucketId: 0, icon: Icons.circle, label: 'circle'),
     ],
     [
       _SortPiece(id: 0, bucketId: 1, icon: Icons.star_rounded, label: 'star'),
-      _SortPiece(id: 1, bucketId: 2, icon: Icons.square_rounded, label: 'square'),
-      _SortPiece(id: 2, bucketId: 0, icon: Icons.hexagon_rounded, label: 'hexagon'),
+      _SortPiece(
+        id: 1,
+        bucketId: 2,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 2,
+        bucketId: 0,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
       _SortPiece(id: 3, bucketId: 1, icon: Icons.circle, label: 'circle'),
-      _SortPiece(id: 4, bucketId: 0, icon: Icons.favorite_rounded, label: 'heart'),
+      _SortPiece(
+        id: 4,
+        bucketId: 0,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
       _SortPiece(id: 5, bucketId: 2, icon: Icons.star_rounded, label: 'star'),
     ],
     [
       _SortPiece(id: 0, bucketId: 0, icon: Icons.star_rounded, label: 'star'),
       _SortPiece(id: 1, bucketId: 2, icon: Icons.circle, label: 'circle'),
-      _SortPiece(id: 2, bucketId: 1, icon: Icons.favorite_rounded, label: 'heart'),
-      _SortPiece(id: 3, bucketId: 0, icon: Icons.hexagon_rounded, label: 'hexagon'),
-      _SortPiece(id: 4, bucketId: 1, icon: Icons.square_rounded, label: 'square'),
-      _SortPiece(id: 5, bucketId: 2, icon: Icons.favorite_rounded, label: 'heart'),
+      _SortPiece(
+        id: 2,
+        bucketId: 1,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(
+        id: 3,
+        bucketId: 0,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(
+        id: 4,
+        bucketId: 1,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 5,
+        bucketId: 2,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+    ],
+    [
+      _SortPiece(
+        id: 0,
+        bucketId: 1,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(id: 1, bucketId: 0, icon: Icons.circle, label: 'circle'),
+      _SortPiece(
+        id: 2,
+        bucketId: 2,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 3,
+        bucketId: 2,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(id: 4, bucketId: 1, icon: Icons.star_rounded, label: 'star'),
+      _SortPiece(
+        id: 5,
+        bucketId: 0,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+    ],
+    [
+      _SortPiece(id: 0, bucketId: 2, icon: Icons.star_rounded, label: 'star'),
+      _SortPiece(
+        id: 1,
+        bucketId: 0,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(id: 2, bucketId: 1, icon: Icons.circle, label: 'circle'),
+      _SortPiece(
+        id: 3,
+        bucketId: 0,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 4,
+        bucketId: 2,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(id: 5, bucketId: 1, icon: Icons.star_rounded, label: 'star'),
+    ],
+    [
+      _SortPiece(
+        id: 0,
+        bucketId: 0,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(
+        id: 1,
+        bucketId: 1,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(
+        id: 2,
+        bucketId: 1,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(id: 3, bucketId: 2, icon: Icons.circle, label: 'circle'),
+      _SortPiece(id: 4, bucketId: 0, icon: Icons.star_rounded, label: 'star'),
+      _SortPiece(
+        id: 5,
+        bucketId: 2,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+    ],
+    [
+      _SortPiece(
+        id: 0,
+        bucketId: 2,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(
+        id: 1,
+        bucketId: 1,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(id: 2, bucketId: 0, icon: Icons.circle, label: 'circle'),
+      _SortPiece(id: 3, bucketId: 2, icon: Icons.star_rounded, label: 'star'),
+      _SortPiece(
+        id: 4,
+        bucketId: 0,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(id: 5, bucketId: 1, icon: Icons.circle, label: 'circle'),
+    ],
+    [
+      _SortPiece(id: 0, bucketId: 1, icon: Icons.star_rounded, label: 'star'),
+      _SortPiece(
+        id: 1,
+        bucketId: 2,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(
+        id: 2,
+        bucketId: 0,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(
+        id: 3,
+        bucketId: 1,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(id: 4, bucketId: 0, icon: Icons.circle, label: 'circle'),
+      _SortPiece(id: 5, bucketId: 2, icon: Icons.star_rounded, label: 'star'),
+    ],
+    [
+      _SortPiece(
+        id: 0,
+        bucketId: 0,
+        icon: Icons.square_rounded,
+        label: 'square',
+      ),
+      _SortPiece(
+        id: 1,
+        bucketId: 2,
+        icon: Icons.hexagon_rounded,
+        label: 'hexagon',
+      ),
+      _SortPiece(id: 2, bucketId: 1, icon: Icons.circle, label: 'circle'),
+      _SortPiece(
+        id: 3,
+        bucketId: 1,
+        icon: Icons.favorite_rounded,
+        label: 'heart',
+      ),
+      _SortPiece(id: 4, bucketId: 2, icon: Icons.circle, label: 'circle'),
+      _SortPiece(id: 5, bucketId: 0, icon: Icons.star_rounded, label: 'star'),
     ],
   ];
+
+  static int get contentCount => _rounds.length;
 
   int _roundIndex = 0;
   late Set<int> _remainingPieceIds;
@@ -89,6 +319,10 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
 
   List<_SortPiece> get _pieces => _rounds[_roundIndex];
   bool get _isLastRound => _roundIndex == _rounds.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   @override
   void initState() {
@@ -111,9 +345,11 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
       _selectedPieceId = id;
       final piece = _pieceWithId(id);
       final bucket = _bucketWithId(piece.bucketId);
-      _feedback = 'Now put the ${bucket.name.toLowerCase()} ${piece.label} in a basket.';
+      _feedback =
+          'Now put the ${bucket.name.toLowerCase()} ${piece.label} in a basket.';
       _feedbackTone = LogicFeedbackTone.neutral;
     });
+    _playFeedback((cue) => cue.playTap());
   }
 
   void _tapBasket(int bucketId) {
@@ -123,6 +359,7 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
         _feedback = 'Choose a colorful shape first.';
         _feedbackTone = LogicFeedbackTone.encouragement;
       });
+      _playFeedback((cue) => cue.playInvalidAction());
       return;
     }
     _tryPlace(selectedId, bucketId);
@@ -151,18 +388,25 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
         }
       } else {
         _selectedPieceId = pieceId;
-        _feedback = 'Good try! This ${piece.label} is ${correctBucket.name.toLowerCase()}.';
+        _feedback =
+            'Good try! This ${piece.label} is ${correctBucket.name.toLowerCase()}.';
         _feedbackTone = LogicFeedbackTone.encouragement;
       }
     });
 
     if (completedNow && !_completionSent) {
+      _playFeedback((cue) => cue.playWin());
       _completionSent = true;
       widget.onCompleted?.call();
+    } else if (isCorrect) {
+      _playFeedback((cue) => cue.playReward());
+    } else {
+      _playFeedback((cue) => cue.playInvalidAction());
     }
   }
 
   void _continue() {
+    _playFeedback((cue) => cue.playTap());
     if (_isLastRound) {
       setState(() {
         _roundIndex = 0;
@@ -182,6 +426,19 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
       _selectedPieceId = null;
       _roundSolved = false;
       _feedback = 'A fresh color mix! Where does each shape belong?';
+      _feedbackTone = LogicFeedbackTone.neutral;
+    });
+  }
+
+  void _restart() {
+    _playFeedback((cue) => cue.playRestart());
+    setState(() {
+      _roundIndex = 0;
+      _remainingPieceIds = _idsForRound(0);
+      _selectedPieceId = null;
+      _roundSolved = false;
+      _completionSent = false;
+      _feedback = 'Drag a shape, or tap it and then tap a basket.';
       _feedbackTone = LogicFeedbackTone.neutral;
     });
   }
@@ -252,7 +509,9 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
                   height: 128,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: bucket.color.withValues(alpha: hovering ? 0.25 : 0.14),
+                    color: bucket.color.withValues(
+                      alpha: hovering ? 0.25 : 0.14,
+                    ),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
                       color: bucket.color,
@@ -307,6 +566,7 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -345,10 +605,7 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
                               onDragStarted: () => _selectPiece(piece.id),
                               feedback: Material(
                                 color: Colors.transparent,
-                                child: _buildPiece(
-                                  piece,
-                                  isDragFeedback: true,
-                                ),
+                                child: _buildPiece(piece, isDragFeedback: true),
                               ),
                               childWhenDragging: Opacity(
                                 opacity: 0.24,

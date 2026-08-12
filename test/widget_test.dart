@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rapid_jump/app/kids_land_app.dart';
+import 'package:rapid_jump/core/ads/app_ads_controller.dart';
+import 'package:rapid_jump/core/analytics/game_analytics.dart';
 import 'package:rapid_jump/core/audio/letter_audio_cue.dart';
 import 'package:rapid_jump/features/tracing/data/progress_repository.dart';
 import 'package:rapid_jump/features/tracing/domain/trace_definition.dart';
@@ -25,7 +27,7 @@ void main() {
     expect(find.text('Start at the glowing dot'), findsOneWidget);
   });
 
-  testWidgets('letter tracing saves once after A through C and celebrates', (
+  testWidgets('letter tracing saves entry progress without ending at C', (
     tester,
   ) async {
     final repository = RecordingProgressRepository();
@@ -55,8 +57,13 @@ void main() {
     await _openTraceEntry(tester, 'letter-c');
     await _traceDefinition(tester, TraceDefinition.uppercaseC());
 
-    expect(repository.markCompleteCalls, 1);
-    expect(repository.isLetterAComplete, isTrue);
+    expect(repository.markCompleteCalls, 0);
+    expect(repository.isLetterAComplete, isFalse);
+    expect(repository.completedContentIds('letter-tracing'), {
+      'letter-a',
+      'letter-b',
+      'letter-c',
+    });
     expect(find.byKey(const ValueKey('celebration-overlay')), findsOneWidget);
 
     // Extra pointer input cannot duplicate completion persistence.
@@ -64,7 +71,7 @@ void main() {
       tester.getCenter(find.byKey(const ValueKey('trace-canvas'))),
     );
     await tester.pump();
-    expect(repository.markCompleteCalls, 1);
+    expect(repository.markCompleteCalls, 0);
   });
 
   testWidgets('off-path touch gives a gentle hint and cannot complete', (
@@ -221,6 +228,8 @@ Widget _app({
   return KidsLandApp(
     progressRepository: repository,
     audioCue: audioCue ?? RecordingAudioCue(),
+    analytics: const NoopGameAnalytics(),
+    adsController: const NoopAppAdsController(),
   );
 }
 
@@ -286,11 +295,15 @@ class RecordingProgressRepository implements ProgressRepository {
   RecordingProgressRepository({
     bool isLetterAComplete = false,
     bool soundEnabled = true,
+    bool hapticsEnabled = true,
   }) : _completedGameIds = <String>{if (isLetterAComplete) letterTracingGameId},
-       _soundEnabled = soundEnabled;
+       _soundEnabled = soundEnabled,
+       _hapticsEnabled = hapticsEnabled;
 
   final Set<String> _completedGameIds;
+  final Set<String> _completedContentKeys = <String>{};
   bool _soundEnabled;
+  bool _hapticsEnabled;
   int markCompleteCalls = 0;
 
   @override
@@ -300,7 +313,20 @@ class RecordingProgressRepository implements ProgressRepository {
   bool get isLetterAComplete => isGameComplete(letterTracingGameId);
 
   @override
+  Set<String> completedContentIds(String gameId) {
+    final prefix = '$gameId::';
+    return Set.unmodifiable(
+      _completedContentKeys
+          .where((key) => key.startsWith(prefix))
+          .map((key) => key.substring(prefix.length)),
+    );
+  }
+
+  @override
   bool get soundEnabled => _soundEnabled;
+
+  @override
+  bool get hapticsEnabled => _hapticsEnabled;
 
   @override
   Future<void> markLetterAComplete() async {
@@ -314,19 +340,36 @@ class RecordingProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<void> markContentComplete(String gameId, String contentId) async {
+    _completedContentKeys.add('$gameId::$contentId');
+  }
+
+  @override
   bool isGameComplete(String gameId) {
     return _completedGameIds.contains(gameId);
   }
 
   @override
+  bool isContentComplete(String gameId, String contentId) {
+    return _completedContentKeys.contains('$gameId::$contentId');
+  }
+
+  @override
   Future<void> reset() async {
     _completedGameIds.clear();
+    _completedContentKeys.clear();
     _soundEnabled = true;
+    _hapticsEnabled = true;
   }
 
   @override
   Future<void> setSoundEnabled(bool enabled) async {
     _soundEnabled = enabled;
+  }
+
+  @override
+  Future<void> setHapticsEnabled(bool enabled) async {
+    _hapticsEnabled = enabled;
   }
 }
 
@@ -344,6 +387,48 @@ class RecordingAudioCue implements LetterAudioCue {
 
   @override
   Future<void> playSuccess() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playTap() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playValidAction() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playInvalidAction() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playReward() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playWin() async {
+    if (shouldFail) {
+      throw StateError('Test audio failure');
+    }
+  }
+
+  @override
+  Future<void> playRestart() async {
     if (shouldFail) {
       throw StateError('Test audio failure');
     }

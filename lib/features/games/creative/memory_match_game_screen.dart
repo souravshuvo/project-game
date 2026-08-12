@@ -1,51 +1,146 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import '../shared/kid_celebration.dart';
 
 /// A deterministic six-pair emoji memory game that works fully offline.
 class MemoryMatchGameScreen extends StatefulWidget {
-  const MemoryMatchGameScreen({this.onCompleted, super.key});
+  const MemoryMatchGameScreen({
+    required this.audioCue,
+    this.onCompleted,
+    super.key,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _MemoryMatchGameScreenState.contentCount;
 
   @override
   State<MemoryMatchGameScreen> createState() => _MemoryMatchGameScreenState();
 }
 
 class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
-  static const _cards = <_MemoryCardData>[
-    _MemoryCardData('lion', '🦁'),
-    _MemoryCardData('frog', '🐸'),
-    _MemoryCardData('panda', '🐼'),
-    _MemoryCardData('fox', '🦊'),
-    _MemoryCardData('fish', '🐠'),
-    _MemoryCardData('owl', '🦉'),
-    _MemoryCardData('panda', '🐼'),
-    _MemoryCardData('owl', '🦉'),
-    _MemoryCardData('lion', '🦁'),
-    _MemoryCardData('fish', '🐠'),
-    _MemoryCardData('fox', '🦊'),
-    _MemoryCardData('frog', '🐸'),
+  static const _boards = <_MemoryBoard>[
+    _MemoryBoard('Forest Friends', [
+      _MemoryCardData('lion', '🦁'),
+      _MemoryCardData('frog', '🐸'),
+      _MemoryCardData('panda', '🐼'),
+      _MemoryCardData('fox', '🦊'),
+      _MemoryCardData('fish', '🐠'),
+      _MemoryCardData('owl', '🦉'),
+      _MemoryCardData('panda', '🐼'),
+      _MemoryCardData('owl', '🦉'),
+      _MemoryCardData('lion', '🦁'),
+      _MemoryCardData('fish', '🐠'),
+      _MemoryCardData('fox', '🦊'),
+      _MemoryCardData('frog', '🐸'),
+    ]),
+    _MemoryBoard('Garden Snacks', [
+      _MemoryCardData('apple', '\u{1F34E}'),
+      _MemoryCardData('banana', '\u{1F34C}'),
+      _MemoryCardData('grapes', '\u{1F347}'),
+      _MemoryCardData('carrot', '\u{1F955}'),
+      _MemoryCardData('corn', '\u{1F33D}'),
+      _MemoryCardData('berry', '\u{1FAD0}'),
+      _MemoryCardData('corn', '\u{1F33D}'),
+      _MemoryCardData('apple', '\u{1F34E}'),
+      _MemoryCardData('berry', '\u{1FAD0}'),
+      _MemoryCardData('banana', '\u{1F34C}'),
+      _MemoryCardData('carrot', '\u{1F955}'),
+      _MemoryCardData('grapes', '\u{1F347}'),
+    ]),
+    _MemoryBoard('Toy Box', [
+      _MemoryCardData('balloon', '\u{1F388}'),
+      _MemoryCardData('teddy', '\u{1F9F8}'),
+      _MemoryCardData('car', '\u{1F697}'),
+      _MemoryCardData('train', '\u{1F682}'),
+      _MemoryCardData('kite', '\u{1FA81}'),
+      _MemoryCardData('blocks', '\u{1F9F1}'),
+      _MemoryCardData('kite', '\u{1FA81}'),
+      _MemoryCardData('car', '\u{1F697}'),
+      _MemoryCardData('blocks', '\u{1F9F1}'),
+      _MemoryCardData('balloon', '\u{1F388}'),
+      _MemoryCardData('train', '\u{1F682}'),
+      _MemoryCardData('teddy', '\u{1F9F8}'),
+    ]),
+    _MemoryBoard('Ocean Pals', [
+      _MemoryCardData('dolphin', '\u{1F42C}'),
+      _MemoryCardData('turtle', '\u{1F422}'),
+      _MemoryCardData('crab', '\u{1F980}'),
+      _MemoryCardData('octopus', '\u{1F419}'),
+      _MemoryCardData('whale', '\u{1F433}'),
+      _MemoryCardData('shell', '\u{1F41A}'),
+      _MemoryCardData('shell', '\u{1F41A}'),
+      _MemoryCardData('octopus', '\u{1F419}'),
+      _MemoryCardData('dolphin', '\u{1F42C}'),
+      _MemoryCardData('whale', '\u{1F433}'),
+      _MemoryCardData('turtle', '\u{1F422}'),
+      _MemoryCardData('crab', '\u{1F980}'),
+    ]),
+    _MemoryBoard('Sky Shapes', [
+      _MemoryCardData('sun', '\u{1F31E}'),
+      _MemoryCardData('moon', '\u{1F319}'),
+      _MemoryCardData('star', '\u{1F31F}'),
+      _MemoryCardData('cloud', '\u{2601}\u{FE0F}'),
+      _MemoryCardData('rainbow', '\u{1F308}'),
+      _MemoryCardData('spark', '\u{2728}'),
+      _MemoryCardData('cloud', '\u{2601}\u{FE0F}'),
+      _MemoryCardData('spark', '\u{2728}'),
+      _MemoryCardData('sun', '\u{1F31E}'),
+      _MemoryCardData('rainbow', '\u{1F308}'),
+      _MemoryCardData('moon', '\u{1F319}'),
+      _MemoryCardData('star', '\u{1F31F}'),
+    ]),
+    _MemoryBoard('Little Bugs', [
+      _MemoryCardData('bee', '\u{1F41D}'),
+      _MemoryCardData('butterfly', '\u{1F98B}'),
+      _MemoryCardData('snail', '\u{1F40C}'),
+      _MemoryCardData('ant', '\u{1F41C}'),
+      _MemoryCardData('ladybug', '\u{1F41E}'),
+      _MemoryCardData('worm', '\u{1FAB1}'),
+      _MemoryCardData('ant', '\u{1F41C}'),
+      _MemoryCardData('bee', '\u{1F41D}'),
+      _MemoryCardData('worm', '\u{1FAB1}'),
+      _MemoryCardData('butterfly', '\u{1F98B}'),
+      _MemoryCardData('snail', '\u{1F40C}'),
+      _MemoryCardData('ladybug', '\u{1F41E}'),
+    ]),
   ];
 
+  static int get contentCount => _boards.length;
+
+  int _boardIndex = 0;
   final Set<int> _matched = <int>{};
   int? _firstIndex;
+  int? _secondIndex;
   int _moves = 0;
   int _roundGeneration = 0;
   bool _inputLocked = false;
   bool _isComplete = false;
   bool _completionReported = false;
 
-  bool _isFaceUp(int index) => _matched.contains(index) || _firstIndex == index;
+  _MemoryBoard get _board => _boards[_boardIndex];
+  List<_MemoryCardData> get _cards => _board.cards;
+  int get _pairCount => _cards.length ~/ 2;
+  bool get _isLastBoard => _boardIndex == _boards.length - 1;
+  bool _isFaceUp(int index) =>
+      _matched.contains(index) || _firstIndex == index || _secondIndex == index;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   Future<void> _flipCard(int index) async {
     if (_inputLocked || _isComplete || _matched.contains(index)) return;
-    if (_firstIndex == index) return;
+    if (_firstIndex == index || _secondIndex == index) return;
 
     if (_firstIndex == null) {
       setState(() => _firstIndex = index);
+      _playFeedback((cue) => cue.playTap());
       return;
     }
 
@@ -59,14 +154,18 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
           ..add(firstIndex)
           ..add(index);
         _firstIndex = null;
+        _secondIndex = null;
         if (_matched.length == _cards.length) {
           _isComplete = true;
           completedNow = true;
         }
       });
-      if (completedNow && !_completionReported) {
+      if (completedNow && _isLastBoard && !_completionReported) {
+        _playFeedback((cue) => cue.playWin());
         _completionReported = true;
         widget.onCompleted?.call();
+      } else {
+        _playFeedback((cue) => cue.playReward());
       }
       return;
     }
@@ -74,25 +173,52 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
     final generation = _roundGeneration;
     setState(() {
       _moves += 1;
+      _secondIndex = index;
       _inputLocked = true;
     });
+    _playFeedback((cue) => cue.playInvalidAction());
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted || generation != _roundGeneration) return;
     setState(() {
       _firstIndex = null;
+      _secondIndex = null;
       _inputLocked = false;
     });
   }
 
   void _resetRound() {
+    _playFeedback((cue) => cue.playRestart());
+    _resetBoardState();
+  }
+
+  void _continueAfterComplete() {
+    _playFeedback((cue) => cue.playTap());
+    setState(() {
+      if (_isLastBoard) {
+        _boardIndex = 0;
+        _completionReported = false;
+      } else {
+        _boardIndex += 1;
+      }
+      _roundGeneration += 1;
+      _matched.clear();
+      _firstIndex = null;
+      _secondIndex = null;
+      _moves = 0;
+      _inputLocked = false;
+      _isComplete = false;
+    });
+  }
+
+  void _resetBoardState() {
     setState(() {
       _roundGeneration += 1;
       _matched.clear();
       _firstIndex = null;
+      _secondIndex = null;
       _moves = 0;
       _inputLocked = false;
       _isComplete = false;
-      _completionReported = false;
     });
   }
 
@@ -110,7 +236,12 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
         child: SafeArea(
           child: Column(
             children: <Widget>[
-              _MemoryHeader(onReset: _resetRound),
+              _MemoryHeader(
+                boardName: _board.name,
+                board: _boardIndex + 1,
+                totalBoards: _boards.length,
+                onReset: _resetRound,
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: Row(
@@ -125,7 +256,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                     const SizedBox(width: 12),
                     _MemoryStat(
                       icon: Icons.favorite_rounded,
-                      value: '${_matched.length ~/ 2}/6',
+                      value: '${_matched.length ~/ 2}/$_pairCount',
                       label: 'pairs',
                       color: const Color(0xFFFF5D7D),
                     ),
@@ -175,7 +306,11 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _isComplete
-                    ? _MemoryCompletePanel(moves: _moves, onReplay: _resetRound)
+                    ? _MemoryCompletePanel(
+                        moves: _moves,
+                        isLastBoard: _isLastBoard,
+                        onContinue: _continueAfterComplete,
+                      )
                     : const SizedBox.shrink(),
               ),
             ],
@@ -187,8 +322,16 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
 }
 
 class _MemoryHeader extends StatelessWidget {
-  const _MemoryHeader({required this.onReset});
+  const _MemoryHeader({
+    required this.boardName,
+    required this.board,
+    required this.totalBoards,
+    required this.onReset,
+  });
 
+  final String boardName;
+  final int board;
+  final int totalBoards;
   final VoidCallback onReset;
 
   @override
@@ -219,11 +362,11 @@ class _MemoryHeader extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const Text(
-                  'Find every matching pair',
+                Text(
+                  '$boardName • Board $board/$totalBoards',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF60758B),
                     fontWeight: FontWeight.w600,
                   ),
@@ -452,10 +595,15 @@ class _MemoryCard extends StatelessWidget {
 }
 
 class _MemoryCompletePanel extends StatelessWidget {
-  const _MemoryCompletePanel({required this.moves, required this.onReplay});
+  const _MemoryCompletePanel({
+    required this.moves,
+    required this.isLastBoard,
+    required this.onContinue,
+  });
 
   final int moves;
-  final VoidCallback onReplay;
+  final bool isLastBoard;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -501,16 +649,21 @@ class _MemoryCompletePanel extends StatelessWidget {
                 SizedBox(
                   height: 64,
                   child: FilledButton.icon(
-                    onPressed: onReplay,
+                    onPressed: onContinue,
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF17835F),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    icon: const Icon(Icons.replay_rounded, size: 27),
-                    label: const Text(
-                      'Play again',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                    icon: Icon(
+                      isLastBoard
+                          ? Icons.replay_rounded
+                          : Icons.arrow_forward_rounded,
+                      size: 27,
+                    ),
+                    label: Text(
+                      isLastBoard ? 'Play again' : 'Next',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ),
                 ),
@@ -528,4 +681,11 @@ class _MemoryCardData {
 
   final String id;
   final String emoji;
+}
+
+class _MemoryBoard {
+  const _MemoryBoard(this.name, this.cards);
+
+  final String name;
+  final List<_MemoryCardData> cards;
 }

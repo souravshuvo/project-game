@@ -1,11 +1,12 @@
 # Audio assets
 
-The letter-A engineering slice uses Flutter's local system sound as a temporary
-interaction cue. It does not yet ship a pronunciation recording.
+KidsLand currently uses Flutter's built-in system sounds and platform haptics
+for lightweight gameplay feedback. No custom audio files, music, sound packs,
+or audio packages are bundled.
 
-Before A–F production:
+If future tracing releases add spoken letter or number cues:
 
-- add a reviewed, child-appropriate local recording for each letter;
+- add reviewed, child-appropriate local recordings;
 - record the creator, source, license, and attribution requirement here;
 - verify pronunciation with a preschool educator or parent;
 - confirm every file is bundled and works in airplane mode.

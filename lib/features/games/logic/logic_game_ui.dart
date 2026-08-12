@@ -12,6 +12,7 @@ class LogicGameScaffold extends StatelessWidget {
     required this.round,
     required this.totalRounds,
     required this.child,
+    this.onRestart,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class LogicGameScaffold extends StatelessWidget {
   final int round;
   final int totalRounds;
   final Widget child;
+  final VoidCallback? onRestart;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +78,8 @@ class LogicGameScaffold extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineSmall
@@ -85,6 +89,21 @@ class LogicGameScaffold extends StatelessWidget {
                                       ),
                                 ),
                               ),
+                              if (onRestart != null) ...[
+                                const SizedBox(width: 8),
+                                SizedBox.square(
+                                  dimension: 56,
+                                  child: IconButton.filledTonal(
+                                    tooltip: 'Restart',
+                                    onPressed: onRestart,
+                                    icon: const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 28,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
                               Container(
                                 constraints: const BoxConstraints(
                                   minWidth: 64,

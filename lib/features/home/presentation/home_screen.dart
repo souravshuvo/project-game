@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/ads/app_ads_controller.dart';
+import '../../../core/analytics/game_analytics.dart';
 import '../../../core/audio/letter_audio_cue.dart';
+import '../../../core/audio/telemetry_audio_cue.dart';
 import '../../games/game_catalog.dart';
 import '../../games/shared/kid_celebration.dart';
 import '../../parent/presentation/parent_corner_screen.dart';
@@ -13,35 +16,89 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.progressRepository,
     required this.audioCue,
+    required this.analytics,
+    required this.adsController,
     super.key,
   });
 
   final ProgressRepository progressRepository;
   final LetterAudioCue audioCue;
+  final GameAnalytics analytics;
+  final AppAdsController adsController;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
+
   Future<void> _openGame(KidsGame game) async {
+    _playFeedback((cue) => cue.playTap());
+    final startedAt = DateTime.now();
     var completionRequested = false;
+    final completedBefore = widget.progressRepository.completedGameIds.length;
+    final wasAlreadyComplete = widget.progressRepository.isGameComplete(
+      game.id,
+    );
+    widget.analytics.gameStarted(
+      gameId: game.id,
+      title: game.title,
+      completedGames: completedBefore,
+      totalGames: kidsGameCatalog.length,
+    );
 
     void markCompleted() {
       if (completionRequested) {
         return;
       }
       completionRequested = true;
+      final completedAfter = wasAlreadyComplete
+          ? completedBefore
+          : (completedBefore + 1).clamp(0, kidsGameCatalog.length);
+      widget.analytics.gameCompleted(
+        gameId: game.id,
+        title: game.title,
+        durationMs: DateTime.now().difference(startedAt).inMilliseconds,
+        completedGames: completedAfter,
+        totalGames: kidsGameCatalog.length,
+      );
       unawaited(widget.progressRepository.markGameComplete(game.id));
     }
 
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: '/games/${game.id}'),
-        builder: (context) =>
-            game.builder(context, markCompleted, widget.audioCue),
+        builder: (context) => game.builder(
+          context,
+          markCompleted,
+          TelemetryLetterAudioCue(
+            delegate: widget.audioCue,
+            analytics: widget.analytics,
+            gameId: game.id,
+          ),
+          widget.progressRepository,
+          widget.analytics,
+        ),
       ),
     );
+
+    widget.analytics.gameExited(
+      gameId: game.id,
+      title: game.title,
+      completed: completionRequested,
+      durationMs: DateTime.now().difference(startedAt).inMilliseconds,
+    );
+    if (completionRequested) {
+      unawaited(
+        widget.adsController.recordCompletedGameBreak(
+          gameId: game.id,
+          gameTitle: game.title,
+        ),
+      );
+    }
 
     if (mounted) {
       setState(() {});
@@ -49,7 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openParentCorner() async {
+    _playFeedback((cue) => cue.playTap());
     final unlocked = await showParentGate(context);
+    widget.analytics.logEvent(
+      'parent_gate_result',
+      parameters: <String, Object?>{'unlocked': unlocked ? 1 : 0},
+    );
     if (!unlocked || !mounted) {
       return;
     }
@@ -60,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => ParentCornerScreen(
           progressRepository: widget.progressRepository,
           totalGames: kidsGameCatalog.length,
+          analytics: widget.analytics,
         ),
       ),
     );
@@ -132,7 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Ten little adventures for curious minds',
+                          completed == 0
+                              ? 'Tap a big card to start'
+                              : 'Ten little adventures for curious minds',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: const Color(0xFF686078),
@@ -164,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Flexible(
                               child: Align(
                                 alignment: Alignment.centerRight,
-                                child: _OfflineBadge(),
+                                child: _SafetyBadge(),
                               ),
                             ),
                           ],
@@ -190,9 +255,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       completed: widget.progressRepository.isGameComplete(
                         game.id,
                       ),
+                      recommended: completed == 0 && index == 0,
                       onTap: () => _openGame(game),
                     );
                   }, childCount: kidsGameCatalog.length),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+                sliver: SliverToBoxAdapter(
+                  child: Center(child: widget.adsController.buildHomeBanner()),
                 ),
               ),
             ],
@@ -319,8 +391,8 @@ class _ProgressBanner extends StatelessWidget {
   }
 }
 
-class _OfflineBadge extends StatelessWidget {
-  const _OfflineBadge();
+class _SafetyBadge extends StatelessWidget {
+  const _SafetyBadge();
 
   @override
   Widget build(BuildContext context) {
@@ -334,11 +406,11 @@ class _OfflineBadge extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.offline_bolt_rounded, size: 18, color: Color(0xFF237A59)),
+          Icon(Icons.verified_rounded, size: 18, color: Color(0xFF237A59)),
           SizedBox(width: 5),
           Flexible(
             child: Text(
-              'Offline • Ad-free',
+              'Kid-safe play',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -357,11 +429,13 @@ class _GameCard extends StatelessWidget {
   const _GameCard({
     required this.game,
     required this.completed,
+    required this.recommended,
     required this.onTap,
   });
 
   final KidsGame game;
   final bool completed;
+  final bool recommended;
   final VoidCallback onTap;
 
   @override
@@ -434,7 +508,9 @@ class _GameCard extends StatelessWidget {
                               size: 24,
                             ),
                           ),
-                        ),
+                        )
+                      else if (recommended)
+                        const _StartBadge(),
                     ],
                   ),
                   const Spacer(),
@@ -468,6 +544,37 @@ class _GameCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StartBadge extends StatelessWidget {
+  const _StartBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 34),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.play_arrow_rounded, color: Color(0xFF7257E8), size: 20),
+          SizedBox(width: 3),
+          Text(
+            'Start',
+            textScaler: TextScaler.noScaling,
+            style: TextStyle(
+              color: Color(0xFF4A397A),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -5,13 +5,15 @@ import 'progress_repository.dart';
 class HiveProgressRepository implements ProgressRepository {
   HiveProgressRepository._(this._box);
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 4;
   static const String boxName = 'kidsland_progress';
 
   static const String _schemaVersionKey = 'schemaVersion';
   static const String _letterACompleteKey = 'letterAComplete';
   static const String _completedGameIdsKey = 'completedGameIds';
+  static const String _completedContentIdsKey = 'completedContentIds';
   static const String _soundEnabledKey = 'soundEnabled';
+  static const String _hapticsEnabledKey = 'hapticsEnabled';
 
   final Box<dynamic> _box;
 
@@ -29,22 +31,27 @@ class HiveProgressRepository implements ProgressRepository {
 
   @override
   Set<String> get completedGameIds {
-    final rawIds = _box.get(
-      _completedGameIdsKey,
-      defaultValue: const <String>[],
+    return _readStringSet(_completedGameIdsKey);
+  }
+
+  @override
+  Set<String> completedContentIds(String gameId) {
+    final prefix = _contentKeyPrefix(gameId);
+    return Set.unmodifiable(
+      _readStringSet(_completedContentIdsKey)
+          .where((key) => key.startsWith(prefix))
+          .map((key) => key.substring(prefix.length)),
     );
-    if (rawIds is! List) {
-      return const <String>{};
-    }
-    return Set.unmodifiable(rawIds.whereType<String>());
   }
 
   @override
   bool get isLetterAComplete => isGameComplete(letterTracingGameId);
 
   @override
-  bool get soundEnabled =>
-      _box.get(_soundEnabledKey, defaultValue: true) as bool;
+  bool get soundEnabled => _readBool(_soundEnabledKey, defaultValue: true);
+
+  @override
+  bool get hapticsEnabled => _readBool(_hapticsEnabledKey, defaultValue: true);
 
   @override
   Future<void> markLetterAComplete() async {
@@ -61,13 +68,37 @@ class HiveProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<void> markContentComplete(String gameId, String contentId) async {
+    final key = _contentKey(gameId, contentId);
+    if (key == null || isContentComplete(gameId, contentId)) {
+      return;
+    }
+    final updatedIds = <String>{
+      ..._readStringSet(_completedContentIdsKey),
+      key,
+    }.toList()..sort();
+    await _box.put(_completedContentIdsKey, updatedIds);
+  }
+
+  @override
   bool isGameComplete(String gameId) {
     return completedGameIds.contains(gameId);
   }
 
   @override
+  bool isContentComplete(String gameId, String contentId) {
+    final key = _contentKey(gameId, contentId);
+    return key != null && _readStringSet(_completedContentIdsKey).contains(key);
+  }
+
+  @override
   Future<void> setSoundEnabled(bool enabled) async {
     await _box.put(_soundEnabledKey, enabled);
+  }
+
+  @override
+  Future<void> setHapticsEnabled(bool enabled) async {
+    await _box.put(_hapticsEnabledKey, enabled);
   }
 
   @override
@@ -82,11 +113,46 @@ class HiveProgressRepository implements ProgressRepository {
       return;
     }
 
+    if (storedVersion == 3) {
+      final legacyCompletedGameIds = completedGameIds.toList()..sort();
+      final legacySoundEnabled = _readBool(
+        _soundEnabledKey,
+        defaultValue: true,
+      );
+      final legacyHapticsEnabled = _readBool(
+        _hapticsEnabledKey,
+        defaultValue: true,
+      );
+      await _box.clear();
+      await _writeDefaults();
+      await _box.put(_completedGameIdsKey, legacyCompletedGameIds);
+      await _box.put(_soundEnabledKey, legacySoundEnabled);
+      await _box.put(_hapticsEnabledKey, legacyHapticsEnabled);
+      return;
+    }
+
+    if (storedVersion == 2) {
+      final legacyCompletedGameIds = completedGameIds.toList()..sort();
+      final legacySoundEnabled = _readBool(
+        _soundEnabledKey,
+        defaultValue: true,
+      );
+      await _box.clear();
+      await _writeDefaults();
+      await _box.put(_completedGameIdsKey, legacyCompletedGameIds);
+      await _box.put(_soundEnabledKey, legacySoundEnabled);
+      return;
+    }
+
     if (storedVersion == 1) {
-      final legacyLetterComplete =
-          _box.get(_letterACompleteKey, defaultValue: false) as bool;
-      final legacySoundEnabled =
-          _box.get(_soundEnabledKey, defaultValue: true) as bool;
+      final legacyLetterComplete = _readBool(
+        _letterACompleteKey,
+        defaultValue: false,
+      );
+      final legacySoundEnabled = _readBool(
+        _soundEnabledKey,
+        defaultValue: true,
+      );
       await _box.clear();
       await _writeDefaults();
       await _box.put(_soundEnabledKey, legacySoundEnabled);
@@ -106,7 +172,36 @@ class HiveProgressRepository implements ProgressRepository {
     return _box.putAll(<String, Object>{
       _schemaVersionKey: currentSchemaVersion,
       _completedGameIdsKey: <String>[],
+      _completedContentIdsKey: <String>[],
       _soundEnabledKey: true,
+      _hapticsEnabledKey: true,
     });
+  }
+
+  Set<String> _readStringSet(String key) {
+    final rawIds = _box.get(key, defaultValue: const <String>[]);
+    if (rawIds is! List) {
+      return const <String>{};
+    }
+    return Set.unmodifiable(rawIds.whereType<String>());
+  }
+
+  bool _readBool(String key, {required bool defaultValue}) {
+    final rawValue = _box.get(key, defaultValue: defaultValue);
+    return rawValue is bool ? rawValue : defaultValue;
+  }
+
+  static String _contentKeyPrefix(String gameId) => '${gameId.trim()}::';
+
+  static String? _contentKey(String gameId, String contentId) {
+    final trimmedGameId = gameId.trim();
+    final trimmedContentId = contentId.trim();
+    if (trimmedGameId.isEmpty ||
+        trimmedContentId.isEmpty ||
+        trimmedGameId.contains('::') ||
+        trimmedContentId.contains('::')) {
+      return null;
+    }
+    return '$trimmedGameId::$trimmedContentId';
   }
 }

@@ -1,5 +1,11 @@
 # KidsLand App Idea Brief
 
+> P4 status note: this brief preserves the earlier ad-free tracing MVP
+> assumptions. The current production v1 repository now contains ten KidsLand
+> games plus production-safe AdMob/Firebase Analytics integration. Use
+> `README.md` and `docs/admob-analytics-data-safety.md` for the current
+> monetization, analytics, and Data safety notes.
+
 Planning date: 2026-08-07  
 Blueprint sources: `checklists/new-app-checklist.md` and `templates/app-idea-brief.md`
 

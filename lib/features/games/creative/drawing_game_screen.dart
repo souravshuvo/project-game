@@ -1,12 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import '../shared/kid_celebration.dart';
 
 /// A cheerful, offline finger-painting activity.
 class DrawingGameScreen extends StatefulWidget {
-  const DrawingGameScreen({this.onCompleted, super.key});
+  const DrawingGameScreen({
+    required this.audioCue,
+    this.onCompleted,
+    super.key,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _DrawingGameScreenState.contentCount;
 
   @override
   State<DrawingGameScreen> createState() => _DrawingGameScreenState();
@@ -22,13 +32,41 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
     Color(0xFF7B4B32),
   ];
 
+  static const _missions = <String>[
+    'Draw a sunny day',
+    'Draw three balloons',
+    'Draw a happy face',
+    'Draw a tall tree',
+    'Draw a little house',
+    'Draw a rainbow',
+    'Draw a big fish',
+    'Draw your favorite fruit',
+    'Draw a toy car',
+    'Draw a flower garden',
+    'Draw a sleepy moon',
+    'Draw a friendly animal',
+    'Draw a birthday cake',
+    'Draw a boat on water',
+    'Draw a starry sky',
+    'Draw anything you imagine',
+  ];
+
+  static int get contentCount => _missions.length;
+
   final List<_DrawingStroke> _strokes = <_DrawingStroke>[];
+  int _missionIndex = 0;
   Color _selectedColor = _palette.first;
   double _brushWidth = 10;
   bool _isComplete = false;
   bool _completionReported = false;
 
   bool get _hasDrawing => _strokes.any((stroke) => stroke.points.isNotEmpty);
+  String get _mission => _missions[_missionIndex];
+  bool get _isLastMission => _missionIndex == _missions.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   void _startStroke(DragStartDetails details) {
     if (_isComplete) return;
@@ -41,6 +79,7 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
         ),
       );
     });
+    _playFeedback((cue) => cue.playTap());
   }
 
   void _continueStroke(DragUpdateDetails details) {
@@ -50,10 +89,14 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
 
   void _undo() {
     if (_strokes.isEmpty || _isComplete) return;
+    _playFeedback((cue) => cue.playValidAction());
     setState(_strokes.removeLast);
   }
 
   void _clear() {
+    if (_strokes.isNotEmpty || _isComplete) {
+      _playFeedback((cue) => cue.playRestart());
+    }
     setState(() {
       _strokes.clear();
       _isComplete = false;
@@ -64,13 +107,40 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
   void _complete() {
     if (!_hasDrawing || _isComplete) return;
     setState(() => _isComplete = true);
-    if (!_completionReported) {
+    if (_isLastMission && !_completionReported) {
+      _playFeedback((cue) => cue.playWin());
       _completionReported = true;
       widget.onCompleted?.call();
+    } else {
+      _playFeedback((cue) => cue.playReward());
     }
   }
 
-  void _newPicture() => _clear();
+  void _newPicture() {
+    _playFeedback((cue) => cue.playTap());
+    setState(() {
+      _strokes.clear();
+      _isComplete = false;
+      if (_isLastMission) {
+        _missionIndex = 0;
+        _completionReported = false;
+      } else {
+        _missionIndex += 1;
+      }
+    });
+  }
+
+  void _selectColor(Color color) {
+    if (_isComplete) return;
+    _playFeedback((cue) => cue.playTap());
+    setState(() => _selectedColor = color);
+  }
+
+  void _selectBrush(double width) {
+    if (_isComplete) return;
+    _playFeedback((cue) => cue.playTap());
+    setState(() => _brushWidth = width);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +157,9 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
           child: Column(
             children: <Widget>[
               _DrawingHeader(
+                mission: _mission,
+                missionNumber: _missionIndex + 1,
+                totalMissions: _missions.length,
                 hasDrawing: _hasDrawing,
                 isComplete: _isComplete,
                 onComplete: _complete,
@@ -127,8 +200,8 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                         ),
                       ),
                       if (!_hasDrawing)
-                        const IgnorePointer(
-                          child: Center(child: _CanvasHint()),
+                        IgnorePointer(
+                          child: Center(child: _CanvasHint(mission: _mission)),
                         ),
                       if (_isComplete)
                         const Positioned.fill(
@@ -141,11 +214,13 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                           ),
                         ),
                       if (_isComplete)
-                        const Positioned(
+                        Positioned(
                           left: 18,
                           right: 18,
                           top: 18,
-                          child: _DrawingCompleteBanner(),
+                          child: _DrawingCompleteBanner(
+                            isLastMission: _isLastMission,
+                          ),
                         ),
                     ],
                   ),
@@ -157,14 +232,8 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                 brushWidth: _brushWidth,
                 canUndo: _strokes.isNotEmpty && !_isComplete,
                 canClear: _strokes.isNotEmpty,
-                onColorSelected: (color) {
-                  if (_isComplete) return;
-                  setState(() => _selectedColor = color);
-                },
-                onBrushSelected: (width) {
-                  if (_isComplete) return;
-                  setState(() => _brushWidth = width);
-                },
+                onColorSelected: _selectColor,
+                onBrushSelected: _selectBrush,
                 onUndo: _undo,
                 onClear: _clear,
               ),
@@ -178,12 +247,18 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
 
 class _DrawingHeader extends StatelessWidget {
   const _DrawingHeader({
+    required this.mission,
+    required this.missionNumber,
+    required this.totalMissions,
     required this.hasDrawing,
     required this.isComplete,
     required this.onComplete,
     required this.onNewPicture,
   });
 
+  final String mission;
+  final int missionNumber;
+  final int totalMissions;
   final bool hasDrawing;
   final bool isComplete;
   final VoidCallback onComplete;
@@ -217,11 +292,11 @@ class _DrawingHeader extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const Text(
-                  'Draw anything you imagine!',
+                Text(
+                  '$missionNumber/$totalMissions • $mission',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF746A87),
                     fontWeight: FontWeight.w600,
                   ),
@@ -248,7 +323,7 @@ class _DrawingHeader extends StatelessWidget {
                 size: 27,
               ),
               label: Text(
-                isComplete ? 'New' : 'Done',
+                isComplete ? 'Next' : 'Done',
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -460,7 +535,9 @@ class _RoundToolButton extends StatelessWidget {
 }
 
 class _CanvasHint extends StatelessWidget {
-  const _CanvasHint();
+  const _CanvasHint({required this.mission});
+
+  final String mission;
 
   @override
   Widget build(BuildContext context) {
@@ -470,18 +547,28 @@ class _CanvasHint extends StatelessWidget {
         color: const Color(0xFFF4F0FF).withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.gesture_rounded, size: 46, color: Color(0xFF7257E8)),
-          SizedBox(height: 4),
+          const Icon(Icons.gesture_rounded, size: 46, color: Color(0xFF7257E8)),
+          const SizedBox(height: 4),
           Text(
-            'Slide your finger to draw',
+            mission,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Color(0xFF51466A),
               fontSize: 17,
               fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Slide your finger to draw',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF746A87),
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -491,7 +578,9 @@ class _CanvasHint extends StatelessWidget {
 }
 
 class _DrawingCompleteBanner extends StatelessWidget {
-  const _DrawingCompleteBanner();
+  const _DrawingCompleteBanner({required this.isLastMission});
+
+  final bool isLastMission;
 
   @override
   Widget build(BuildContext context) {
@@ -514,16 +603,22 @@ class _DrawingCompleteBanner extends StatelessWidget {
                 BoxShadow(color: Color(0x332DBE88), blurRadius: 12),
               ],
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
-                SizedBox(width: 9),
+                const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 9),
                 Flexible(
                   child: Text(
-                    'Wonderful drawing!',
+                    isLastMission
+                        ? 'Wonderful drawing!'
+                        : 'Great! Try the next idea.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 19,
                       fontWeight: FontWeight.w900,

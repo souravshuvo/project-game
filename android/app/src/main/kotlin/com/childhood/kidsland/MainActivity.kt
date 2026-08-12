@@ -1,4 +1,4 @@
-package com.childhood.rapidjump.rapid_jump
+package com.childhood.kidsland
 
 import io.flutter.embedding.android.FlutterActivity
 

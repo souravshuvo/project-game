@@ -1,24 +1,54 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/analytics/game_analytics.dart';
 import '../../tracing/data/progress_repository.dart';
 
 class ParentCornerScreen extends StatefulWidget {
   const ParentCornerScreen({
     required this.progressRepository,
     required this.totalGames,
+    required this.analytics,
     super.key,
   });
 
   final ProgressRepository progressRepository;
   final int totalGames;
+  final GameAnalytics analytics;
 
   @override
   State<ParentCornerScreen> createState() => _ParentCornerScreenState();
 }
 
 class _ParentCornerScreenState extends State<ParentCornerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    widget.analytics.logEvent('settings_open');
+  }
+
   Future<void> _setSound(bool enabled) async {
     await widget.progressRepository.setSoundEnabled(enabled);
+    widget.analytics.logEvent(
+      'settings_change',
+      parameters: <String, Object?>{
+        'setting': 'sound_feedback',
+        'enabled': enabled ? 1 : 0,
+      },
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _setHaptics(bool enabled) async {
+    await widget.progressRepository.setHapticsEnabled(enabled);
+    widget.analytics.logEvent(
+      'settings_change',
+      parameters: <String, Object?>{
+        'setting': 'haptic_feedback',
+        'enabled': enabled ? 1 : 0,
+      },
+    );
     if (mounted) {
       setState(() {});
     }
@@ -50,6 +80,7 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
       return;
     }
     await widget.progressRepository.reset();
+    widget.analytics.logEvent('progress_reset');
     if (mounted) {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,13 +132,28 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
               icon: Icons.tune_rounded,
               color: const Color(0xFFEF7B45),
               title: 'Settings',
-              child: SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: widget.progressRepository.soundEnabled,
-                onChanged: _setSound,
-                secondary: const Icon(Icons.volume_up_rounded),
-                title: const Text('Sound feedback'),
-                subtitle: const Text('Uses local, offline-safe cues only.'),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: widget.progressRepository.soundEnabled,
+                    onChanged: _setSound,
+                    secondary: const Icon(Icons.volume_up_rounded),
+                    title: const Text('Sound feedback'),
+                    subtitle: const Text('Uses local, offline-safe cues only.'),
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: widget.progressRepository.hapticsEnabled,
+                    onChanged: _setHaptics,
+                    secondary: const Icon(Icons.vibration_rounded),
+                    title: const Text('Haptic feedback'),
+                    subtitle: const Text(
+                      'Gentle device vibration for actions.',
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -116,10 +162,13 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
               color: Color(0xFF2EAD7B),
               title: 'Privacy',
               child: Text(
-                'KidsLand has no account, ads, Firebase, analytics SDK, '
-                'location, camera, microphone, or child profile. Game '
-                'progress stays in local Hive storage. Android cloud backup '
-                'and device transfer are disabled for app data.',
+                'KidsLand has no account, login, location, camera, microphone, '
+                'or child profile. Game progress stays in local Hive storage. '
+                'When Firebase Analytics and AdMob are configured, the app '
+                'sends gameplay, settings, retention, and ad-delivery events '
+                'without names, profiles, raw touch coordinates, or free text. '
+                'Android cloud backup and device transfer are disabled for app '
+                'data. Sound and haptic feedback use local device features.',
               ),
             ),
             const SizedBox(height: 16),

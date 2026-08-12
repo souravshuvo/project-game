@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:03,000
+Follow big guided paths.
+
+2
+00:00:03,000 --> 00:00:06,000
+Practice numbers 1 to 10.
+
+3
+00:00:06,000 --> 00:00:09,000
+Tap the number you see.
+
+4
+00:00:09,000 --> 00:00:12,000
+Move shapes into baskets.
+
+5
+00:00:12,000 --> 00:00:15,000
+Find each shape's home.
+
+6
+00:00:15,000 --> 00:00:18,000
+Flip cards and remember.
+
+7
+00:00:18,000 --> 00:00:21,000
+Tap through quick waves.
+
+8
+00:00:21,000 --> 00:00:24,000
+Make simple drawings.
+
+9
+00:00:24,000 --> 00:00:25,000
+Small wins after each game.

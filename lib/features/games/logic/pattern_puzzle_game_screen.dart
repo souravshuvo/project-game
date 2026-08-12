@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import 'logic_game_ui.dart';
 
 class PatternPuzzleGameScreen extends StatefulWidget {
-  const PatternPuzzleGameScreen({super.key, this.onCompleted});
+  const PatternPuzzleGameScreen({
+    required this.audioCue,
+    super.key,
+    this.onCompleted,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _PatternPuzzleGameScreenState.contentCount;
 
   @override
   State<PatternPuzzleGameScreen> createState() =>
@@ -58,7 +68,69 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
       options: ['🟩', '🟦', '🟨'],
       hint: 'Yellow, green, yellow…',
     ),
+    _PatternRound(
+      sequence: [
+        '\u{1F43E}',
+        '\u{1F33F}',
+        '\u{1F43E}',
+        '\u{1F33F}',
+        '\u{1F43E}',
+      ],
+      answer: '\u{1F33F}',
+      options: ['\u{1F33F}', '\u{1F43E}', '\u{1F337}'],
+      hint: 'Paw, leaf, paw, leaf…',
+    ),
+    _PatternRound(
+      sequence: [
+        '\u{1F534}',
+        '\u{1F534}',
+        '\u{1F535}',
+        '\u{1F535}',
+        '\u{1F534}',
+      ],
+      answer: '\u{1F534}',
+      options: ['\u{1F535}', '\u{1F7E2}', '\u{1F534}'],
+      hint: 'Two red, two blue…',
+    ),
+    _PatternRound(
+      sequence: [
+        '\u{1F34E}',
+        '\u{1F34C}',
+        '\u{1F34C}',
+        '\u{1F34E}',
+        '\u{1F34C}',
+      ],
+      answer: '\u{1F34C}',
+      options: ['\u{1F34E}', '\u{1F347}', '\u{1F34C}'],
+      hint: 'Apple, two bananas…',
+    ),
+    _PatternRound(
+      sequence: [
+        '\u{1F31E}',
+        '\u{1F319}',
+        '\u{1F31F}',
+        '\u{1F31E}',
+        '\u{1F319}',
+      ],
+      answer: '\u{1F31F}',
+      options: ['\u{1F319}', '\u{1F31F}', '\u{2601}\u{FE0F}'],
+      hint: 'Sun, moon, star…',
+    ),
+    _PatternRound(
+      sequence: [
+        '\u{1F697}',
+        '\u{1F697}',
+        '\u{1F6B2}',
+        '\u{1F697}',
+        '\u{1F697}',
+      ],
+      answer: '\u{1F6B2}',
+      options: ['\u{1F697}', '\u{1F6B2}', '\u{1F68C}'],
+      hint: 'Two cars, then one bike…',
+    ),
   ];
+
+  static int get contentCount => _rounds.length;
 
   int _roundIndex = 0;
   String? _selectedOption;
@@ -67,6 +139,10 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
 
   _PatternRound get _round => _rounds[_roundIndex];
   bool get _isLastRound => _roundIndex == _rounds.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   void _choose(String option) {
     if (_roundSolved) return;
@@ -77,13 +153,23 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
       _roundSolved = solved;
     });
 
-    if (solved && _isLastRound && !_completionSent) {
-      _completionSent = true;
-      widget.onCompleted?.call();
+    if (solved) {
+      if (_isLastRound) {
+        _playFeedback((cue) => cue.playWin());
+        if (!_completionSent) {
+          _completionSent = true;
+          widget.onCompleted?.call();
+        }
+      } else {
+        _playFeedback((cue) => cue.playReward());
+      }
+    } else {
+      _playFeedback((cue) => cue.playInvalidAction());
     }
   }
 
   void _continue() {
+    _playFeedback((cue) => cue.playTap());
     if (_isLastRound) {
       setState(() {
         _roundIndex = 0;
@@ -101,6 +187,16 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
     });
   }
 
+  void _restart() {
+    _playFeedback((cue) => cue.playRestart());
+    setState(() {
+      _roundIndex = 0;
+      _selectedOption = null;
+      _roundSolved = false;
+      _completionSent = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFF08B35);
@@ -112,6 +208,7 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import 'logic_game_ui.dart';
 
 class CountingGameScreen extends StatefulWidget {
-  const CountingGameScreen({super.key, this.onCompleted});
+  const CountingGameScreen({
+    required this.audioCue,
+    super.key,
+    this.onCompleted,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _CountingGameScreenState.contentCount;
 
   @override
   State<CountingGameScreen> createState() => _CountingGameScreenState();
@@ -28,36 +38,48 @@ class _CountingRound {
 class _CountingGameScreenState extends State<CountingGameScreen> {
   static const _rounds = <_CountingRound>[
     _CountingRound(
-      emoji: '⭐',
-      name: 'stars',
-      count: 2,
+      emoji: '\u{1F7E3}',
+      name: 'dots',
+      count: 1,
       answers: [1, 2, 3],
     ),
+    _CountingRound(emoji: '⭐', name: 'stars', count: 2, answers: [1, 2, 3]),
     _CountingRound(
       emoji: '🐥',
       name: 'ducklings',
       count: 3,
       answers: [4, 2, 3],
     ),
+    _CountingRound(emoji: '🍎', name: 'apples', count: 4, answers: [4, 5, 3]),
+    _CountingRound(emoji: '⚽', name: 'balls', count: 5, answers: [6, 5, 4]),
+    _CountingRound(emoji: '🐠', name: 'fish', count: 6, answers: [5, 7, 6]),
     _CountingRound(
-      emoji: '🍎',
-      name: 'apples',
-      count: 4,
-      answers: [4, 5, 3],
+      emoji: '\u{1F338}',
+      name: 'flowers',
+      count: 7,
+      answers: [7, 6, 8],
     ),
     _CountingRound(
-      emoji: '⚽',
-      name: 'balls',
-      count: 5,
-      answers: [6, 5, 4],
+      emoji: '\u{1F697}',
+      name: 'cars',
+      count: 8,
+      answers: [9, 8, 7],
     ),
     _CountingRound(
-      emoji: '🐠',
-      name: 'fish',
-      count: 6,
-      answers: [5, 7, 6],
+      emoji: '\u{1F9F8}',
+      name: 'toys',
+      count: 9,
+      answers: [8, 10, 9],
+    ),
+    _CountingRound(
+      emoji: '\u{1F388}',
+      name: 'balloons',
+      count: 10,
+      answers: [10, 9, 8],
     ),
   ];
+
+  static int get contentCount => _rounds.length;
 
   int _roundIndex = 0;
   int? _selectedAnswer;
@@ -66,6 +88,10 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
 
   _CountingRound get _round => _rounds[_roundIndex];
   bool get _isLastRound => _roundIndex == _rounds.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   void _chooseAnswer(int answer) {
     if (_roundSolved) return;
@@ -76,13 +102,23 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
       _roundSolved = solved;
     });
 
-    if (solved && _isLastRound && !_completionSent) {
-      _completionSent = true;
-      widget.onCompleted?.call();
+    if (solved) {
+      if (_isLastRound) {
+        _playFeedback((cue) => cue.playWin());
+        if (!_completionSent) {
+          _completionSent = true;
+          widget.onCompleted?.call();
+        }
+      } else {
+        _playFeedback((cue) => cue.playReward());
+      }
+    } else {
+      _playFeedback((cue) => cue.playInvalidAction());
     }
   }
 
   void _continue() {
+    _playFeedback((cue) => cue.playTap());
     if (_isLastRound) {
       setState(() {
         _roundIndex = 0;
@@ -100,6 +136,16 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
     });
   }
 
+  void _restart() {
+    _playFeedback((cue) => cue.playRestart());
+    setState(() {
+      _roundIndex = 0;
+      _selectedAnswer = null;
+      _roundSolved = false;
+      _completionSent = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF7055DB);
@@ -112,6 +158,7 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

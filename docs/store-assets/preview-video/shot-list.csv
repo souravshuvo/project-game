@@ -1,0 +1,10 @@
+time_start,time_end,capture_id,real_app_moment,on_screen_text,voiceover_or_caption,edit_notes
+0.0,3.0,ui-01-letter-tracing,"Letter Tracing active canvas, A or B with visible path progress","Trace letters","Follow big guided paths.","Start with movement already in progress."
+3.0,6.0,ui-02-number-tracing,"Number Tracing active canvas, 1 or 2 in progress","Trace numbers","Practice numbers 1 to 10.","Match cut from letter stroke to number stroke."
+6.0,9.0,ui-03-count-choose,"Count & Choose with objects and large answer buttons","Count and choose","Tap the number you see.","Show selection feedback if available."
+9.0,12.0,ui-04-color-sorting,"Color Sorting drag/drop or tap-then-basket action","Sort colors","Move shapes into baskets.","Capture one correct placement and feedback."
+12.0,15.0,ui-05-shape-match,"Shape Match with shape homes and pieces","Match shapes","Find each shape's home.","Capture active drag or successful match."
+15.0,18.0,ui-06-memory-match,"Memory Match mid-board with one pair revealed","Find pairs","Flip cards and remember.","Show pair reveal, not only card backs."
+18.0,21.0,ui-07-balloon-pop,"Balloon Pop active wave","Pop balloons","Tap through quick waves.","Show a balloon pop moment and burst feedback."
+21.0,24.0,ui-08-magic-drawing,"Magic Drawing canvas with prompt and color tools","Draw prompts","Make simple drawings.","Show stroke creation on the canvas."
+24.0,25.0,ui-09-celebration,"Any completed game celebration/confetti","Celebrate progress","Small wins after each game.","End on celebration."

@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/audio/letter_audio_cue.dart';
 import '../shared/kid_celebration.dart';
 
 class BalloonPopGameScreen extends StatefulWidget {
-  const BalloonPopGameScreen({this.onCompleted, super.key});
+  const BalloonPopGameScreen({
+    required this.audioCue,
+    this.onCompleted,
+    super.key,
+  });
 
+  final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+
+  static int get contentCount => _BalloonPopGameScreenState.contentCount;
 
   @override
   State<BalloonPopGameScreen> createState() => _BalloonPopGameScreenState();
@@ -24,23 +34,162 @@ class _BalloonSpec {
 }
 
 class _BalloonPopGameScreenState extends State<BalloonPopGameScreen> {
-  static const _balloons = <_BalloonSpec>[
-    _BalloonSpec(id: 0, color: Color(0xFFEF5DA8), icon: Icons.favorite_rounded),
-    _BalloonSpec(id: 1, color: Color(0xFF35A7FF), icon: Icons.star_rounded),
-    _BalloonSpec(id: 2, color: Color(0xFFFFA928), icon: Icons.circle),
-    _BalloonSpec(id: 3, color: Color(0xFF2DBE88), icon: Icons.hexagon_rounded),
-    _BalloonSpec(id: 4, color: Color(0xFF7257E8), icon: Icons.auto_awesome),
-    _BalloonSpec(id: 5, color: Color(0xFFFF7B54), icon: Icons.favorite_rounded),
-    _BalloonSpec(id: 6, color: Color(0xFF43C8D9), icon: Icons.star_rounded),
-    _BalloonSpec(id: 7, color: Color(0xFFFFC14F), icon: Icons.circle),
-    _BalloonSpec(id: 8, color: Color(0xFF8D57D9), icon: Icons.hexagon_rounded),
-    _BalloonSpec(id: 9, color: Color(0xFF30B86F), icon: Icons.auto_awesome),
+  static const _waves = <List<_BalloonSpec>>[
+    [
+      _BalloonSpec(
+        id: 0,
+        color: Color(0xFFEF5DA8),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 1, color: Color(0xFF35A7FF), icon: Icons.star_rounded),
+      _BalloonSpec(id: 2, color: Color(0xFFFFA928), icon: Icons.circle),
+      _BalloonSpec(
+        id: 3,
+        color: Color(0xFF2DBE88),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 4, color: Color(0xFF7257E8), icon: Icons.auto_awesome),
+      _BalloonSpec(
+        id: 5,
+        color: Color(0xFFFF7B54),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 6, color: Color(0xFF43C8D9), icon: Icons.star_rounded),
+      _BalloonSpec(id: 7, color: Color(0xFFFFC14F), icon: Icons.circle),
+      _BalloonSpec(
+        id: 8,
+        color: Color(0xFF8D57D9),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 9, color: Color(0xFF30B86F), icon: Icons.auto_awesome),
+    ],
+    [
+      _BalloonSpec(id: 0, color: Color(0xFF35A7FF), icon: Icons.circle),
+      _BalloonSpec(id: 1, color: Color(0xFFFFC14F), icon: Icons.star_rounded),
+      _BalloonSpec(
+        id: 2,
+        color: Color(0xFF2DBE88),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(
+        id: 3,
+        color: Color(0xFFFF7B54),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 4, color: Color(0xFF8D57D9), icon: Icons.auto_awesome),
+      _BalloonSpec(id: 5, color: Color(0xFF43C8D9), icon: Icons.circle),
+      _BalloonSpec(id: 6, color: Color(0xFFEF5DA8), icon: Icons.star_rounded),
+      _BalloonSpec(
+        id: 7,
+        color: Color(0xFFFFA928),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(
+        id: 8,
+        color: Color(0xFF30B86F),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 9, color: Color(0xFF7257E8), icon: Icons.auto_awesome),
+    ],
+    [
+      _BalloonSpec(id: 0, color: Color(0xFFFFA928), icon: Icons.star_rounded),
+      _BalloonSpec(
+        id: 1,
+        color: Color(0xFF7257E8),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(
+        id: 2,
+        color: Color(0xFF43C8D9),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 3, color: Color(0xFFEF5DA8), icon: Icons.circle),
+      _BalloonSpec(id: 4, color: Color(0xFF30B86F), icon: Icons.auto_awesome),
+      _BalloonSpec(id: 5, color: Color(0xFFFF7B54), icon: Icons.star_rounded),
+      _BalloonSpec(
+        id: 6,
+        color: Color(0xFF35A7FF),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 7, color: Color(0xFF2DBE88), icon: Icons.circle),
+      _BalloonSpec(
+        id: 8,
+        color: Color(0xFFFFC14F),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 9, color: Color(0xFF8D57D9), icon: Icons.auto_awesome),
+    ],
+    [
+      _BalloonSpec(
+        id: 0,
+        color: Color(0xFF2DBE88),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 1, color: Color(0xFFEF5DA8), icon: Icons.star_rounded),
+      _BalloonSpec(id: 2, color: Color(0xFF7257E8), icon: Icons.circle),
+      _BalloonSpec(
+        id: 3,
+        color: Color(0xFFFFC14F),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 4, color: Color(0xFF35A7FF), icon: Icons.auto_awesome),
+      _BalloonSpec(id: 5, color: Color(0xFF30B86F), icon: Icons.star_rounded),
+      _BalloonSpec(
+        id: 6,
+        color: Color(0xFFFF7B54),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(
+        id: 7,
+        color: Color(0xFF43C8D9),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 8, color: Color(0xFFFFA928), icon: Icons.circle),
+      _BalloonSpec(id: 9, color: Color(0xFF8D57D9), icon: Icons.auto_awesome),
+    ],
+    [
+      _BalloonSpec(id: 0, color: Color(0xFF8D57D9), icon: Icons.auto_awesome),
+      _BalloonSpec(
+        id: 1,
+        color: Color(0xFF30B86F),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 2, color: Color(0xFFFF7B54), icon: Icons.star_rounded),
+      _BalloonSpec(id: 3, color: Color(0xFF43C8D9), icon: Icons.circle),
+      _BalloonSpec(
+        id: 4,
+        color: Color(0xFFFFC14F),
+        icon: Icons.hexagon_rounded,
+      ),
+      _BalloonSpec(id: 5, color: Color(0xFFEF5DA8), icon: Icons.auto_awesome),
+      _BalloonSpec(
+        id: 6,
+        color: Color(0xFF35A7FF),
+        icon: Icons.favorite_rounded,
+      ),
+      _BalloonSpec(id: 7, color: Color(0xFF7257E8), icon: Icons.star_rounded),
+      _BalloonSpec(id: 8, color: Color(0xFF2DBE88), icon: Icons.circle),
+      _BalloonSpec(
+        id: 9,
+        color: Color(0xFFFFA928),
+        icon: Icons.hexagon_rounded,
+      ),
+    ],
   ];
 
+  static int get contentCount => _waves.length;
+
+  int _waveIndex = 0;
   final Set<int> _poppedIds = <int>{};
   bool _completionReported = false;
 
+  List<_BalloonSpec> get _balloons => _waves[_waveIndex];
   bool get _isComplete => _poppedIds.length == _balloons.length;
+  bool get _isLastWave => _waveIndex == _waves.length - 1;
+
+  void _playFeedback(Future<void> Function(LetterAudioCue cue) action) {
+    unawaited(action(widget.audioCue).catchError((Object _) {}));
+  }
 
   void _pop(int id) {
     if (_poppedIds.contains(id)) {
@@ -53,17 +202,35 @@ class _BalloonPopGameScreenState extends State<BalloonPopGameScreen> {
       completedNow = _isComplete;
     });
 
-    if (completedNow && !_completionReported) {
+    if (completedNow && _isLastWave && !_completionReported) {
+      _playFeedback((cue) => cue.playWin());
       _completionReported = true;
       widget.onCompleted?.call();
+    } else {
+      _playFeedback((cue) => cue.playReward());
     }
   }
 
   void _reset() {
+    _playFeedback((cue) => cue.playRestart());
+    _resetWaveState();
+  }
+
+  void _continueAfterComplete() {
+    _playFeedback((cue) => cue.playTap());
     setState(() {
+      if (_isLastWave) {
+        _waveIndex = 0;
+        _completionReported = false;
+      } else {
+        _waveIndex += 1;
+      }
       _poppedIds.clear();
-      _completionReported = false;
     });
+  }
+
+  void _resetWaveState() {
+    setState(_poppedIds.clear);
   }
 
   @override
@@ -83,7 +250,11 @@ class _BalloonPopGameScreenState extends State<BalloonPopGameScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              _BalloonHeader(onReset: _reset),
+              _BalloonHeader(
+                wave: _waveIndex + 1,
+                totalWaves: _waves.length,
+                onReset: _reset,
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
                 child: Column(
@@ -154,7 +325,10 @@ class _BalloonPopGameScreenState extends State<BalloonPopGameScreen> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 260),
                 child: _isComplete
-                    ? _BalloonCompletePanel(onReplay: _reset)
+                    ? _BalloonCompletePanel(
+                        isLastWave: _isLastWave,
+                        onContinue: _continueAfterComplete,
+                      )
                     : const SizedBox.shrink(),
               ),
             ],
@@ -166,8 +340,14 @@ class _BalloonPopGameScreenState extends State<BalloonPopGameScreen> {
 }
 
 class _BalloonHeader extends StatelessWidget {
-  const _BalloonHeader({required this.onReset});
+  const _BalloonHeader({
+    required this.wave,
+    required this.totalWaves,
+    required this.onReset,
+  });
 
+  final int wave;
+  final int totalWaves;
   final VoidCallback onReset;
 
   @override
@@ -198,11 +378,11 @@ class _BalloonHeader extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const Text(
-                  'Tap every floating balloon',
+                Text(
+                  'Tap every balloon • Wave $wave/$totalWaves',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF746A87),
                     fontWeight: FontWeight.w700,
                   ),
@@ -347,9 +527,13 @@ class _BalloonShape extends StatelessWidget {
 }
 
 class _BalloonCompletePanel extends StatelessWidget {
-  const _BalloonCompletePanel({required this.onReplay});
+  const _BalloonCompletePanel({
+    required this.isLastWave,
+    required this.onContinue,
+  });
 
-  final VoidCallback onReplay;
+  final bool isLastWave;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -393,16 +577,21 @@ class _BalloonCompletePanel extends StatelessWidget {
               SizedBox(
                 height: 62,
                 child: FilledButton.icon(
-                  onPressed: onReplay,
+                  onPressed: onContinue,
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFFD66A14),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  icon: const Icon(Icons.replay_rounded, size: 27),
-                  label: const Text(
-                    'Again',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                  icon: Icon(
+                    isLastWave
+                        ? Icons.replay_rounded
+                        : Icons.arrow_forward_rounded,
+                    size: 27,
+                  ),
+                  label: Text(
+                    isLastWave ? 'Again' : 'Next',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
               ),
