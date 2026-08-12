@@ -9,6 +9,7 @@ import 'challenges/challenge.dart';
 import 'components/aim_preview_component.dart';
 import 'components/ball_component.dart';
 import 'components/field_component.dart';
+import 'game_feedback.dart';
 import 'game_phase.dart';
 import 'game_result.dart';
 import 'physics/collision_rules.dart';
@@ -16,28 +17,41 @@ import 'physics/shot_physics.dart';
 
 class RooftopCurveGame extends FlameGame with PanDetector {
   RooftopCurveGame({
+    this.initialChallengeIndex = 0,
     required this.onChallengeChanged,
     required this.onAimingChanged,
+    required this.onAimUpdated,
+    required this.onFeedback,
     required this.onAttemptsChanged,
     required this.onResult,
-  })
-    : super(
-        camera: CameraComponent.withFixedResolution(
-          width: fieldWidth,
-          height: fieldHeight,
-        ),
-      );
+  }) : super(
+         camera: CameraComponent.withFixedResolution(
+           width: fieldWidth,
+           height: fieldHeight,
+         ),
+       );
 
   static const double fieldWidth = 360;
   static const double fieldHeight = 640;
+  static const double ballTouchRadius = 78;
+  static const double _pullZoneWidth = 190;
+  static const double _pullZoneHeight = 156;
+  static const double _pullZoneYOffset = 58;
 
-  final void Function(Challenge challenge, int challengeIndex, int totalChallenges)
+  final int initialChallengeIndex;
+  final void Function(
+    Challenge challenge,
+    int challengeIndex,
+    int totalChallenges,
+  )
   onChallengeChanged;
   final void Function(bool isAiming) onAimingChanged;
+  final void Function(double power, double curve) onAimUpdated;
+  final void Function(GameFeedback feedback) onFeedback;
   final void Function(int attempts) onAttemptsChanged;
   final void Function(GameResult result) onResult;
 
-  final List<Challenge> _challenges = productionV1StarterChallenges();
+  final List<Challenge> _challenges = productionV1Challenges();
   final AimPreviewComponent _aimPreview = AimPreviewComponent();
   final List<Component> _sceneComponents = [];
 
@@ -46,6 +60,7 @@ class RooftopCurveGame extends FlameGame with PanDetector {
   GamePhase _phase = GamePhase.ready;
   int _challengeIndex = 0;
   int _attempts = 1;
+  bool _isLoaded = false;
 
   int get currentChallengeNumber => _challengeIndex + 1;
   int get totalChallenges => _challenges.length;
@@ -59,10 +74,17 @@ class RooftopCurveGame extends FlameGame with PanDetector {
     camera.viewfinder.position = Vector2.zero();
 
     world.add(FieldComponent());
-    _loadChallenge(0);
+    final startIndex = initialChallengeIndex
+        .clamp(0, _challenges.length - 1)
+        .toInt();
+    _loadChallenge(startIndex, announce: false);
   }
 
   void nextChallenge() {
+    if (!_isLoaded) {
+      return;
+    }
+
     if (!hasNextChallenge) {
       retry(countAttempt: false);
       return;
@@ -72,26 +94,112 @@ class RooftopCurveGame extends FlameGame with PanDetector {
   }
 
   void retry({bool countAttempt = true}) {
+    if (!_isLoaded) {
+      return;
+    }
+
     if (countAttempt) {
       _attempts += 1;
       onAttemptsChanged(_attempts);
     }
     _phase = GamePhase.ready;
     onAimingChanged(false);
+    onAimUpdated(0, 0);
     _aimPreview.clear();
     _ball.reset(_challenge.ballStart);
+    onFeedback(GameFeedback.retry);
   }
 
   void restartChallenge() {
+    if (!_isLoaded) {
+      return;
+    }
+
     _attempts = 1;
     onAttemptsChanged(_attempts);
     _phase = GamePhase.ready;
     onAimingChanged(false);
+    onAimUpdated(0, 0);
     _aimPreview.clear();
     _ball.reset(_challenge.ballStart);
+    onFeedback(GameFeedback.retry);
   }
 
-  void _loadChallenge(int index) {
+  void startAimFromWidget(Vector2 widgetPosition) {
+    if (!_isLoaded) {
+      return;
+    }
+
+    if (_phase != GamePhase.ready) {
+      return;
+    }
+
+    final worldPosition = _toWorld(widgetPosition);
+    if (!_canStartAimAt(worldPosition)) {
+      onFeedback(GameFeedback.invalid);
+      return;
+    }
+
+    _phase = GamePhase.aiming;
+    onAimingChanged(true);
+    onFeedback(GameFeedback.aimStart);
+    _updateAim(worldPosition);
+  }
+
+  void updateAimFromWidget(Vector2 widgetPosition) {
+    if (!_isLoaded) {
+      return;
+    }
+
+    if (_phase != GamePhase.aiming) {
+      return;
+    }
+
+    _updateAim(_toWorld(widgetPosition));
+  }
+
+  void releaseAim() {
+    if (!_isLoaded) {
+      return;
+    }
+
+    if (_phase != GamePhase.aiming) {
+      return;
+    }
+
+    final shot = _aimPreview.shot;
+    _aimPreview.clear();
+    onAimingChanged(false);
+    onAimUpdated(0, 0);
+
+    if (shot == null || shot.power <= 0) {
+      _phase = GamePhase.ready;
+      onFeedback(GameFeedback.invalid);
+      return;
+    }
+
+    _ball.shoot(shot);
+    _phase = GamePhase.shotInFlight;
+    onFeedback(GameFeedback.shot);
+  }
+
+  void cancelAim() {
+    if (!_isLoaded) {
+      return;
+    }
+
+    if (_phase != GamePhase.aiming) {
+      return;
+    }
+
+    _phase = GamePhase.ready;
+    _aimPreview.clear();
+    onAimingChanged(false);
+    onAimUpdated(0, 0);
+  }
+
+  void _loadChallenge(int index, {bool announce = true}) {
+    _isLoaded = false;
     for (final component in _sceneComponents) {
       component.removeFromParent();
     }
@@ -102,6 +210,7 @@ class RooftopCurveGame extends FlameGame with PanDetector {
     _phase = GamePhase.ready;
     _attempts = 1;
     onAimingChanged(false);
+    onAimUpdated(0, 0);
     _aimPreview.clear();
 
     final goal = _GoalComponent(_challenge.goalMouth);
@@ -126,52 +235,27 @@ class RooftopCurveGame extends FlameGame with PanDetector {
     world.add(_aimPreview);
     _sceneComponents.add(_aimPreview);
 
+    _isLoaded = true;
     onAttemptsChanged(_attempts);
     onChallengeChanged(_challenge, _challengeIndex, _challenges.length);
+    if (announce && index > 0) {
+      onFeedback(GameFeedback.next);
+    }
   }
 
   @override
   void onPanStart(DragStartInfo info) {
-    if (_phase != GamePhase.ready) {
-      return;
-    }
-
-    final worldPosition = _toWorld(info.eventPosition.widget);
-    if (worldPosition.distanceTo(_ball.position) > 46) {
-      return;
-    }
-
-    _phase = GamePhase.aiming;
-    onAimingChanged(true);
-    _updateAim(worldPosition);
+    startAimFromWidget(info.eventPosition.widget);
   }
 
   @override
   void onPanUpdate(DragUpdateInfo info) {
-    if (_phase != GamePhase.aiming) {
-      return;
-    }
-
-    _updateAim(_toWorld(info.eventPosition.widget));
+    updateAimFromWidget(info.eventPosition.widget);
   }
 
   @override
   void onPanEnd(DragEndInfo info) {
-    if (_phase != GamePhase.aiming) {
-      return;
-    }
-
-    final shot = _aimPreview.shot;
-    _aimPreview.clear();
-    onAimingChanged(false);
-
-    if (shot == null || shot.power <= 0) {
-      _phase = GamePhase.ready;
-      return;
-    }
-
-    _ball.shoot(shot);
-    _phase = GamePhase.shotInFlight;
+    releaseAim();
   }
 
   @override
@@ -201,6 +285,19 @@ class RooftopCurveGame extends FlameGame with PanDetector {
     return camera.globalToLocal(widgetPosition);
   }
 
+  bool _canStartAimAt(Vector2 worldPosition) {
+    if (worldPosition.distanceTo(_ball.position) <= ballTouchRadius) {
+      return true;
+    }
+
+    final pullZone = Rect.fromCenter(
+      center: Offset(_ball.position.x, _ball.position.y + _pullZoneYOffset),
+      width: _pullZoneWidth,
+      height: _pullZoneHeight,
+    );
+    return pullZone.contains(Offset(worldPosition.x, worldPosition.y));
+  }
+
   void _updateAim(Vector2 dragPosition) {
     final shot = ShotPhysics.fromDrag(
       ballPosition: _ball.position,
@@ -211,6 +308,7 @@ class RooftopCurveGame extends FlameGame with PanDetector {
       dragPosition: dragPosition,
       shotConfig: shot,
     );
+    onAimUpdated(shot.power, shot.curve);
   }
 
   void _resolve(GameResultType type) {
@@ -218,13 +316,36 @@ class RooftopCurveGame extends FlameGame with PanDetector {
     _ball.inFlight = false;
     _ball.velocity = Vector2.zero();
     onAimingChanged(false);
-    onResult(
-      GameResult(
-        type: type,
-        attempt: _attempts,
-        challengeId: _challenge.id,
+    onAimUpdated(0, 0);
+    world.add(
+      _ImpactRingComponent(
+        position: _ball.position.clone(),
+        color: _resultColor(type),
       ),
     );
+    onFeedback(_feedbackForResult(type));
+    onResult(
+      GameResult(type: type, attempt: _attempts, challengeId: _challenge.id),
+    );
+  }
+
+  Color _resultColor(GameResultType type) {
+    return switch (type) {
+      GameResultType.goal => const Color(0xFF70E000),
+      GameResultType.saved => const Color(0xFFFFD166),
+      GameResultType.blocked => const Color(0xFFEF476F),
+      GameResultType.missed ||
+      GameResultType.tooWeak => const Color(0xFFFF6B6B),
+    };
+  }
+
+  GameFeedback _feedbackForResult(GameResultType type) {
+    return switch (type) {
+      GameResultType.goal => GameFeedback.goal,
+      GameResultType.saved => GameFeedback.saved,
+      GameResultType.blocked => GameFeedback.blocked,
+      GameResultType.missed || GameResultType.tooWeak => GameFeedback.missed,
+    };
   }
 }
 
@@ -298,5 +419,32 @@ class _ObstacleComponent extends PositionComponent {
       ..strokeWidth = 3;
     canvas.drawLine(const Offset(6, 12), Offset(size.x - 6, 26), stripePaint);
     canvas.drawLine(const Offset(6, 42), Offset(size.x - 6, 56), stripePaint);
+  }
+}
+
+class _ImpactRingComponent extends PositionComponent {
+  _ImpactRingComponent({required Vector2 position, required this.color})
+    : super(position: position, anchor: Anchor.center);
+
+  final Color color;
+  double _age = 0;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= 0.34) {
+      removeFromParent();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final progress = (_age / 0.34).clamp(0.0, 1.0).toDouble();
+    final paint = Paint()
+      ..color = color.withValues(alpha: 1 - progress)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawCircle(Offset.zero, 12 + progress * 28, paint);
   }
 }

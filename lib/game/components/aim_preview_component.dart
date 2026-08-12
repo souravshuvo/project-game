@@ -52,8 +52,8 @@ class AimPreviewComponent extends PositionComponent {
 
     final path = Path()..moveTo(startPosition.x, startPosition.y);
     var previewPosition = startPosition.clone();
-    var velocity = shotConfig.velocity.clone() * 0.72;
-    for (var i = 0; i < 26; i++) {
+    var velocity = shotConfig.velocity.clone() * 0.9;
+    for (var i = 0; i < 42; i++) {
       velocity = ShotPhysics.nextVelocity(
         velocity: velocity,
         curve: shotConfig.curve,

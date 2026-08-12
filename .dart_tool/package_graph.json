@@ -8,8 +8,11 @@
       "version": "1.0.0+1",
       "dependencies": [
         "cupertino_icons",
+        "firebase_analytics",
+        "firebase_core",
         "flame",
-        "flutter"
+        "flutter",
+        "google_mobile_ads"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -159,6 +162,11 @@
       ]
     },
     {
+      "name": "ordered_set",
+      "version": "8.0.1",
+      "dependencies": []
+    },
+    {
       "name": "sky_engine",
       "version": "0.0.0",
       "dependencies": []
@@ -238,9 +246,149 @@
       "dependencies": []
     },
     {
-      "name": "ordered_set",
-      "version": "8.0.1",
+      "name": "google_mobile_ads",
+      "version": "9.1.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "webview_flutter",
+        "webview_flutter_android",
+        "webview_flutter_wkwebview"
+      ]
+    },
+    {
+      "name": "firebase_core",
+      "version": "4.13.0",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "firebase_core_web",
+        "flutter",
+        "meta"
+      ]
+    },
+    {
+      "name": "firebase_core_web",
+      "version": "3.10.0",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "firebase_core_platform_interface",
+      "version": "8.1.0",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_test",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_analytics",
+      "version": "12.4.6",
+      "dependencies": [
+        "firebase_analytics_platform_interface",
+        "firebase_analytics_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_analytics_web",
+      "version": "0.6.1+12",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_analytics_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "firebase_analytics_platform_interface",
+      "version": "6.0.6",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "_flutterfire_internals",
+      "version": "1.3.76",
+      "dependencies": [
+        "collection",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
+      ]
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
       "dependencies": []
+    },
+    {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
+      "name": "webview_flutter",
+      "version": "4.14.1",
+      "dependencies": [
+        "flutter",
+        "webview_flutter_android",
+        "webview_flutter_platform_interface",
+        "webview_flutter_wkwebview"
+      ]
+    },
+    {
+      "name": "webview_flutter_platform_interface",
+      "version": "2.15.1",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "webview_flutter_wkwebview",
+      "version": "3.26.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "path",
+        "webview_flutter_platform_interface"
+      ]
+    },
+    {
+      "name": "webview_flutter_android",
+      "version": "4.14.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "webview_flutter_platform_interface"
+      ]
     }
   ],
   "configVersion": 1

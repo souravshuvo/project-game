@@ -50,6 +50,18 @@ class BallComponent extends CircleComponent {
 
   @override
   void render(Canvas canvas) {
+    if (!inFlight) {
+      final glowPaint = Paint()
+        ..color = const Color(0xFFFFD166).withValues(alpha: 0.22)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(ballRadius, ballRadius), 21, glowPaint);
+
+      final ringPaint = Paint()
+        ..color = const Color(0xFFFFD166).withValues(alpha: 0.78)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2;
+      canvas.drawCircle(const Offset(ballRadius, ballRadius), 17, ringPaint);
+    }
     super.render(canvas);
     final seamPaint = Paint()
       ..color = const Color(0xFF24312D)
