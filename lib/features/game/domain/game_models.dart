@@ -1,12 +1,10 @@
-enum GameMode { singlePlayer, passAndPlay }
+enum GameMode { singlePlayer }
 
 extension GameModeLabel on GameMode {
   String get label {
     switch (this) {
       case GameMode.singlePlayer:
         return 'Single Player';
-      case GameMode.passAndPlay:
-        return 'Pass & Play';
     }
   }
 }

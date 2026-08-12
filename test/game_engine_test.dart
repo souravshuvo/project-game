@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rapid_jump/features/game/domain/game_content.dart';
 import 'package:rapid_jump/features/game/domain/game_models.dart';
 import 'package:rapid_jump/features/game/logic/game_engine.dart';
 
@@ -112,10 +113,82 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('score watcher bot targets the public score leader', () {
+    final engine = GameEngine(random: Random(1));
+
+    final suspect = engine.chooseBotSuspect(
+      players: players,
+      policePlayerId: 'p4',
+      style: BotGuessStyle.scoreWatcher,
+      currentTotals: const <String, int>{
+        'p1': 1000,
+        'p2': 2500,
+        'p3': 800,
+        'p4': 0,
+      },
+    );
+
+    expect(suspect, 'p2');
+  });
+
+  test('table memory bot uses earlier revealed thief history', () {
+    final engine = GameEngine(random: Random(1));
+    final history = <GameRound>[
+      _roundWithThief('p1'),
+      _roundWithThief('p2'),
+      _roundWithThief('p2'),
+    ];
+
+    final suspect = engine.chooseBotSuspect(
+      players: players,
+      policePlayerId: 'p4',
+      style: BotGuessStyle.tableMemory,
+      history: history,
+    );
+
+    expect(suspect, 'p2');
+  });
 }
 
 int _pointsFor(RoundScore score, String playerId) {
   return score.entries
       .singleWhere((entry) => entry.playerId == playerId)
       .points;
+}
+
+GameRound _roundWithThief(String thiefPlayerId) {
+  final assignments = switch (thiefPlayerId) {
+    'p1' => <String, GameRole>{
+      'p1': GameRole.thief,
+      'p2': GameRole.minister,
+      'p3': GameRole.king,
+      'p4': GameRole.police,
+    },
+    'p2' => <String, GameRole>{
+      'p1': GameRole.king,
+      'p2': GameRole.thief,
+      'p3': GameRole.minister,
+      'p4': GameRole.police,
+    },
+    _ => <String, GameRole>{
+      'p1': GameRole.king,
+      'p2': GameRole.minister,
+      'p3': GameRole.thief,
+      'p4': GameRole.police,
+    },
+  };
+
+  return GameRound(
+    roundNumber: 1,
+    assignments: assignments,
+    accusation: const Accusation(policePlayerId: 'p4', accusedPlayerId: 'p1'),
+    result: RoundResult(
+      policePlayerId: 'p4',
+      accusedPlayerId: 'p1',
+      thiefPlayerId: thiefPlayerId,
+      wasCorrect: thiefPlayerId == 'p1',
+    ),
+    scoreEntries: const <ScoreEntry>[],
+  );
 }

@@ -1,0 +1,8 @@
+shot,start,end,duration,real_capture,on_screen_caption,voiceover,editing_notes
+1,00:00.000,00:03.000,3.0,"Main menu with match setup, Quick preset, bot style, and Start match button.","Choose a quick match","Pick a short match and bot style.","Open on real UI. Keep title and Start match readable."
+2,00:03.000,00:06.000,3.0,"Tap Start match, then show shuffling/loading state.","Secret roles are dealt","Every round starts with hidden roles.","Use a quick cut from menu to shuffling. No fake card animation."
+3,00:06.000,00:10.000,4.0,"Secret role screen, tap Reveal my card, show only the human role.","Reveal only your card","Reveal only your own card.","Capture real reveal state. Do not show bot roles."
+4,00:10.000,00:14.000,4.0,"Police reveal screen with one Police card visible and other roles hidden.","Police steps forward","The Police must find the hidden Thief.","Keep Police card and hidden cards readable."
+5,00:14.000,00:18.000,4.0,"Accusation screen in a real human-Police round, with one suspect selected.","Pick one suspect","Choose carefully. One guess decides the round.","Record a real round where the human is Police."
+6,00:18.000,00:23.000,5.0,"Round reveal or round summary showing caught/escaped result and points.","Caught or escaped?","Scores update after every reveal.","Use the real result from the accusation shot where possible."
+7,00:23.000,00:26.000,3.0,"Progress or match summary showing local goals, history, or final ranking.","Track local goals","Finish matches and track local goals.","End with real progress or match summary. No download CTA."

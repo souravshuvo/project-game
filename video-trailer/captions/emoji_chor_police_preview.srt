@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:03,000
+Choose a quick match
+
+2
+00:00:03,000 --> 00:00:06,000
+Secret roles are dealt
+
+3
+00:00:06,000 --> 00:00:10,000
+Reveal only your card
+
+4
+00:00:10,000 --> 00:00:14,000
+Police steps forward
+
+5
+00:00:14,000 --> 00:00:18,000
+Pick one suspect
+
+6
+00:00:18,000 --> 00:00:23,000
+Caught or escaped?
+
+7
+00:00:23,000 --> 00:00:26,000
+Track local goals

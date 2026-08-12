@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../domain/game_content.dart';
 import '../domain/game_models.dart';
 
 class GameEngine {
@@ -35,12 +36,68 @@ class GameEngine {
   String chooseBotSuspect({
     required List<GamePlayer> players,
     required String policePlayerId,
+    BotGuessStyle style = BotGuessStyle.fairRandom,
+    Map<String, int> currentTotals = const <String, int>{},
+    List<GameRound> history = const <GameRound>[],
   }) {
     final suspects = validSuspectIds(
       players: players,
       policePlayerId: policePlayerId,
     );
-    return suspects[_random.nextInt(suspects.length)];
+
+    switch (style) {
+      case BotGuessStyle.fairRandom:
+        return _randomId(suspects);
+      case BotGuessStyle.scoreWatcher:
+        return _highestPublicScore(suspects, currentTotals);
+      case BotGuessStyle.tableMemory:
+        return _mostOftenRevealedThief(suspects, history);
+    }
+  }
+
+  String _randomId(List<String> ids) {
+    return ids[_random.nextInt(ids.length)];
+  }
+
+  String _highestPublicScore(
+    List<String> suspectIds,
+    Map<String, int> currentTotals,
+  ) {
+    final bestScore = suspectIds.fold<int>(
+      currentTotals[suspectIds.first] ?? 0,
+      (best, id) => max(best, currentTotals[id] ?? 0),
+    );
+    final topSuspects = suspectIds
+        .where((id) => (currentTotals[id] ?? 0) == bestScore)
+        .toList(growable: false);
+    return _randomId(topSuspects);
+  }
+
+  String _mostOftenRevealedThief(
+    List<String> suspectIds,
+    List<GameRound> history,
+  ) {
+    final thiefCounts = <String, int>{for (final id in suspectIds) id: 0};
+    for (final round in history) {
+      final thiefPlayerId = findPlayerWithRole(
+        round.assignments,
+        GameRole.thief,
+      );
+      if (thiefCounts.containsKey(thiefPlayerId)) {
+        thiefCounts[thiefPlayerId] = thiefCounts[thiefPlayerId]! + 1;
+      }
+    }
+
+    final bestCount = thiefCounts.values.fold<int>(0, max);
+    if (bestCount == 0) {
+      return _randomId(suspectIds);
+    }
+
+    final topSuspects = thiefCounts.entries
+        .where((entry) => entry.value == bestCount)
+        .map((entry) => entry.key)
+        .toList(growable: false);
+    return _randomId(topSuspects);
   }
 
   RoundScore scoreRound({
