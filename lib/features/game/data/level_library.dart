@@ -1,8 +1,14 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import '../domain/game_model.dart';
 
-const v1Levels = [
+final List<LevelDefinition> v1Levels = List<LevelDefinition>.unmodifiable([
+  ..._tutorialLevels,
+  ...List<LevelDefinition>.generate(25, _buildProductionLevel),
+]);
+
+const _tutorialLevels = [
   LevelDefinition(
     id: 'channel-1',
     number: 1,
@@ -223,3 +229,255 @@ const v1Levels = [
     ],
   ),
 ];
+
+const _arcNames = ['North', 'East', 'South', 'West', 'Core'];
+
+const _patternNames = [
+  'Split Charge',
+  'Cross Current',
+  'Red Bend',
+  'Wide Sweep',
+  'Double Wall',
+];
+
+LevelDefinition _buildProductionLevel(int index) {
+  final number = index + 6;
+  final tier = index ~/ 5;
+  final pattern = index % 5;
+  final idPrefix = 'l$number';
+  final reserve = 58 + tier * 8 + pattern * 2;
+  final launchRate = 38.0 + tier;
+  final unitSpeed = 126.0 + tier * 3 + pattern;
+  final maxCrowd = 158 + tier * 24 + pattern * 6;
+  final visualCap = math.min(120, 98 + tier * 5 + pattern * 2).toInt();
+  final add = 22 + tier * 5 + pattern * 2;
+  final bonus = 12 + tier * 3 + pattern;
+  final drain = 10 + tier * 3 + pattern;
+  final firstStrength = 26 + tier * 5 + pattern * 2;
+  final finalStrength = 58 + tier * 9 + pattern * 4;
+  final arcName = _arcNames[tier];
+  final patternName = _patternNames[pattern];
+
+  return switch (pattern) {
+    0 => LevelDefinition(
+      id: 'channel-$number',
+      number: number,
+      name: '$arcName $patternName',
+      startReserve: reserve,
+      launchRate: launchRate,
+      unitSpeed: unitSpeed,
+      maxCrowd: maxCrowd,
+      visualCap: visualCap,
+      finishY: 64,
+      gates: [
+        GateDefinition(
+          id: '$idPrefix-add',
+          center: const Offset(108, 505),
+          size: const Size(112, 54),
+          effect: GateEffect.add(add),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-multiply',
+          center: const Offset(252, 505),
+          size: const Size(112, 54),
+          effect: const GateEffect.multiply(2),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-bonus',
+          center: const Offset(180, 350),
+          size: const Size(118, 54),
+          effect: GateEffect.add(bonus),
+        ),
+      ],
+      enemies: [
+        EnemyDefinition(
+          id: '$idPrefix-final',
+          center: const Offset(180, 150),
+          size: Size(232.0 + tier * 6, 78),
+          strength: finalStrength + 14,
+        ),
+      ],
+    ),
+    1 => LevelDefinition(
+      id: 'channel-$number',
+      number: number,
+      name: '$arcName $patternName',
+      startReserve: reserve,
+      launchRate: launchRate,
+      unitSpeed: unitSpeed,
+      maxCrowd: maxCrowd,
+      visualCap: visualCap,
+      finishY: 64,
+      gates: [
+        GateDefinition(
+          id: '$idPrefix-tight',
+          center: const Offset(108, 510),
+          size: const Size(112, 54),
+          effect: const GateEffect.tight(),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-add',
+          center: const Offset(252, 510),
+          size: const Size(112, 54),
+          effect: GateEffect.add(add),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-multiply',
+          center: const Offset(180, 365),
+          size: const Size(118, 54),
+          effect: const GateEffect.multiply(2),
+        ),
+      ],
+      enemies: [
+        EnemyDefinition(
+          id: '$idPrefix-left',
+          center: const Offset(132, 242),
+          size: const Size(150, 58),
+          strength: firstStrength,
+        ),
+        EnemyDefinition(
+          id: '$idPrefix-right',
+          center: const Offset(218, 128),
+          size: const Size(190, 72),
+          strength: finalStrength + 4,
+        ),
+      ],
+    ),
+    2 => LevelDefinition(
+      id: 'channel-$number',
+      number: number,
+      name: '$arcName $patternName',
+      startReserve: reserve,
+      launchRate: launchRate,
+      unitSpeed: unitSpeed,
+      maxCrowd: maxCrowd,
+      visualCap: visualCap,
+      finishY: 64,
+      gates: [
+        GateDefinition(
+          id: '$idPrefix-add',
+          center: const Offset(108, 500),
+          size: const Size(112, 54),
+          effect: GateEffect.add(add + 8),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-drain',
+          center: const Offset(252, 500),
+          size: const Size(112, 54),
+          effect: GateEffect.subtract(drain),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-multiply',
+          center: const Offset(180, 345),
+          size: const Size(118, 54),
+          effect: const GateEffect.multiply(2),
+        ),
+      ],
+      enemies: [
+        EnemyDefinition(
+          id: '$idPrefix-final',
+          center: const Offset(180, 150),
+          size: Size(238.0 + tier * 6, 82),
+          strength: finalStrength + 28,
+          shape: EnemyShape.narrowBlock,
+        ),
+      ],
+    ),
+    3 => LevelDefinition(
+      id: 'channel-$number',
+      number: number,
+      name: '$arcName $patternName',
+      startReserve: reserve,
+      launchRate: launchRate,
+      unitSpeed: unitSpeed,
+      maxCrowd: maxCrowd,
+      visualCap: visualCap,
+      finishY: 64,
+      gates: [
+        GateDefinition(
+          id: '$idPrefix-wide',
+          center: const Offset(108, 510),
+          size: const Size(112, 54),
+          effect: const GateEffect.wide(),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-add',
+          center: const Offset(252, 510),
+          size: const Size(112, 54),
+          effect: GateEffect.add(add),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-multiply',
+          center: const Offset(180, 365),
+          size: const Size(118, 54),
+          effect: const GateEffect.multiply(2),
+        ),
+      ],
+      enemies: [
+        EnemyDefinition(
+          id: '$idPrefix-line',
+          center: const Offset(180, 166),
+          size: Size(292.0 + tier * 4, 72),
+          strength: finalStrength + 34,
+          shape: EnemyShape.wideLine,
+        ),
+      ],
+    ),
+    _ => LevelDefinition(
+      id: 'channel-$number',
+      number: number,
+      name: '$arcName $patternName',
+      startReserve: reserve,
+      launchRate: launchRate,
+      unitSpeed: unitSpeed,
+      maxCrowd: maxCrowd,
+      visualCap: visualCap,
+      finishY: 64,
+      gates: [
+        GateDefinition(
+          id: '$idPrefix-add',
+          center: const Offset(108, 505),
+          size: const Size(112, 54),
+          effect: GateEffect.add(add + 4),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-multiply',
+          center: const Offset(252, 505),
+          size: const Size(112, 54),
+          effect: const GateEffect.multiply(2),
+          choiceGroup: '$idPrefix-choice-a',
+        ),
+        GateDefinition(
+          id: '$idPrefix-bonus',
+          center: const Offset(180, 355),
+          size: const Size(118, 54),
+          effect: GateEffect.add(bonus + 4),
+        ),
+      ],
+      enemies: [
+        EnemyDefinition(
+          id: '$idPrefix-first',
+          center: const Offset(180, 250),
+          size: const Size(190, 60),
+          strength: firstStrength + 4,
+        ),
+        EnemyDefinition(
+          id: '$idPrefix-final',
+          center: const Offset(180, 125),
+          size: Size(254.0 + tier * 4, 82),
+          strength: finalStrength + 10,
+          shape: EnemyShape.narrowBlock,
+        ),
+      ],
+    ),
+  };
+}

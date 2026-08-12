@@ -18,4 +18,26 @@ void main() {
     expect(find.text('Reserve'), findsOneWidget);
     expect(find.text('Crowd'), findsOneWidget);
   });
+
+  testWidgets('game menu exposes help and feedback settings', (tester) async {
+    await tester.pumpWidget(const MagneticMarblesApp());
+
+    await tester.tap(find.byKey(const ValueKey('play-button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(find.byKey(const ValueKey('game-menu-button')));
+    await tester.pump();
+
+    expect(find.text('Game menu'), findsOneWidget);
+    expect(find.byKey(const ValueKey('help-button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('settings-button')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('settings-button')));
+    await tester.pump();
+
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.byKey(const ValueKey('sound-toggle')), findsOneWidget);
+    expect(find.byKey(const ValueKey('haptics-toggle')), findsOneWidget);
+  });
 }

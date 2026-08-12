@@ -11,9 +11,10 @@ void main() {
   });
 
   test('gate choice applies only the selected gate in a choice group', () {
-    final engine = MarbleRunGameEngine(level: v1Levels.first, levelCount: 5)
-      ..setLauncherX(252)
-      ..setLaunching(true);
+    final engine =
+        MarbleRunGameEngine(level: v1Levels.first, levelCount: v1Levels.length)
+          ..setLauncherX(252)
+          ..setLaunching(true);
 
     for (var tick = 0; tick < 75; tick += 1) {
       engine.update(1 / 30);
@@ -25,9 +26,10 @@ void main() {
   });
 
   test('level one can clear through the add route', () {
-    final engine = MarbleRunGameEngine(level: v1Levels.first, levelCount: 5)
-      ..setLauncherX(108)
-      ..setLaunching(true);
+    final engine =
+        MarbleRunGameEngine(level: v1Levels.first, levelCount: v1Levels.length)
+          ..setLauncherX(108)
+          ..setLaunching(true);
 
     for (var tick = 0; tick < 190; tick += 1) {
       if (tick == 70) {
@@ -41,9 +43,10 @@ void main() {
   });
 
   test('level five rewards the stronger route', () {
-    final engine = MarbleRunGameEngine(level: v1Levels.last, levelCount: 5)
-      ..setLauncherX(252)
-      ..setLaunching(true);
+    final engine =
+        MarbleRunGameEngine(level: v1Levels[4], levelCount: v1Levels.length)
+          ..setLauncherX(252)
+          ..setLaunching(true);
 
     for (var tick = 0; tick < 220; tick += 1) {
       if (tick == 55) {

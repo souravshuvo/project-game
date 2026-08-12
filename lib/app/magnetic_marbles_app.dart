@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'game_services.dart';
 import '../features/home/presentation/home_screen.dart';
 
 class MagneticMarblesApp extends StatelessWidget {
-  const MagneticMarblesApp({super.key});
+  const MagneticMarblesApp({this.services = GameServices.fallback, super.key});
+
+  final GameServices services;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +24,7 @@ class MagneticMarblesApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(services: services),
     );
   }
 }

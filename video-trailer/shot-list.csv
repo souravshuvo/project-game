@@ -1,0 +1,7 @@
+shot_id,start,end,duration,capture_target,required_action,on_screen_text,voiceover,audio_edit,qa_acceptance
+01,0.0,3.0,3.0,Home screen,Show app title and tap Continue,Magnetic Marbles,Guide a marble crowd,Keep app tap sound if clean,Real home UI with no debug banner
+02,3.0,7.0,4.0,Level 1 ready state,Hold and drag launcher then release,Hold and drag,through gates.,Keep launch feedback,Real hint and real launch visible
+03,7.0,12.0,5.0,Active gate choice,Steer toward readable add or multiply gate,Choose a gate,Grow the stream,,Gate labels readable and crowd visibly changes
+04,12.0,17.0,5.0,Enemy collision,Crowd hits and clears enemy cluster,Clear clusters,clear the clusters,,Real collision feedback shown
+05,17.0,22.0,5.0,Level clear result,Show score stars Retry Next and Home,Fast level clears,and finish quick,Win result readable with stars visible
+06,22.0,27.0,5.0,Level select sheet,Show real 30-level grid,30 offline levels,offline arcade levels.,Light outro hit,Do not imply all levels are unlocked

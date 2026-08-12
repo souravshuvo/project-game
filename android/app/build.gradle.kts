@@ -13,6 +13,12 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val isReleaseTask = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true) || it.contains("bundle", ignoreCase = true)
 }
+val testAdMobApplicationId = "ca-app-pub-3940256099942544~3347511713"
+val adMobApplicationId = (
+    project.findProperty("ADMOB_APP_ID") as String?
+        ?: System.getenv("ADMOB_APP_ID")
+        ?: testAdMobApplicationId
+)
 
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
@@ -22,8 +28,14 @@ if (keystorePropertiesFile.exists()) {
     )
 }
 
+if (isReleaseTask && adMobApplicationId == testAdMobApplicationId) {
+    throw org.gradle.api.GradleException(
+        "Missing production ADMOB_APP_ID. Release artifacts must not use the sample AdMob app ID."
+    )
+}
+
 android {
-    namespace = "com.magneticmarbles.game"
+    namespace = "com.childhood.magneticmarbles"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -37,13 +49,14 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.magneticmarbles.game"
+        applicationId = "com.childhood.magneticmarbles"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["adMobApplicationId"] = adMobApplicationId
     }
 
     signingConfigs {
@@ -66,4 +79,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }

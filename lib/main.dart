@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'app/game_services.dart';
 import 'app/magnetic_marbles_app.dart';
 
-void main() {
-  runApp(const MagneticMarblesApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final services = await GameServices.initialize();
+  runApp(MagneticMarblesApp(services: services));
 }

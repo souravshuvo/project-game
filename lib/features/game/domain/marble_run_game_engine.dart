@@ -98,6 +98,10 @@ class MarbleRunGameEngine {
     launcherX = worldX.clamp(36.0, gameWorldSize.width - 36).toDouble();
   }
 
+  void showMessage(String message, {bool persist = false}) {
+    _setMessage(message, persist: persist);
+  }
+
   void setLaunching(bool launching) {
     if (phase == GamePhase.won || phase == GamePhase.lost) {
       isLaunching = false;
@@ -142,6 +146,7 @@ class MarbleRunGameEngine {
 
     if (reserveCount == 0 && !_reserveEmptyEmitted) {
       _reserveEmptyEmitted = true;
+      _setMessage('Reserve empty');
       _emit(GameEventNames.reserveEmpty);
     }
   }

@@ -1,5 +1,5 @@
 name: project_game
-description: "Original offline crowd-control arcade game."
+description: "Original crowd-control arcade game."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +34,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  firebase_analytics: ^12.4.5
+  firebase_core: ^4.12.1
+  google_mobile_ads: ^9.0.0
 
 dev_dependencies:
   flutter_test:
