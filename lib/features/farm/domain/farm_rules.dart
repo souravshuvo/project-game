@@ -23,6 +23,11 @@ class FarmRules {
   static const sunSproutsId = 'sun_sprouts';
   static const rainBeansId = 'rain_beans';
   static const amberLeafId = 'amber_leaf';
+  static const moonMintId = 'moon_mint';
+  static const cloudPepperId = 'cloud_pepper';
+  static const glassBerryId = 'glass_berry';
+  static const starfruitVinesId = 'starfruit_vines';
+  static const goldenThymeId = 'golden_thyme';
 
   static const mvp = FarmRules(
     plotCount: 9,
@@ -61,6 +66,51 @@ class FarmRules {
         harvestYield: 1,
         sellValue: 13,
       ),
+      CropDefinition(
+        id: moonMintId,
+        name: 'Moon Mint',
+        unlockLevel: 3,
+        growDuration: Duration(seconds: 120),
+        seedCost: 1,
+        harvestYield: 1,
+        sellValue: 18,
+      ),
+      CropDefinition(
+        id: cloudPepperId,
+        name: 'Cloud Pepper',
+        unlockLevel: 3,
+        growDuration: Duration(seconds: 180),
+        seedCost: 1,
+        harvestYield: 1,
+        sellValue: 26,
+      ),
+      CropDefinition(
+        id: glassBerryId,
+        name: 'Glass Berry',
+        unlockLevel: 4,
+        growDuration: Duration(seconds: 300),
+        seedCost: 1,
+        harvestYield: 1,
+        sellValue: 38,
+      ),
+      CropDefinition(
+        id: starfruitVinesId,
+        name: 'Starfruit Vines',
+        unlockLevel: 5,
+        growDuration: Duration(seconds: 480),
+        seedCost: 1,
+        harvestYield: 1,
+        sellValue: 60,
+      ),
+      CropDefinition(
+        id: goldenThymeId,
+        name: 'Golden Thyme',
+        unlockLevel: 6,
+        growDuration: Duration(seconds: 720),
+        seedCost: 1,
+        harvestYield: 1,
+        sellValue: 90,
+      ),
     ],
     upgrades: <UpgradeDefinition>[
       UpgradeDefinition(
@@ -69,6 +119,34 @@ class FarmRules {
         unlockedPlots: 6,
         waterCap: 6,
         description: 'Unlock 2 plots, Rain Beans, Amber Leaf, and +2 water cap',
+      ),
+      UpgradeDefinition(
+        targetLevel: 3,
+        cost: 70,
+        unlockedPlots: 7,
+        waterCap: 7,
+        description: 'Unlock Plot 7, Moon Mint, Cloud Pepper, and +1 water cap',
+      ),
+      UpgradeDefinition(
+        targetLevel: 4,
+        cost: 160,
+        unlockedPlots: 8,
+        waterCap: 8,
+        description: 'Unlock Plot 8, Glass Berry, and +1 water cap',
+      ),
+      UpgradeDefinition(
+        targetLevel: 5,
+        cost: 320,
+        unlockedPlots: 9,
+        waterCap: 9,
+        description: 'Unlock Plot 9, Starfruit Vines, and +1 water cap',
+      ),
+      UpgradeDefinition(
+        targetLevel: 6,
+        cost: 650,
+        unlockedPlots: 9,
+        waterCap: 10,
+        description: 'Unlock Golden Thyme and the final +1 water cap',
       ),
     ],
   );

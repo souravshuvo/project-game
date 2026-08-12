@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:03,000
+Start a tiny rooftop garden
+
+2
+00:00:03,000 --> 00:00:07,000
+Plant, water, grow
+
+3
+00:00:07,000 --> 00:00:12,000
+Tap a plot to plant
+
+4
+00:00:12,000 --> 00:00:16,000
+Water crops to grow
+
+5
+00:00:16,000 --> 00:00:20,000
+Harvest when ready
+
+6
+00:00:20,000 --> 00:00:24,000
+Sell crops for coins
+
+7
+00:00:24,000 --> 00:00:28,000
+Upgrade your garden
+
+8
+00:00:28,000 --> 00:00:30,000
+Rooftop Rain Garden

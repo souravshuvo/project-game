@@ -1,4 +1,4 @@
-package com.rooftopraingarden.app
+package com.childhood.rooftopraingarden
 
 import io.flutter.embedding.android.FlutterActivity
 

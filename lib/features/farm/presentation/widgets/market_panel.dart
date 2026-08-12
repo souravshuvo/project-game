@@ -31,7 +31,8 @@ class MarketPanel extends StatelessWidget {
     final canUpgrade = nextUpgrade != null && state.coins >= nextUpgrade.cost;
     final helperText = _helperText(sellValue, nextUpgrade, canUpgrade);
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF7F0),
@@ -56,26 +57,34 @@ class MarketPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(helperText, style: Theme.of(context).textTheme.bodySmall),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: Text(
+              helperText,
+              key: ValueKey(helperText),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                onPressed: state.inventory.hasCrateItems ? onSell : null,
+              _MarketButton(
+                primary: state.inventory.hasCrateItems,
+                onPressed: onSell,
                 icon: const Icon(Icons.sell_outlined),
-                label: Text('Sell +$sellValue'),
+                label: Text(sellValue == 0 ? 'Sell crate' : 'Sell +$sellValue'),
               ),
-              OutlinedButton.icon(
-                onPressed: state.coins >= rules.seedPackCost
-                    ? onBuySeeds
-                    : null,
+              _MarketButton(
+                primary: state.coins >= rules.seedPackCost,
+                onPressed: onBuySeeds,
                 icon: const Icon(Icons.add_shopping_cart_outlined),
                 label: Text('Seeds ${rules.seedPackCost}'),
               ),
-              OutlinedButton.icon(
-                onPressed: canUpgrade ? onUpgrade : null,
+              _MarketButton(
+                primary: canUpgrade,
+                onPressed: onUpgrade,
                 icon: const Icon(Icons.upgrade_outlined),
                 label: Text(
                   nextUpgrade == null
@@ -83,7 +92,8 @@ class MarketPanel extends StatelessWidget {
                       : 'Upgrade ${nextUpgrade.cost}',
                 ),
               ),
-              OutlinedButton.icon(
+              _MarketButton(
+                primary: false,
                 onPressed: saving ? null : onSave,
                 icon: saving
                     ? const SizedBox.square(
@@ -122,5 +132,41 @@ class MarketPanel extends StatelessWidget {
       return 'Upgrade now to open more plots and crops.';
     }
     return 'Harvest, sell, then save up ${nextUpgrade.cost} coins for the next upgrade.';
+  }
+}
+
+class _MarketButton extends StatelessWidget {
+  const _MarketButton({
+    required this.primary,
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  });
+
+  final bool primary;
+  final VoidCallback? onPressed;
+  final Widget icon;
+  final Widget label;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ButtonStyle(
+      minimumSize: WidgetStateProperty.all(const Size(104, 48)),
+      tapTargetSize: MaterialTapTargetSize.padded,
+    );
+    if (primary) {
+      return FilledButton.icon(
+        style: style,
+        onPressed: onPressed,
+        icon: icon,
+        label: label,
+      );
+    }
+    return OutlinedButton.icon(
+      style: style,
+      onPressed: onPressed,
+      icon: icon,
+      label: label,
+    );
   }
 }

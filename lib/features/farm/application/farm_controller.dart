@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../data/farm_save_store.dart';
 import '../domain/crop_definition.dart';
 import '../domain/farm_action_result.dart';
+import '../domain/farm_plot.dart';
 import '../domain/farm_return_report.dart';
 import '../domain/farm_rules.dart';
 import '../domain/farm_simulation.dart';
@@ -35,10 +36,12 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _ticker;
   bool _saving = false;
   bool _disposed = false;
+  bool _lastActionChanged = false;
   String _selectedCropId;
 
   FarmState get state => _state;
   bool get saving => _saving;
+  bool get lastActionChanged => _lastActionChanged;
   int get nowMs => clock.nowMs;
   String get selectedCropId => _selectedCropId;
   CropDefinition get selectedCrop => rules.cropById(_selectedCropId);
@@ -49,12 +52,14 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
   void start() {
     WidgetsBinding.instance.addObserver(this);
     analytics.log(FarmAnalyticsEvents.gameStarted, <String, Object?>{
+      ..._commonAnalyticsProperties(),
       'farm_level': _state.farmLevel,
       'has_return_progress': returnReport.hasProgress,
     });
     if (returnReport.hasProgress) {
       analytics
           .log(FarmAnalyticsEvents.offlineProgressApplied, <String, Object?>{
+            ..._commonAnalyticsProperties(),
             'ready_plots': returnReport.readyPlots,
             'water_restored': returnReport.waterRestored,
             'away_seconds': returnReport.awaySeconds,
@@ -74,10 +79,13 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
 
   void selectCrop(String cropId) {
     if (!rules.isCropUnlocked(cropId, _state.farmLevel)) {
+      _lastActionChanged = false;
       return;
     }
     _selectedCropId = cropId;
+    _lastActionChanged = true;
     analytics.log(FarmAnalyticsEvents.plotSelected, <String, Object?>{
+      ..._commonAnalyticsProperties(),
       'crop_id': cropId,
     });
     notifyListeners();
@@ -158,7 +166,27 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
   Future<String> saveManually() async {
     analytics.log(FarmAnalyticsEvents.manualSaveTapped);
     await save(manual: true);
+    _lastActionChanged = true;
     return 'Saved.';
+  }
+
+  Future<String> resetProgress() async {
+    final now = nowMs;
+    _state = rules.initialState(now);
+    returnReport = const FarmReturnReport();
+    _selectedCropId = rules.unlockedCrops(_state.farmLevel).first.id;
+    _lastActionChanged = true;
+    analytics.log(FarmAnalyticsEvents.progressReset);
+
+    _saving = true;
+    notifyListeners();
+    await saveStore.save(_state);
+    if (_disposed) {
+      return 'New garden started.';
+    }
+    _saving = false;
+    notifyListeners();
+    return 'New garden started.';
   }
 
   Future<void> save({required bool manual}) async {
@@ -185,11 +213,15 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
     Map<String, Object?> properties,
   ) async {
     _state = result.state;
+    _lastActionChanged = result.changed;
     _ensureSelectedCropIsAvailable();
     notifyListeners();
 
     if (result.changed) {
-      analytics.log(eventName, properties);
+      analytics.log(eventName, <String, Object?>{
+        ..._commonAnalyticsProperties(),
+        ...properties,
+      });
       await save(manual: false);
     }
 
@@ -206,6 +238,39 @@ class FarmController extends ChangeNotifier with WidgetsBindingObserver {
   void _tick() {
     _state = simulation.applyTimeProgress(_state, nowMs);
     notifyListeners();
+  }
+
+  Map<String, Object?> _commonAnalyticsProperties() {
+    final unlockedPlots = rules.unlockedPlotCount(_state.farmLevel);
+    var activePlots = 0;
+    var readyPlots = 0;
+    var dryPlots = 0;
+    for (var index = 0; index < unlockedPlots; index += 1) {
+      final status = rules.plotStatus(_state, index, nowMs);
+      if (status != PlotStatus.empty) {
+        activePlots += 1;
+      }
+      if (status == PlotStatus.ready) {
+        readyPlots += 1;
+      }
+      if (status == PlotStatus.plantedDry) {
+        dryPlots += 1;
+      }
+    }
+
+    return <String, Object?>{
+      'farm_level': _state.farmLevel,
+      'difficulty_stage': 'level_${_state.farmLevel}',
+      'unlocked_plots': unlockedPlots,
+      'active_plots': activePlots,
+      'ready_plots': readyPlots,
+      'dry_plots': dryPlots,
+      'coins': _state.coins,
+      'water': _state.water,
+      'seeds': _state.inventory.seeds,
+      'crate_items': _state.inventory.totalCrateItems,
+      'selected_crop_id': _selectedCropId,
+    };
   }
 
   @override

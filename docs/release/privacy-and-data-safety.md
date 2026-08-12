@@ -1,6 +1,6 @@
 # Privacy And Data Safety
 
-Reviewed against Google Play policy help pages on August 10, 2026:
+Reviewed against Google Play policy help pages on August 12, 2026:
 
 - Data safety form:
   https://support.google.com/googleplay/android-developer/answer/10787469
@@ -14,22 +14,23 @@ privacy policy in Play Console and a privacy policy link or text inside the app.
 
 ## Version 1 Data Practices
 
-Rooftop Rain Garden version 1 is designed as an offline game.
+Rooftop Rain Garden version 1 keeps game progress local, but now includes
+production-safe Google Mobile Ads and Firebase Analytics hooks.
 
 | Area | V1 behavior |
 | --- | --- |
 | Account | No account creation or login |
-| Network | No internet permission in the main Android manifest |
-| Ads | No ad SDK and no ad display |
-| Analytics | No external analytics SDK; current analytics implementation is no-op |
+| Network | Main Android manifest declares internet and network-state permissions for ads and analytics |
+| Ads | Google Mobile Ads SDK; Google test IDs by default, production IDs required for live ads |
+| Analytics | Firebase Analytics wrapper; falls back to no-op if native Firebase config is absent or initialization fails |
 | Purchases | No in-app purchases |
 | Cloud sync | None |
 | Save data | Local device storage through SharedPreferences |
-| Personal data | No intentional collection of personal information |
-| Data sharing | No intentional sharing from the app |
+| Personal data | No account/profile collection by the game itself |
+| Data sharing | Google Ads/Firebase SDK data handling must be declared from the final release artifact |
 
-Debug and profile Android manifests may include internet permission for Flutter
-development tooling. The release/main manifest does not declare it.
+AdMob interstitials are capped and requested only at natural transitions outside
+active gameplay. Ad loading failure must not block the farm loop.
 
 ## Local Save Data
 
@@ -49,20 +50,26 @@ progress. Deleting the app may delete local progress.
 
 ## Data Safety Draft Direction
 
-For the current v1 codebase, the expected declaration direction is:
+For the current v1 codebase, the expected declaration direction must account
+for Google Mobile Ads and Firebase Analytics in the final build:
 
-- Data collected: no, if no SDK or build variant transmits user data off device
-- Data shared: no
-- Data encrypted in transit: not applicable for offline-only v1
-- Users can request data deletion: not applicable for no-account local-only data
+- Data collected/shared: verify against the exact Google SDK versions,
+  Firebase configuration, AdMob account settings, consent settings, and Play
+  SDK guidance before submission
+- Likely SDK-related areas to review: app activity, ad interactions, diagnostics,
+  device or other identifiers, approximate device information, and performance
+  data
+- Data encrypted in transit: verify for SDK network traffic in the final build
+- Users can request game-save deletion by deleting the app; any Google
+  ad/analytics controls must be described in the hosted privacy policy
 
 The developer is still responsible for checking the final release artifact and
 all included SDKs before submitting the Play form.
 
 ## Changes That Require A Privacy/Data Safety Update
 
-- Adding AdMob or any ad mediation SDK
-- Adding analytics, Crashlytics, Sentry, PostHog, Firebase, or remote logging
+- Changing AdMob mediation, ad personalization, consent, or frequency behavior
+- Changing Firebase Analytics, Crashlytics, Sentry, PostHog, or remote logging
 - Adding accounts, login, cloud save, social, leaderboards, or multiplayer
 - Adding purchases or subscriptions
 - Adding location, contacts, photos, microphone, camera, notifications, or other

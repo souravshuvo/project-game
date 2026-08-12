@@ -1,5 +1,5 @@
 name: rooftop_rain_garden
-description: "A cozy offline rooftop garden farming game."
+description: "A cozy rooftop garden farming game with local progress."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +34,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  firebase_analytics: ^12.4.5
+  firebase_core: ^4.12.1
+  google_mobile_ads: ^9.0.0
   shared_preferences: ^2.5.5
 
 dev_dependencies:

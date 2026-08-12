@@ -9,6 +9,38 @@ void main() {
   const startMs = 1000;
 
   group('FarmSimulation', () {
+    test('mvp rules include enough production v1 farming content', () {
+      final visibleProgressionSteps =
+          rules.crops.length +
+          rules.upgrades.length +
+          rules.plotCount +
+          rules.waterCap(rules.maxLevel);
+
+      expect(rules.crops, hasLength(8));
+      expect(rules.crops.length, inInclusiveRange(6, 10));
+      expect(rules.upgrades, hasLength(5));
+      expect(rules.maxLevel, 6);
+      expect(rules.plotCount, 9);
+      expect(rules.unlockedPlotCount(rules.maxLevel), rules.plotCount);
+      expect(rules.waterCap(rules.maxLevel), 10);
+      expect(visibleProgressionSteps, greaterThanOrEqualTo(30));
+    });
+
+    test('crop rewards and timers ramp upward through v1 content', () {
+      var previousSellValue = 0;
+      var previousGrowMs = 0;
+
+      for (final crop in rules.crops) {
+        expect(crop.sellValue, greaterThan(previousSellValue));
+        expect(crop.growDuration.inMilliseconds, greaterThan(previousGrowMs));
+        expect(crop.seedCost, 1);
+        expect(crop.harvestYield, 1);
+
+        previousSellValue = crop.sellValue;
+        previousGrowMs = crop.growDuration.inMilliseconds;
+      }
+    });
+
     test('plant consumes seeds and creates a dry crop', () {
       final state = rules.initialState(startMs);
 
@@ -164,6 +196,42 @@ void main() {
       expect(rules.waterCap(upgraded.state.farmLevel), 6);
       expect(rules.unlockedCrops(upgraded.state.farmLevel), hasLength(3));
     });
+
+    test(
+      'upgrade path reaches final level and unlocks every plot and crop',
+      () {
+        var state = rules.initialState(startMs);
+
+        while (true) {
+          final upgrade = rules.nextUpgrade(state.farmLevel);
+          if (upgrade == null) {
+            break;
+          }
+
+          final upgraded = simulation.upgradeFarm(
+            state.copyWith(coins: upgrade.cost),
+            nowMs: startMs,
+          );
+
+          expect(upgraded.changed, isTrue);
+          expect(upgraded.state.farmLevel, upgrade.targetLevel);
+          expect(
+            rules.unlockedPlotCount(upgraded.state.farmLevel),
+            upgrade.unlockedPlots,
+          );
+          expect(rules.waterCap(upgraded.state.farmLevel), upgrade.waterCap);
+          state = upgraded.state;
+        }
+
+        expect(state.farmLevel, rules.maxLevel);
+        expect(
+          rules.unlockedCrops(state.farmLevel),
+          hasLength(rules.crops.length),
+        );
+        expect(rules.unlockedPlotCount(state.farmLevel), rules.plotCount);
+        expect(rules.nextUpgrade(state.farmLevel), isNull);
+      },
+    );
 
     test('offline progress refills water and reports ready crops', () {
       final crop = rules.cropById(FarmRules.sunSproutsId);

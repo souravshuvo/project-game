@@ -12,18 +12,20 @@ Recommended: Rooftop Rain Garden.
 
 ## Short Description Ideas
 
-- Grow tiny rooftop crops in a calm offline garden.
+- Grow tiny rooftop crops in a calm local-save garden.
 - Plant, water, harvest, sell, and upgrade a cozy rooftop garden.
-- A small offline farming loop for quick, gentle play sessions.
+- A calm local-save farming loop for quick, gentle play sessions.
 
 ## Full Description Outline
 
-Rooftop Rain Garden is a small offline farming game about restoring a tiny
+Rooftop Rain Garden is a small farming game about restoring a tiny
 rooftop garden one crop at a time.
 
 Version 1 focuses on a simple loop:
 
 - plant original seeds
+- unlock 8 original crops over 6 garden levels
+- open all 9 rooftop plots
 - water crops
 - wait for short growth timers
 - harvest into your crate
@@ -43,15 +45,16 @@ until those features exist in the shipping app.
 3. A watered crop showing its short growth timer.
 4. A ready crop with Harvest available.
 5. Crate selling and seed buying in the market panel.
-6. Garden upgrade available or completed.
-7. Returning after time away with the offline progress panel.
+6. Later crops unlocked after garden upgrades.
+7. Garden upgrade available or completed.
+8. Returning after time away with the offline progress panel.
 
 ## Feature Graphic Brief
 
 Show an original rooftop garden scene inspired by the real UI: compact plots,
 sprouts, a water icon, a crop crate, and coins. Keep the design quiet, cozy, and
-honest to the one-screen MVP. Do not show animals, buildings, towns, characters,
-large maps, events, or crops that are not in the app.
+honest to the one-screen farm. Do not show animals, buildings, towns,
+characters, large maps, events, or crops that are not in the app.
 
 ## App Icon Brief
 

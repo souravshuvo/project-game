@@ -1,18 +1,23 @@
 # Rooftop Rain Garden
 
-A small offline Flutter farming game focused on the version 1 loop:
+A small Flutter farming game focused on the version 1 loop:
 plant, water, grow, harvest, sell, upgrade, save, and return.
 
-Version 1 is intentionally scoped to one farm screen, three original crops,
-short timers, simple resources, local save data, and no ads.
+Version 1 is intentionally scoped to one farm screen, eight original crops,
+six garden levels, nine unlockable plots, short timers, local save data,
+production-safe AdMob hooks, and Firebase Analytics hooks.
 
 ## Production V1 Scope
 
-- Android package id: `com.rooftopraingarden.app`
+- Android package id: `com.childhood.rooftopraingarden`
 - App label: `Rain Garden`
 - Version: `1.0.0+1`
-- Offline-only local save in version 1
-- No account, cloud sync, ads, purchases, town, quests, animals, crafting, or
+- Production content: 8 crops, 5 upgrades, 6 garden levels, all 9 plots
+- Local save with capped offline progress in version 1
+- AdMob uses Google test IDs by default; production ad requests require explicit
+  production unit IDs
+- Firebase Analytics falls back to no-op until native Firebase config is added
+- No account, cloud sync, purchases, town, quests, animals, crafting, or
   live events
 
 ## Release Notes

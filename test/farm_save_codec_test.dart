@@ -1,6 +1,8 @@
 import 'package:rooftop_rain_garden/features/farm/data/farm_save_codec.dart';
+import 'package:rooftop_rain_garden/features/farm/domain/farm_plot.dart';
 import 'package:rooftop_rain_garden/features/farm/domain/farm_rules.dart';
 import 'package:rooftop_rain_garden/features/farm/domain/farm_simulation.dart';
+import 'package:rooftop_rain_garden/features/farm/domain/inventory_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -39,6 +41,38 @@ void main() {
     expect(restored.inventory.seeds, saved.inventory.seeds);
     expect(restored.inventory.countForCrop(crop.id), crop.harvestYield);
     expect(restored.plots[1].isEmpty, isTrue);
+  });
+
+  test('save codec restores late-game crops and final garden progress', () {
+    final plantedGoldenThyme = FarmPlot.planted(
+      FarmRules.goldenThymeId,
+      startMs,
+    ).watered(startMs + 1);
+    final saved = rules
+        .initialState(startMs)
+        .replacePlot(8, plantedGoldenThyme)
+        .copyWith(
+          farmLevel: rules.maxLevel,
+          water: rules.waterCap(rules.maxLevel),
+          inventory: InventoryState(
+            seeds: 12,
+            crate: const <String, int>{
+              FarmRules.starfruitVinesId: 3,
+              FarmRules.goldenThymeId: 2,
+            },
+          ),
+          lastSavedAtMs: startMs + 100,
+        );
+
+    final raw = codec.encode(saved);
+    final restored = codec.decode(raw, nowMs: startMs + 200);
+
+    expect(restored.farmLevel, rules.maxLevel);
+    expect(restored.water, rules.waterCap(rules.maxLevel));
+    expect(restored.plots[8].cropId, FarmRules.goldenThymeId);
+    expect(restored.plots[8].wateredAtMs, startMs + 1);
+    expect(restored.inventory.countForCrop(FarmRules.starfruitVinesId), 3);
+    expect(restored.inventory.countForCrop(FarmRules.goldenThymeId), 2);
   });
 
   test('save codec rejects invalid save data', () {

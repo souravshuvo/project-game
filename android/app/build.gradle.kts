@@ -31,8 +31,14 @@ if (requestedReleaseBuild && (!hasReleaseKeystore || missingSigningProperties.is
     )
 }
 
+val defaultAdMobApplicationId = "ca-app-pub-3940256099942544~3347511713"
+val admobApplicationId = providers.gradleProperty("ADMOB_ANDROID_APP_ID")
+    .orElse(providers.environmentVariable("ADMOB_ANDROID_APP_ID"))
+    .orElse(defaultAdMobApplicationId)
+    .get()
+
 android {
-    namespace = "com.rooftopraingarden.app"
+    namespace = "com.childhood.rooftopraingarden"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -42,13 +48,14 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.rooftopraingarden.app"
+        applicationId = "com.childhood.rooftopraingarden"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["admobApplicationId"] = admobApplicationId
     }
 
     signingConfigs {

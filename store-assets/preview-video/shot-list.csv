@@ -1,0 +1,9 @@
+shot,start,end,capture_moment,on_screen_text,editing_notes
+1,00:00,00:03,Garden home screen with Start visible,Start a tiny rooftop garden,Open on real app UI; avoid long static hold.
+2,00:03,00:07,Tap Start and show HUD seed picker and 3x3 grid,Plant water grow,Show board clearly before cutting.
+3,00:07,00:12,Select Sun Sprouts and plant an empty unlocked plot,Tap a plot to plant,Use real Plant Sun Sprouts action.
+4,00:12,00:16,Water crop and show timer or progress,Water crops to grow,Capture timer/progress after watering.
+5,00:16,00:20,Show ready crop and tap Harvest,Harvest when ready,Use real ready state only.
+6,00:20,00:24,Market panel sell crate and buy seeds,Sell crops for coins,Show real coin/resource changes if visible.
+7,00:24,00:28,Upgrade panel or later garden state,Upgrade your garden,Use real progressed save or achievable seeded state.
+8,00:28,00:30,Clean garden or home end frame,Rooftop Rain Garden,Optional app icon or feature graphic end card.

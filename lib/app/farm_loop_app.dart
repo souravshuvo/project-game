@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'ads/ad_controller.dart';
 import '../features/farm/application/clock.dart';
+import '../features/farm/application/analytics_events.dart';
 import '../features/farm/application/farm_controller.dart';
 import '../features/farm/data/farm_save_store.dart';
 import '../features/farm/domain/farm_return_report.dart';
@@ -9,6 +11,8 @@ import '../features/farm/domain/farm_simulation.dart';
 import '../features/farm/domain/farm_state.dart';
 import '../features/farm/presentation/farm_screen.dart';
 import 'app_theme.dart';
+import 'game_feedback.dart';
+import 'player_settings.dart';
 
 class FarmLoopApp extends StatefulWidget {
   const FarmLoopApp({
@@ -19,6 +23,8 @@ class FarmLoopApp extends StatefulWidget {
     required this.initialState,
     required this.returnReport,
     required this.clock,
+    required this.analytics,
+    required this.ads,
   });
 
   static const title = 'Rooftop Rain Garden';
@@ -29,6 +35,8 @@ class FarmLoopApp extends StatefulWidget {
   final FarmState initialState;
   final FarmReturnReport returnReport;
   final Clock clock;
+  final FarmAnalytics analytics;
+  final AdController ads;
 
   @override
   State<FarmLoopApp> createState() => _FarmLoopAppState();
@@ -36,10 +44,14 @@ class FarmLoopApp extends StatefulWidget {
 
 class _FarmLoopAppState extends State<FarmLoopApp> {
   late final FarmController _controller;
+  late final PlayerSettings _settings;
+  late final GameFeedback _feedback;
 
   @override
   void initState() {
     super.initState();
+    _settings = PlayerSettings(preferences: widget.saveStore.preferences);
+    _feedback = GameFeedback(_settings);
     _controller = FarmController(
       rules: widget.rules,
       simulation: widget.simulation,
@@ -47,12 +59,15 @@ class _FarmLoopAppState extends State<FarmLoopApp> {
       initialState: widget.initialState,
       returnReport: widget.returnReport,
       clock: widget.clock,
+      analytics: widget.analytics,
     )..start();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    widget.ads.dispose();
+    _settings.dispose();
     super.dispose();
   }
 
@@ -62,7 +77,12 @@ class _FarmLoopAppState extends State<FarmLoopApp> {
       title: FarmLoopApp.title,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: FarmScreen(controller: _controller),
+      home: FarmScreen(
+        controller: _controller,
+        settings: _settings,
+        feedback: _feedback,
+        ads: widget.ads,
+      ),
     );
   }
 }

@@ -24,7 +24,7 @@ and keystore files.
 
 ## Before First Play Upload
 
-- Confirm the final application id is `com.rooftopraingarden.app`.
+- Confirm the final application id is `com.childhood.rooftopraingarden`.
 - Enroll in Play App Signing and keep the upload key private.
 - Keep a secure backup of the upload keystore and passwords.
 - Do not reuse debug keys or sample credentials.
