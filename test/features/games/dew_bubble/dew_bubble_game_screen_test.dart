@@ -34,7 +34,20 @@ void main() {
     await tester.pump();
 
     expect(find.text('Loose Leaves'), findsOneWidget);
-    expect(find.text('Level 3 of 5'), findsOneWidget);
+    expect(find.text('Level 3 of 40'), findsOneWidget);
     expect(find.byKey(const ValueKey('dew-bubble-playfield')), findsOneWidget);
+    expect(find.text('Match 3 to clear every dew drop'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('dew-pause-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('Sound feedback'), findsOneWidget);
+    expect(find.text('Haptic feedback'), findsOneWidget);
+
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Paused'), findsNothing);
   });
 }

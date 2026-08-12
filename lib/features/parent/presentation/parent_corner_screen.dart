@@ -24,14 +24,21 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
     }
   }
 
+  Future<void> _setHaptics(bool enabled) async {
+    await widget.progressRepository.setHapticsEnabled(enabled);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   Future<void> _resetProgress() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reset all progress?'),
         content: const Text(
-          'This removes every local completion checkmark and restores sound. '
-          'It cannot be undone.',
+          'This removes every local completion checkmark and restores sound '
+          'and haptics. It cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -102,13 +109,26 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
               icon: Icons.tune_rounded,
               color: const Color(0xFFEF7B45),
               title: 'Settings',
-              child: SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: widget.progressRepository.soundEnabled,
-                onChanged: _setSound,
-                secondary: const Icon(Icons.volume_up_rounded),
-                title: const Text('Sound feedback'),
-                subtitle: const Text('Uses local, offline-safe cues only.'),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: widget.progressRepository.soundEnabled,
+                    onChanged: _setSound,
+                    secondary: const Icon(Icons.volume_up_rounded),
+                    title: const Text('Sound feedback'),
+                    subtitle: const Text('Uses local, offline-safe cues only.'),
+                  ),
+                  const Divider(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: widget.progressRepository.hapticsEnabled,
+                    onChanged: _setHaptics,
+                    secondary: const Icon(Icons.vibration_rounded),
+                    title: const Text('Haptic feedback'),
+                    subtitle: const Text('Uses gentle device vibration cues.'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -117,10 +137,12 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
               color: Color(0xFF2EAD7B),
               title: 'Privacy',
               child: Text(
-                'KidsLand has no account, ads, Firebase, analytics SDK, '
-                'location, camera, microphone, or child profile. Game '
-                'progress stays in local Hive storage. Android cloud backup '
-                'and device transfer are disabled for app data.',
+                'Dew Bubble has no account, login, location, camera, '
+                'microphone, or child profile. Progress stays in local Hive '
+                'storage. Level-end ads use child-directed, non-personalized '
+                'requests, and Firebase Analytics records aggregate gameplay '
+                'events only. Android cloud backup and device transfer are '
+                'disabled for app data.',
               ),
             ),
             const SizedBox(height: 16),

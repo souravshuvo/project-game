@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.childhood.rapidjump.rapid_jump"
+    namespace = "com.childhood.dewbubble"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.childhood.rapidjump.rapid_jump"
+        applicationId = "com.childhood.dewbubble"
+        manifestPlaceholders["adMobApplicationId"] =
+            project.findProperty("admobApplicationId")
+                ?: "ca-app-pub-3940256099942544~3347511713"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

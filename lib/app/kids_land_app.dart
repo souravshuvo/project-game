@@ -2,11 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../features/home/presentation/home_screen.dart';
 import '../features/tracing/data/progress_repository.dart';
+import '../shared/ads/game_ad_service.dart';
+import '../shared/analytics/game_analytics.dart';
 
 class KidsLandApp extends StatelessWidget {
-  const KidsLandApp({required this.progressRepository, super.key});
+  const KidsLandApp({
+    required this.progressRepository,
+    this.analytics = const NoopGameAnalytics(),
+    this.adService = const NoopGameAdService(),
+    super.key,
+  });
 
   final ProgressRepository progressRepository;
+  final GameAnalytics analytics;
+  final GameAdService adService;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +26,7 @@ class KidsLandApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'KidsLand',
+      title: 'Dew Bubble',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: colorScheme,
@@ -31,7 +40,11 @@ class KidsLandApp extends StatelessWidget {
           ),
         ),
       ),
-      home: HomeScreen(progressRepository: progressRepository),
+      home: HomeScreen(
+        progressRepository: progressRepository,
+        analytics: analytics,
+        adService: adService,
+      ),
     );
   }
 }

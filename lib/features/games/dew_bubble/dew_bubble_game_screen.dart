@@ -12,15 +12,21 @@ import 'domain/bubble_grid.dart';
 import 'domain/bubble_level.dart';
 import 'domain/grid_position.dart';
 import '../../tracing/data/progress_repository.dart';
+import '../../../shared/ads/game_ad_service.dart';
+import '../../../shared/analytics/game_analytics.dart';
 
 class DewBubbleGameScreen extends StatefulWidget {
   const DewBubbleGameScreen({
     required this.progressRepository,
+    this.analytics = const NoopGameAnalytics(),
+    this.adService = const NoopGameAdService(),
     this.onCompleted,
     super.key,
   });
 
   final ProgressRepository progressRepository;
+  final GameAnalytics analytics;
+  final GameAdService adService;
   final VoidCallback? onCompleted;
 
   @override
@@ -31,6 +37,8 @@ enum _DewPlayResult { won, lost }
 
 enum _BubbleEffectKind { pop, drop }
 
+enum _DewPauseAction { restart, levels, home }
+
 const _minimumUpwardAim = 0.28;
 const _maxTickSeconds = 0.033;
 const _projectileSpeed = 620.0;
@@ -39,6 +47,12 @@ const _topAttachDistance = 1.05;
 const _popEffectDuration = 0.46;
 const _dropEffectDuration = 0.72;
 const _scoreEffectDuration = 0.82;
+const _defaultDewHint =
+    'Drag or tap above the launcher. Match 3 same-color dew drops.';
+const _neutralFeedbackColor = Color(0xFF31425E);
+const _successFeedbackColor = Color(0xFF2CB9A0);
+const _warningFeedbackColor = Color(0xFFFFA928);
+const _errorFeedbackColor = Color(0xFFEC6F66);
 
 class _Projectile {
   const _Projectile({
@@ -95,12 +109,16 @@ class _BoardResolveFeedback {
     this.dropped = false,
     this.won = false,
     this.lost = false,
+    this.poppedCount = 0,
+    this.droppedCount = 0,
   });
 
   final bool popped;
   final bool dropped;
   final bool won;
   final bool lost;
+  final int poppedCount;
+  final int droppedCount;
 }
 
 class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
@@ -124,12 +142,23 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
   bool _isAiming = false;
   bool _showLevelSelect = true;
   bool _completionReported = false;
+  bool _isPaused = false;
+  String _feedbackMessage = _defaultDewHint;
+  Color _feedbackColor = _neutralFeedbackColor;
+  int _feedbackPulse = 0;
   Offset? _aimTarget;
   Duration? _lastTick;
+  DateTime? _levelStartedAt;
   _Projectile? _projectile;
   _DewBoardGeometry? _lastGeometry;
   _DewPlayResult? _result;
   int _nextEffectId = 0;
+  int _shotsFired = 0;
+  int _invalidAims = 0;
+  int _attachments = 0;
+  int _poppedTotal = 0;
+  int _droppedTotal = 0;
+  bool _levelEndLogged = false;
 
   BubbleLevel get _level => dewBubbleLevels[_levelIndex];
 
@@ -147,6 +176,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     _ticker = createTicker(_onTick);
     _syncSavedProgress();
     _resetLevel(notify: false);
+    _logLevelSelectViewed('initial');
   }
 
   @override
@@ -163,7 +193,8 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     _highestUnlockedLevelIndex = widget
         .progressRepository
         .dewBubbleHighestUnlockedLevelIndex
-        .clamp(0, dewBubbleLevels.length - 1);
+        .clamp(0, dewBubbleLevels.length - 1)
+        .toInt();
     _bestScores
       ..clear()
       ..addEntries(
@@ -214,6 +245,17 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       _scoreEffects.clear();
       _result = null;
       _nextEffectId = 0;
+      _isPaused = false;
+      _feedbackMessage = _defaultDewHint;
+      _feedbackColor = _neutralFeedbackColor;
+      _feedbackPulse = 0;
+      _levelStartedAt = DateTime.now();
+      _shotsFired = 0;
+      _invalidAims = 0;
+      _attachments = 0;
+      _poppedTotal = 0;
+      _droppedTotal = 0;
+      _levelEndLogged = false;
     }
 
     if (_ticker.isActive) {
@@ -233,6 +275,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     }
     _showLevelSelect = false;
     _loadLevel(levelIndex);
+    _logLevelStart('level_select');
   }
 
   void _openLevelSelect() {
@@ -242,12 +285,14 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     setState(() {
       _showLevelSelect = true;
       _isAiming = false;
+      _isPaused = false;
       _aimTarget = null;
       _projectile = null;
       _bubbleEffects.clear();
       _scoreEffects.clear();
       _lastTick = null;
     });
+    _logLevelSelectViewed('game_menu');
   }
 
   void _goToNextLevel() {
@@ -256,6 +301,179 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       return;
     }
     _startLevel(_levelIndex + 1);
+  }
+
+  void _logLevelSelectViewed(String source) {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.levelSelectViewed, {
+        'game_id': dewBubbleGameId,
+        'source': source,
+        'highest_unlocked': _highestUnlockedLevelIndex + 1,
+        'total_levels': dewBubbleLevels.length,
+      }),
+    );
+  }
+
+  void _logLevelStart(String source) {
+    final level = _level;
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.levelStart, {
+        'game_id': dewBubbleGameId,
+        'level_id': level.id,
+        'level_number': _levelIndex + 1,
+        'source': source,
+        'shots_allowed': level.shots,
+        'bubble_count': _grid.bubbleCount,
+        'color_count': _levelColorCount(level),
+      }),
+    );
+  }
+
+  void _logShotFired(Offset direction) {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.shotFired, {
+        ..._levelAnalyticsParams(),
+        'shot_number': _shotsFired,
+        'shots_remaining': _shotsRemaining,
+        'aim_dx': (direction.dx * 1000).round(),
+        'aim_dy': (direction.dy * 1000).round(),
+      }),
+    );
+  }
+
+  void _logInvalidAim() {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.invalidAim, {
+        ..._levelAnalyticsParams(),
+        'invalid_aims': _invalidAims,
+        'shots_remaining': _shotsRemaining,
+      }),
+    );
+  }
+
+  void _logShotMissed() {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.shotMissed, {
+        ..._levelAnalyticsParams(),
+        'shots_remaining': _shotsRemaining,
+      }),
+    );
+  }
+
+  void _logResolveAnalytics(_BoardResolveFeedback feedback) {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.bubbleAttached, {
+        ..._levelAnalyticsParams(),
+        'attachments': _attachments,
+        'matched': feedback.poppedCount > 0,
+        'popped_count': feedback.poppedCount,
+        'dropped_count': feedback.droppedCount,
+        'shots_remaining': _shotsRemaining,
+        'bubble_count_after': _grid.bubbleCount,
+      }),
+    );
+
+    if (feedback.poppedCount > 0) {
+      unawaited(
+        widget.analytics.logEvent(GameAnalyticsEvents.matchPopped, {
+          ..._levelAnalyticsParams(),
+          'popped_count': feedback.poppedCount,
+          'popped_total': _poppedTotal,
+          'score': _score,
+        }),
+      );
+    }
+
+    if (feedback.droppedCount > 0) {
+      unawaited(
+        widget.analytics.logEvent(GameAnalyticsEvents.floatingDropped, {
+          ..._levelAnalyticsParams(),
+          'dropped_count': feedback.droppedCount,
+          'dropped_total': _droppedTotal,
+          'score': _score,
+        }),
+      );
+    }
+  }
+
+  void _logLevelEnd(_DewPlayResult result) {
+    if (_levelEndLogged) {
+      return;
+    }
+    _levelEndLogged = true;
+    widget.adService.recordLevelEnd(won: result == _DewPlayResult.won);
+    final startedAt = _levelStartedAt;
+    final durationSeconds = startedAt == null
+        ? 0
+        : DateTime.now().difference(startedAt).inSeconds;
+
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.levelEnd, {
+        ..._levelAnalyticsParams(),
+        'result': result == _DewPlayResult.won ? 'won' : 'lost',
+        'duration_seconds': durationSeconds,
+        'shots_allowed': _level.shots,
+        'shots_fired': _shotsFired,
+        'shots_remaining': _shotsRemaining,
+        'invalid_aims': _invalidAims,
+        'attachments': _attachments,
+        'popped_total': _poppedTotal,
+        'dropped_total': _droppedTotal,
+        'score': _score,
+        'stars': _earnedStars,
+      }),
+    );
+  }
+
+  void _handleResultAction(String action, VoidCallback callback) {
+    unawaited(_runResultActionAfterAd(action, callback));
+  }
+
+  Future<void> _runResultActionAfterAd(
+    String action,
+    VoidCallback callback,
+  ) async {
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.resultAction, {
+        ..._levelAnalyticsParams(),
+        'action': action,
+        'result': _result == _DewPlayResult.won ? 'won' : 'lost',
+      }),
+    );
+    try {
+      await widget.adService.showInterstitialIfAvailable(
+        placement: 'level_result_$action',
+      );
+    } on Object {
+      // Ads must never block retry, next level, or level select.
+    }
+    if (!mounted) {
+      return;
+    }
+    callback();
+  }
+
+  void _restartLevel() {
+    _resetLevel();
+    if (!_showLevelSelect) {
+      _logLevelStart('restart');
+    }
+  }
+
+  Map<String, Object> _levelAnalyticsParams() {
+    return {
+      'game_id': dewBubbleGameId,
+      'level_id': _level.id,
+      'level_number': _levelIndex + 1,
+    };
+  }
+
+  int _levelColorCount(BubbleLevel level) {
+    return {
+      for (final row in level.layout)
+        for (final token in row)
+          if (dewBubbleColorFromToken(token) case final color?) color,
+    }.length;
   }
 
   void _onTick(Duration elapsed) {
@@ -363,8 +581,129 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     }
   }
 
+  void _setFeedback(String message, Color color) {
+    _feedbackMessage = message;
+    _feedbackColor = color;
+    _feedbackPulse++;
+  }
+
+  void _playDewHaptic(Future<void> Function() feedback) {
+    if (!widget.progressRepository.hapticsEnabled) {
+      return;
+    }
+    unawaited(feedback());
+  }
+
+  Future<void> _setSoundEnabled(bool enabled) async {
+    await widget.progressRepository.setSoundEnabled(enabled);
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.settingsChanged, {
+        'game_id': dewBubbleGameId,
+        'setting': 'sound',
+        'enabled': enabled,
+        'surface': 'pause_menu',
+      }),
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _setHapticsEnabled(bool enabled) async {
+    await widget.progressRepository.setHapticsEnabled(enabled);
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.settingsChanged, {
+        'game_id': dewBubbleGameId,
+        'setting': 'haptics',
+        'enabled': enabled,
+        'surface': 'pause_menu',
+      }),
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _openHelpSheet() async {
+    _playDewCue(SystemSoundType.click);
+    _playDewHaptic(HapticFeedback.selectionClick);
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const _DewHelpSheet(),
+    );
+  }
+
+  Future<void> _openPauseMenu() async {
+    if (_showLevelSelect) {
+      return;
+    }
+
+    final shouldResumeTicker =
+        _ticker.isActive &&
+        (_projectile != null ||
+            _bubbleEffects.isNotEmpty ||
+            _scoreEffects.isNotEmpty);
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
+
+    setState(() {
+      _isPaused = true;
+      _isAiming = false;
+      _aimTarget = null;
+      _lastTick = null;
+      _setFeedback('Paused. Resume when you are ready.', _neutralFeedbackColor);
+    });
+    _playDewCue(SystemSoundType.click);
+    _playDewHaptic(HapticFeedback.selectionClick);
+
+    final action = await showModalBottomSheet<_DewPauseAction>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _DewPauseSheet(
+        soundEnabled: widget.progressRepository.soundEnabled,
+        hapticsEnabled: widget.progressRepository.hapticsEnabled,
+        onSoundChanged: _setSoundEnabled,
+        onHapticsChanged: _setHapticsEnabled,
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isPaused = false;
+      _lastTick = null;
+      if (action == null) {
+        _setFeedback(_defaultDewHint, _neutralFeedbackColor);
+      }
+    });
+
+    switch (action) {
+      case _DewPauseAction.restart:
+        _restartLevel();
+      case _DewPauseAction.levels:
+        _openLevelSelect();
+      case _DewPauseAction.home:
+        unawaited(Navigator.maybePop(context));
+      case null:
+        if (shouldResumeTicker) {
+          _ensureTickerRunning();
+        }
+    }
+  }
+
   void _setAimTarget(Offset localPosition) {
-    if (_result != null || _projectile != null || _shotsRemaining <= 0) {
+    if (_isPaused ||
+        _result != null ||
+        _projectile != null ||
+        _shotsRemaining <= 0) {
       return;
     }
 
@@ -374,8 +713,20 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     });
   }
 
+  void _cancelAim() {
+    if (!_isAiming) {
+      return;
+    }
+    setState(() {
+      _isAiming = false;
+      _aimTarget = null;
+      _setFeedback('Aim cancelled.', _neutralFeedbackColor);
+    });
+  }
+
   void _fire(_DewBoardGeometry geometry) {
-    if (_result != null ||
+    if (_isPaused ||
+        _result != null ||
         _projectile != null ||
         _shotsRemaining <= 0 ||
         _aimTarget == null) {
@@ -387,14 +738,23 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       _aimTarget!,
     );
     if (direction == null) {
+      _invalidAims++;
       setState(() {
         _isAiming = false;
         _aimTarget = null;
+        _setFeedback(
+          'Aim upward into the garden, then release.',
+          _errorFeedbackColor,
+        );
       });
+      _playDewCue(SystemSoundType.alert);
+      _playDewHaptic(HapticFeedback.lightImpact);
+      _logInvalidAim();
       return;
     }
 
     setState(() {
+      _shotsFired++;
       _shotsRemaining--;
       _isAiming = false;
       _aimTarget = null;
@@ -403,8 +763,14 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
         position: geometry.shooterCenter,
         direction: direction,
       );
+      _setFeedback(
+        'Shot launched. Watch where it attaches.',
+        _neutralFeedbackColor,
+      );
     });
     _playDewCue(SystemSoundType.click);
+    _playDewHaptic(HapticFeedback.lightImpact);
+    _logShotFired(direction);
 
     _ensureTickerRunning();
   }
@@ -424,14 +790,33 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
           );
 
     if (attachPosition == null) {
+      late final bool lost;
       setState(() {
         _projectile = null;
         if (_shotsRemaining <= 0) {
           _result = _DewPlayResult.lost;
+          lost = true;
+          _setFeedback(
+            'No shots left. Restart and try a higher path.',
+            _errorFeedbackColor,
+          );
         } else {
+          lost = false;
           _advanceQueueIfPlaying();
+          _setFeedback(
+            'That shot could not attach. Aim closer to the cluster.',
+            _warningFeedbackColor,
+          );
         }
       });
+      _playDewCue(SystemSoundType.alert);
+      _playDewHaptic(
+        lost ? HapticFeedback.vibrate : HapticFeedback.mediumImpact,
+      );
+      _logShotMissed();
+      if (lost) {
+        _logLevelEnd(_DewPlayResult.lost);
+      }
       _ticker.stop();
       _lastTick = null;
       return;
@@ -441,10 +826,17 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     setState(() {
       _projectile = null;
       _grid.setColor(attachPosition, projectile.color);
+      _attachments++;
       feedback = _resolveBoardAfterAttach(attachPosition, geometry);
       _advanceQueueIfPlaying();
     });
     _playResolveFeedback(feedback);
+    _logResolveAnalytics(feedback);
+    if (feedback.won) {
+      _logLevelEnd(_DewPlayResult.won);
+    } else if (feedback.lost) {
+      _logLevelEnd(_DewPlayResult.lost);
+    }
 
     _stopTickerIfIdle();
   }
@@ -491,6 +883,8 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
     var dropped = false;
     var won = false;
     var lost = false;
+    var poppedCount = 0;
+    var droppedCount = 0;
     final matched = _grid.connectedSameColor(attachPosition);
     if (matched.length >= 3) {
       _addBubbleEffects(
@@ -505,7 +899,13 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
         geometry.centerFor(attachPosition).translate(0, -geometry.radius),
         const Color(0xFF2CB9A0),
       );
+      _setFeedback(
+        'Nice match. ${matched.length} dew drops popped.',
+        _successFeedbackColor,
+      );
       popped = true;
+      poppedCount = matched.length;
+      _poppedTotal += matched.length;
 
       final floating = _grid.floatingPositions();
       if (floating.isNotEmpty) {
@@ -521,8 +921,19 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
           _centerOf(floating, geometry).translate(0, geometry.radius),
           const Color(0xFFFFA928),
         );
+        _setFeedback(
+          'Great drop. ${floating.length} floating dew cleared.',
+          _warningFeedbackColor,
+        );
         dropped = true;
+        droppedCount = floating.length;
+        _droppedTotal += floating.length;
       }
+    } else {
+      _setFeedback(
+        'Attached. Build a group of 3 matching colors.',
+        _neutralFeedbackColor,
+      );
     }
 
     if (_grid.isCleared) {
@@ -535,6 +946,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       );
       _result = _DewPlayResult.won;
       _recordLevelWin(_score, _earnedStars);
+      _setFeedback('Garden cleared. Stars saved.', _successFeedbackColor);
       won = true;
       if (_levelIndex == dewBubbleLevels.length - 1 && !_completionReported) {
         _completionReported = true;
@@ -542,6 +954,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       }
     } else if (_shotsRemaining <= 0) {
       _result = _DewPlayResult.lost;
+      _setFeedback('No shots left. Restart to try again.', _errorFeedbackColor);
       lost = true;
     }
 
@@ -550,6 +963,8 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
       dropped: dropped,
       won: won,
       lost: lost,
+      poppedCount: poppedCount,
+      droppedCount: droppedCount,
     );
   }
 
@@ -632,12 +1047,24 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
   }
 
   void _playResolveFeedback(_BoardResolveFeedback feedback) {
-    if (feedback.won || feedback.lost) {
+    if (feedback.won) {
       _playDewCue(SystemSoundType.alert);
+      _playDewHaptic(HapticFeedback.heavyImpact);
       return;
     }
-    if (feedback.popped || feedback.dropped) {
+    if (feedback.lost) {
+      _playDewCue(SystemSoundType.alert);
+      _playDewHaptic(HapticFeedback.vibrate);
+      return;
+    }
+    if (feedback.dropped) {
       _playDewCue(SystemSoundType.click);
+      _playDewHaptic(HapticFeedback.mediumImpact);
+      return;
+    }
+    if (feedback.popped) {
+      _playDewCue(SystemSoundType.click);
+      _playDewHaptic(HapticFeedback.selectionClick);
     }
   }
 
@@ -668,6 +1095,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
         bestScoreFor: _bestScoreForLevel,
         bestStarsFor: _bestStarsForLevel,
         onBack: () => Navigator.maybePop(context),
+        onHelp: _openHelpSheet,
         onSelectLevel: _startLevel,
       );
     }
@@ -689,12 +1117,17 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
                 levelNumber: _levelIndex + 1,
                 levelCount: dewBubbleLevels.length,
                 onSelectLevel: _openLevelSelect,
-                onRestart: _resetLevel,
+                onPause: _openPauseMenu,
               ),
               _DewBubbleHud(
                 shotsRemaining: _shotsRemaining,
                 score: _score,
                 nextColor: _nextColor,
+              ),
+              _DewFeedbackBanner(
+                message: _feedbackMessage,
+                color: _feedbackColor,
+                pulseKey: _feedbackPulse,
               ),
               Expanded(child: _buildPlayArea()),
             ],
@@ -715,9 +1148,12 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
           children: [
             GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onTapDown: (details) => _setAimTarget(details.localPosition),
+              onTapUp: (_) => _fire(geometry),
               onPanStart: (details) => _setAimTarget(details.localPosition),
               onPanUpdate: (details) => _setAimTarget(details.localPosition),
               onPanEnd: (_) => _fire(geometry),
+              onPanCancel: _cancelAim,
               child: CustomPaint(
                 key: const ValueKey('dew-bubble-playfield'),
                 size: Size.infinite,
@@ -734,6 +1170,7 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
                   ),
                   isAiming: _isAiming,
                   aimTarget: _aimTarget,
+                  isPaused: _isPaused,
                 ),
               ),
             ),
@@ -746,10 +1183,13 @@ class _DewBubbleGameScreenState extends State<DewBubbleGameScreen>
                   result: _result!,
                   score: _score,
                   stars: _earnedStars,
-                  onRestart: _resetLevel,
-                  onLevelSelect: _openLevelSelect,
+                  onRestart: () =>
+                      _handleResultAction('restart', _restartLevel),
+                  onLevelSelect: () =>
+                      _handleResultAction('levels', _openLevelSelect),
                   hasNextLevel: _hasNextLevel,
-                  onNextLevel: _goToNextLevel,
+                  onNextLevel: () =>
+                      _handleResultAction('next_level', _goToNextLevel),
                 ),
               ),
           ],
@@ -766,6 +1206,7 @@ class _DewLevelSelectScreen extends StatelessWidget {
     required this.bestScoreFor,
     required this.bestStarsFor,
     required this.onBack,
+    required this.onHelp,
     required this.onSelectLevel,
   });
 
@@ -774,6 +1215,7 @@ class _DewLevelSelectScreen extends StatelessWidget {
   final int Function(String levelId) bestScoreFor;
   final int Function(String levelId) bestStarsFor;
   final VoidCallback onBack;
+  final VoidCallback onHelp;
   final ValueChanged<int> onSelectLevel;
 
   @override
@@ -820,7 +1262,7 @@ class _DewLevelSelectScreen extends StatelessWidget {
                                   ),
                             ),
                             const Text(
-                              'Choose an unlocked garden',
+                              'Choose a garden. Match 3 to clear it.',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -829,6 +1271,14 @@ class _DewLevelSelectScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      SizedBox.square(
+                        dimension: 56,
+                        child: IconButton.filledTonal(
+                          tooltip: 'How to play',
+                          onPressed: onHelp,
+                          icon: const Icon(Icons.help_rounded, size: 28),
                         ),
                       ),
                     ],
@@ -1010,14 +1460,14 @@ class _DewBubbleHeader extends StatelessWidget {
     required this.levelNumber,
     required this.levelCount,
     required this.onSelectLevel,
-    required this.onRestart,
+    required this.onPause,
   });
 
   final String title;
   final int levelNumber;
   final int levelCount;
   final VoidCallback onSelectLevel;
-  final VoidCallback onRestart;
+  final VoidCallback onPause;
 
   @override
   Widget build(BuildContext context) {
@@ -1048,7 +1498,7 @@ class _DewBubbleHeader extends StatelessWidget {
                   ),
                 ),
                 const Text(
-                  'Prototype visuals',
+                  'Match 3 to clear every dew drop',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -1081,13 +1531,14 @@ class _DewBubbleHeader extends StatelessWidget {
           SizedBox.square(
             dimension: 56,
             child: IconButton.filled(
-              tooltip: 'Restart level',
-              onPressed: onRestart,
+              key: const ValueKey('dew-pause-button'),
+              tooltip: 'Pause, settings, and help',
+              onPressed: onPause,
               style: IconButton.styleFrom(
                 backgroundColor: const Color(0xFF2CB9A0),
                 foregroundColor: Colors.white,
               ),
-              icon: const Icon(Icons.refresh_rounded, size: 30),
+              icon: const Icon(Icons.pause_rounded, size: 30),
             ),
           ),
         ],
@@ -1133,6 +1584,70 @@ class _DewBubbleHud extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(child: _NextBubbleChip(nextColor: nextColor)),
         ],
+      ),
+    );
+  }
+}
+
+class _DewFeedbackBanner extends StatelessWidget {
+  const _DewFeedbackBanner({
+    required this.message,
+    required this.color,
+    required this.pulseKey,
+  });
+
+  final String message;
+  final Color color;
+  final int pulseKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(
+                Tween<Offset>(begin: const Offset(0, 0.18), end: Offset.zero),
+              ),
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          key: ValueKey<int>(pulseKey),
+          constraints: const BoxConstraints(minHeight: 44),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withValues(alpha: 0.26)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_rounded, color: color, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1301,95 +1816,424 @@ class _DewResultPanel extends StatelessWidget {
     final won = result == _DewPlayResult.won;
     final color = won ? const Color(0xFF2CB9A0) : const Color(0xFFEC6F66);
 
-    return Material(
-      color: Colors.white,
-      elevation: 8,
-      shadowColor: color.withValues(alpha: 0.2),
-      borderRadius: BorderRadius.circular(28),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Icon(
-                  won ? Icons.celebration_rounded : Icons.replay_rounded,
-                  color: Colors.white,
-                  size: 34,
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.94, end: 1),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.scale(scale: value, child: child),
+        );
+      },
+      child: Material(
+        color: Colors.white,
+        elevation: 8,
+        shadowColor: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(28),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    won ? Icons.celebration_rounded : Icons.replay_rounded,
+                    color: Colors.white,
+                    size: 34,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      won ? 'Garden cleared!' : 'Try again',
+                      style: const TextStyle(
+                        color: Color(0xFF34415F),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'Score $score',
+                      style: const TextStyle(
+                        color: Color(0xFF68758B),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (won)
+                      Row(
+                        children: List.generate(3, (index) {
+                          return Icon(
+                            index < stars
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            color: const Color(0xFFFFA928),
+                            size: 22,
+                          );
+                        }),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    won ? 'Garden cleared!' : 'Try again',
-                    style: const TextStyle(
-                      color: Color(0xFF34415F),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
+                  if (won && hasNextLevel) ...[
+                    FilledButton(
+                      onPressed: onNextLevel,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: color,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(84, 46),
+                      ),
+                      child: const Text(
+                        'Next',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  OutlinedButton(
+                    onPressed: won ? onLevelSelect : onRestart,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: color,
+                      minimumSize: const Size(84, 46),
+                      side: BorderSide(color: color.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      won ? 'Levels' : 'Restart',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ),
-                  Text(
-                    'Score $score',
-                    style: const TextStyle(
-                      color: Color(0xFF68758B),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (won)
-                    Row(
-                      children: List.generate(3, (index) {
-                        return Icon(
-                          index < stars
-                              ? Icons.star_rounded
-                              : Icons.star_border_rounded,
-                          color: const Color(0xFFFFA928),
-                          size: 22,
-                        );
-                      }),
-                    ),
                 ],
               ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (won && hasNextLevel) ...[
-                  FilledButton(
-                    onPressed: onNextLevel,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: color,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(84, 46),
-                    ),
-                    child: const Text(
-                      'Next',
-                      style: TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                OutlinedButton(
-                  onPressed: won ? onLevelSelect : onRestart,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: color,
-                    minimumSize: const Size(84, 46),
-                    side: BorderSide(color: color.withValues(alpha: 0.5)),
-                  ),
-                  child: Text(
-                    won ? 'Levels' : 'Restart',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DewPauseSheet extends StatefulWidget {
+  const _DewPauseSheet({
+    required this.soundEnabled,
+    required this.hapticsEnabled,
+    required this.onSoundChanged,
+    required this.onHapticsChanged,
+  });
+
+  final bool soundEnabled;
+  final bool hapticsEnabled;
+  final Future<void> Function(bool enabled) onSoundChanged;
+  final Future<void> Function(bool enabled) onHapticsChanged;
+
+  @override
+  State<_DewPauseSheet> createState() => _DewPauseSheetState();
+}
+
+class _DewPauseSheetState extends State<_DewPauseSheet> {
+  late bool _soundEnabled = widget.soundEnabled;
+  late bool _hapticsEnabled = widget.hapticsEnabled;
+
+  void _setSound(bool enabled) {
+    setState(() => _soundEnabled = enabled);
+    unawaited(widget.onSoundChanged(enabled));
+  }
+
+  void _setHaptics(bool enabled) {
+    setState(() => _hapticsEnabled = enabled);
+    unawaited(widget.onHapticsChanged(enabled));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _DewSheetFrame(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DewSheetHandle(),
+          Row(
+            children: [
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE7FAFF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(Icons.pause_rounded, color: Color(0xFF31425E)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Paused',
+                  style: TextStyle(
+                    color: Color(0xFF31425E),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-              ],
+              ),
+              IconButton(
+                tooltip: 'Resume',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const _DewHelpSummary(),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _soundEnabled,
+            onChanged: _setSound,
+            secondary: const Icon(Icons.volume_up_rounded),
+            title: const Text('Sound feedback'),
+            subtitle: const Text('System tap, score, win, and loss cues.'),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _hapticsEnabled,
+            onChanged: _setHaptics,
+            secondary: const Icon(Icons.vibration_rounded),
+            title: const Text('Haptic feedback'),
+            subtitle: const Text('Gentle device feedback for actions.'),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: const Text('Resume'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              backgroundColor: const Color(0xFF2CB9A0),
+              foregroundColor: Colors.white,
             ),
-          ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pop(_DewPauseAction.restart),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Restart'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pop(_DewPauseAction.levels),
+                  icon: const Icon(Icons.grid_view_rounded),
+                  label: const Text('Levels'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () => Navigator.of(context).pop(_DewPauseAction.home),
+            icon: const Icon(Icons.home_rounded),
+            label: const Text('Home'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DewHelpSheet extends StatelessWidget {
+  const _DewHelpSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return _DewSheetFrame(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DewSheetHandle(),
+          Row(
+            children: [
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE7FAFF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(Icons.help_rounded, color: Color(0xFF31425E)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'How to play',
+                  style: TextStyle(
+                    color: Color(0xFF31425E),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const _DewHelpSummary(),
+          const SizedBox(height: 14),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              backgroundColor: const Color(0xFF2CB9A0),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DewHelpSummary extends StatelessWidget {
+  const _DewHelpSummary();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        _DewHelpRow(
+          icon: Icons.touch_app_rounded,
+          title: 'Aim',
+          text: 'Drag or tap above the launcher to preview the path.',
+        ),
+        SizedBox(height: 8),
+        _DewHelpRow(
+          icon: Icons.auto_awesome_rounded,
+          title: 'Match',
+          text: 'Attach 3 or more same-color dew drops to pop them.',
+        ),
+        SizedBox(height: 8),
+        _DewHelpRow(
+          icon: Icons.keyboard_double_arrow_down_rounded,
+          title: 'Clear',
+          text:
+              'Unsupported drops fall. Clear the garden before shots run out.',
+        ),
+      ],
+    );
+  }
+}
+
+class _DewHelpRow extends StatelessWidget {
+  const _DewHelpRow({
+    required this.icon,
+    required this.title,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String title;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFF2CB9A0), size: 24),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF31425E),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                text,
+                style: const TextStyle(
+                  color: Color(0xFF68758B),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DewSheetFrame extends StatelessWidget {
+  const _DewSheetFrame({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 12,
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DewSheetHandle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 48,
+        height: 5,
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDDE4EA),
+          borderRadius: BorderRadius.circular(99),
         ),
       ),
     );
@@ -1406,6 +2250,7 @@ class _DewBubblePainter extends CustomPainter {
     required this.scoreEffects,
     required this.isAiming,
     required this.aimTarget,
+    required this.isPaused,
   });
 
   final BubbleGrid grid;
@@ -1416,6 +2261,7 @@ class _DewBubblePainter extends CustomPainter {
   final List<_ScoreFloatEffect> scoreEffects;
   final bool isAiming;
   final Offset? aimTarget;
+  final bool isPaused;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1433,6 +2279,9 @@ class _DewBubblePainter extends CustomPainter {
         geometry.radius,
         activeProjectile.color,
       );
+    }
+    if (isPaused) {
+      _drawPauseVeil(canvas);
     }
   }
 
@@ -1460,6 +2309,7 @@ class _DewBubblePainter extends CustomPainter {
 
     final direction = _aimDirectionFromTarget(geometry.shooterCenter, target);
     if (direction == null) {
+      _drawInvalidAimGuide(canvas);
       return;
     }
 
@@ -1482,6 +2332,29 @@ class _DewBubblePainter extends CustomPainter {
           ..strokeWidth = 2.4,
       );
     }
+  }
+
+  void _drawInvalidAimGuide(Canvas canvas) {
+    final center = geometry.shooterCenter;
+    final paint = Paint()
+      ..color = _errorFeedbackColor.withValues(alpha: 0.74)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 4;
+    final guideEnd = center.translate(0, -geometry.radius * 3.2);
+    canvas.drawLine(
+      center.translate(0, -geometry.radius * 0.8),
+      guideEnd,
+      paint,
+    );
+    canvas.drawCircle(
+      guideEnd,
+      geometry.radius * 0.42,
+      Paint()
+        ..color = _errorFeedbackColor.withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
   }
 
   void _drawGrid(Canvas canvas) {
@@ -1516,6 +2389,13 @@ class _DewBubblePainter extends CustomPainter {
     );
     canvas.drawCircle(center.translate(0, 4), geometry.radius * 1.12, cupPaint);
     _drawBubble(canvas, center, geometry.radius, currentColor);
+  }
+
+  void _drawPauseVeil(Canvas canvas) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.36)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Offset.zero & geometry.size, paint);
   }
 
   void _drawEffects(Canvas canvas) {

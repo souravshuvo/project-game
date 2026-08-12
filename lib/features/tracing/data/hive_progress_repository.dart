@@ -5,12 +5,13 @@ import 'progress_repository.dart';
 class HiveProgressRepository implements ProgressRepository {
   HiveProgressRepository._(this._box);
 
-  static const int currentSchemaVersion = 4;
+  static const int currentSchemaVersion = 5;
   static const String boxName = 'kidsland_progress';
 
   static const String _schemaVersionKey = 'schemaVersion';
   static const String _completedGameIdsKey = 'completedGameIds';
   static const String _soundEnabledKey = 'soundEnabled';
+  static const String _hapticsEnabledKey = 'hapticsEnabled';
   static const String _dewBubbleHighestUnlockedLevelIndexKey =
       'dewBubbleHighestUnlockedLevelIndex';
   static const String _dewBubbleBestScoresKey = 'dewBubbleBestScores';
@@ -52,8 +53,10 @@ class HiveProgressRepository implements ProgressRepository {
   }
 
   @override
-  bool get soundEnabled =>
-      _box.get(_soundEnabledKey, defaultValue: true) as bool;
+  bool get soundEnabled => _readBool(_soundEnabledKey, defaultValue: true);
+
+  @override
+  bool get hapticsEnabled => _readBool(_hapticsEnabledKey, defaultValue: true);
 
   @override
   int dewBubbleBestScore(String levelId) {
@@ -111,6 +114,11 @@ class HiveProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<void> setHapticsEnabled(bool enabled) async {
+    await _box.put(_hapticsEnabledKey, enabled);
+  }
+
+  @override
   Future<void> reset() async {
     await _box.clear();
     await _writeDefaults();
@@ -122,9 +130,10 @@ class HiveProgressRepository implements ProgressRepository {
       return;
     }
 
-    if (storedVersion == 3) {
+    if (storedVersion == 3 || storedVersion == 4) {
       final completedIds = completedGameIds.toList()..sort();
       final soundEnabled = this.soundEnabled;
+      final hapticsEnabled = this.hapticsEnabled;
       final highestUnlocked = dewBubbleHighestUnlockedLevelIndex;
       final bestScores = _readIntMap(_dewBubbleBestScoresKey);
       final bestStars = _readIntMap(_dewBubbleBestStarsKey);
@@ -135,6 +144,7 @@ class HiveProgressRepository implements ProgressRepository {
         completedIds.where((id) => id == dewBubbleGameId).toList(),
       );
       await _box.put(_soundEnabledKey, soundEnabled);
+      await _box.put(_hapticsEnabledKey, hapticsEnabled);
       await _box.put(_dewBubbleHighestUnlockedLevelIndexKey, highestUnlocked);
       await _box.put(_dewBubbleBestScoresKey, bestScores);
       await _box.put(_dewBubbleBestStarsKey, bestStars);
@@ -142,11 +152,18 @@ class HiveProgressRepository implements ProgressRepository {
     }
 
     if (storedVersion == 1 || storedVersion == 2) {
-      final legacySoundEnabled =
-          _box.get(_soundEnabledKey, defaultValue: true) as bool;
+      final legacySoundEnabled = _readBool(
+        _soundEnabledKey,
+        defaultValue: true,
+      );
+      final legacyHapticsEnabled = _readBool(
+        _hapticsEnabledKey,
+        defaultValue: true,
+      );
       await _box.clear();
       await _writeDefaults();
       await _box.put(_soundEnabledKey, legacySoundEnabled);
+      await _box.put(_hapticsEnabledKey, legacyHapticsEnabled);
       return;
     }
 
@@ -164,7 +181,13 @@ class HiveProgressRepository implements ProgressRepository {
       _dewBubbleBestScoresKey: <String, int>{},
       _dewBubbleBestStarsKey: <String, int>{},
       _soundEnabledKey: true,
+      _hapticsEnabledKey: true,
     });
+  }
+
+  bool _readBool(String key, {required bool defaultValue}) {
+    final raw = _box.get(key, defaultValue: defaultValue);
+    return raw is bool ? raw : defaultValue;
   }
 
   Map<String, int> _readIntMap(String key) {

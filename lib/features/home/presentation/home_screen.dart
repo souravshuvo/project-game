@@ -9,11 +9,20 @@ import '../../games/shared/kid_celebration.dart';
 import '../../parent/presentation/parent_corner_screen.dart';
 import '../../parent/presentation/parent_gate_dialog.dart';
 import '../../tracing/data/progress_repository.dart';
+import '../../../shared/ads/game_ad_service.dart';
+import '../../../shared/analytics/game_analytics.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({required this.progressRepository, super.key});
+  const HomeScreen({
+    required this.progressRepository,
+    this.analytics = const NoopGameAnalytics(),
+    this.adService = const NoopGameAdService(),
+    super.key,
+  });
 
   final ProgressRepository progressRepository;
+  final GameAnalytics analytics;
+  final GameAdService adService;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,9 +31,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   KidsGame get _game => kidsGameCatalog.single;
 
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.homeViewed, {
+        'game_id': _game.id,
+        'total_levels': dewBubbleLevels.length,
+      }),
+    );
+  }
+
   Future<void> _openGame() async {
     final game = _game;
     var completionRequested = false;
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.gameOpened, {
+        'game_id': game.id,
+        'source': 'home_card',
+      }),
+    );
 
     void markCompleted() {
       if (completionRequested) {
@@ -37,8 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: '/games/${game.id}'),
-        builder: (context) =>
-            game.builder(context, markCompleted, widget.progressRepository),
+        builder: (context) => game.builder(
+          context,
+          markCompleted,
+          widget.progressRepository,
+          widget.analytics,
+          widget.adService,
+        ),
       ),
     );
 

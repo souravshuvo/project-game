@@ -24,7 +24,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Dew Bubble Garden'), findsOneWidget);
-    expect(find.text('Choose an unlocked garden'), findsOneWidget);
+    expect(find.text('Choose a garden. Match 3 to clear it.'), findsOneWidget);
     expect(find.text('Sprout Steps'), findsOneWidget);
     expect(find.byKey(const ValueKey('dew-bubble-playfield')), findsNothing);
   });

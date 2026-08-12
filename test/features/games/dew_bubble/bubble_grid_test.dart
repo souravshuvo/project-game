@@ -3,6 +3,7 @@ import 'package:rapid_jump/features/games/dew_bubble/data/dew_levels.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/attach_solver.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_color.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_grid.dart';
+import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_level.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/grid_position.dart';
 
 void main() {
@@ -182,19 +183,26 @@ void main() {
   });
 
   group('dewBubbleLevels', () {
-    test('defines a small handcrafted level pack with unique ids', () {
-      expect(dewBubbleLevels, hasLength(5));
+    test('defines a production v1 level pack with unique sequential ids', () {
+      expect(dewBubbleLevels, hasLength(40));
       expect(
         dewBubbleLevels.map((level) => level.id).toSet(),
         hasLength(dewBubbleLevels.length),
       );
+      expect(dewBubbleLevels.first.id, 'dew-1');
+      expect(dewBubbleLevels.last.id, 'dew-40');
+      for (var index = 0; index < dewBubbleLevels.length; index++) {
+        expect(dewBubbleLevels[index].id, 'dew-${index + 1}');
+      }
     });
 
     test('all levels are rectangular and have enough queued shots', () {
       for (final level in dewBubbleLevels) {
         expect(level.layout, hasLength(6), reason: level.id);
         expect(level.bubbleQueue.length, greaterThanOrEqualTo(2));
-        expect(level.shots, greaterThanOrEqualTo(level.bubbleQueue.length));
+        expect(level.bubbleQueue.length, level.shots, reason: level.id);
+        expect(level.shots, greaterThanOrEqualTo(8), reason: level.id);
+        expect(level.shots, lessThanOrEqualTo(17), reason: level.id);
 
         for (final row in level.layout) {
           expect(row, hasLength(8), reason: level.id);
@@ -220,5 +228,54 @@ void main() {
         }
       },
     );
+
+    test('levels provide target pairs and ramp row and color pressure', () {
+      for (final level in dewBubbleLevels) {
+        final grid = level.createGrid();
+        final pairCells = grid.occupiedPositions().where(
+          (position) => grid.connectedSameColor(position).length == 2,
+        );
+        expect(pairCells, isNotEmpty, reason: level.id);
+      }
+
+      expect(
+        dewBubbleLevels.take(10).map(_activeRows).reduce(_maxInt),
+        lessThanOrEqualTo(2),
+      );
+      expect(
+        dewBubbleLevels.skip(10).take(10).map(_activeRows),
+        everyElement(3),
+      );
+      expect(dewBubbleLevels.skip(20).map(_activeRows), everyElement(4));
+
+      expect(_colorsIn(dewBubbleLevels[0]), hasLength(3));
+      expect(_colorsIn(dewBubbleLevels[3]), contains(DewBubbleColor.green));
+      expect(
+        dewBubbleLevels
+            .skip(10)
+            .every((level) => _colorsIn(level).contains(DewBubbleColor.green)),
+        isTrue,
+      );
+    });
   });
 }
+
+int _activeRows(BubbleLevel level) {
+  var activeRows = 0;
+  for (var row = 0; row < level.layout.length; row++) {
+    if (level.layout[row].any((token) => token != null)) {
+      activeRows = row + 1;
+    }
+  }
+  return activeRows;
+}
+
+Set<DewBubbleColor> _colorsIn(BubbleLevel level) {
+  return {
+    for (final row in level.layout)
+      for (final token in row)
+        if (dewBubbleColorFromToken(token) case final color?) color,
+  };
+}
+
+int _maxInt(int a, int b) => a > b ? a : b;

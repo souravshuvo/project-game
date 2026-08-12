@@ -9,6 +9,8 @@ abstract interface class ProgressRepository {
 
   bool get soundEnabled;
 
+  bool get hapticsEnabled;
+
   int dewBubbleBestScore(String levelId);
 
   int dewBubbleBestStars(String levelId);
@@ -24,6 +26,8 @@ abstract interface class ProgressRepository {
 
   Future<void> setSoundEnabled(bool enabled);
 
+  Future<void> setHapticsEnabled(bool enabled);
+
   Future<void> reset();
 }
 
@@ -34,12 +38,14 @@ abstract interface class ProgressRepository {
 class MemoryProgressRepository implements ProgressRepository {
   MemoryProgressRepository({
     bool soundEnabled = true,
+    bool hapticsEnabled = true,
     Set<String> completedGameIds = const <String>{},
     int dewBubbleHighestUnlockedLevelIndex = 0,
     Map<String, int> dewBubbleBestScores = const <String, int>{},
     Map<String, int> dewBubbleBestStars = const <String, int>{},
   }) : _completedGameIds = <String>{...completedGameIds},
        _soundEnabled = soundEnabled,
+       _hapticsEnabled = hapticsEnabled,
        _dewBubbleHighestUnlockedLevelIndex = dewBubbleHighestUnlockedLevelIndex,
        _dewBubbleBestScores = Map<String, int>.of(dewBubbleBestScores),
        _dewBubbleBestStars = Map<String, int>.of(dewBubbleBestStars);
@@ -48,6 +54,7 @@ class MemoryProgressRepository implements ProgressRepository {
   final Map<String, int> _dewBubbleBestScores;
   final Map<String, int> _dewBubbleBestStars;
   bool _soundEnabled;
+  bool _hapticsEnabled;
   int _dewBubbleHighestUnlockedLevelIndex;
 
   @override
@@ -59,6 +66,9 @@ class MemoryProgressRepository implements ProgressRepository {
 
   @override
   bool get soundEnabled => _soundEnabled;
+
+  @override
+  bool get hapticsEnabled => _hapticsEnabled;
 
   @override
   int dewBubbleBestScore(String levelId) {
@@ -104,12 +114,18 @@ class MemoryProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<void> setHapticsEnabled(bool enabled) async {
+    _hapticsEnabled = enabled;
+  }
+
+  @override
   Future<void> reset() async {
     _completedGameIds.clear();
     _dewBubbleBestScores.clear();
     _dewBubbleBestStars.clear();
     _dewBubbleHighestUnlockedLevelIndex = 0;
     _soundEnabled = true;
+    _hapticsEnabled = true;
   }
 }
 

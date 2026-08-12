@@ -36,18 +36,21 @@ void main() {
     expect(repository.dewBubbleBestScore('dew-1'), 0);
     expect(repository.dewBubbleBestStars('dew-1'), 0);
     expect(repository.soundEnabled, isTrue);
+    expect(repository.hapticsEnabled, isTrue);
   });
 
-  test('persists sound preference', () async {
+  test('persists feedback preferences', () async {
     var repository = await HiveProgressRepository.create(box);
 
     await repository.setSoundEnabled(false);
+    await repository.setHapticsEnabled(false);
     await box.close();
 
     box = await Hive.openBox<dynamic>('progress_test');
     repository = await HiveProgressRepository.create(box);
 
     expect(repository.soundEnabled, isFalse);
+    expect(repository.hapticsEnabled, isFalse);
   });
 
   test('persists dew bubble unlocks, best scores, and best stars', () async {
@@ -110,12 +113,14 @@ void main() {
     expect(repository.dewBubbleBestScore('dew-1'), 320);
     expect(repository.dewBubbleBestStars('dew-1'), 3);
     expect(repository.soundEnabled, isFalse);
+    expect(repository.hapticsEnabled, isTrue);
   });
 
   test('reset removes progress and restores defaults', () async {
     final repository = await HiveProgressRepository.create(box);
     await repository.markGameComplete(dewBubbleGameId);
     await repository.setSoundEnabled(false);
+    await repository.setHapticsEnabled(false);
     await repository.recordDewBubbleLevelWin(
       levelIndex: 0,
       levelId: 'dew-1',
@@ -127,6 +132,7 @@ void main() {
 
     expect(repository.completedGameIds, isEmpty);
     expect(repository.soundEnabled, isTrue);
+    expect(repository.hapticsEnabled, isTrue);
     expect(repository.dewBubbleHighestUnlockedLevelIndex, 0);
     expect(repository.dewBubbleBestScore('dew-1'), 0);
     expect(repository.dewBubbleBestStars('dew-1'), 0);
