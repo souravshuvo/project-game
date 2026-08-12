@@ -145,6 +145,7 @@ class TicTacToeController extends ChangeNotifier {
 
   void startGame() {
     _screen = TicTacToeScreen.playing;
+    _playUiFeedback();
     _trackRoundStarted();
     notifyListeners();
     _queueAiMoveIfNeeded();
@@ -217,6 +218,7 @@ class TicTacToeController extends ChangeNotifier {
   void restartRound() {
     _cancelAiMove();
     final completedMatch = _isMatchComplete;
+    _playUiFeedback();
     telemetry.track(
       TicTacToeTelemetryEvents.rematchTapped(mode: _mode.analyticsName),
     );
@@ -240,6 +242,7 @@ class TicTacToeController extends ChangeNotifier {
   void resetScore() {
     _score = const GameScore.zero();
     _isMatchComplete = false;
+    _playUiFeedback();
     telemetry.track(
       TicTacToeTelemetryEvents.scoreReset(mode: _mode.analyticsName),
     );
@@ -248,6 +251,9 @@ class TicTacToeController extends ChangeNotifier {
 
   void toggleSound(bool enabled) {
     _settings = _settings.copyWith(soundEnabled: enabled);
+    if (enabled) {
+      _playUiFeedback();
+    }
     _saveSettings();
     telemetry.track(
       TicTacToeTelemetryEvents.settingsChanged(
@@ -339,6 +345,7 @@ class TicTacToeController extends ChangeNotifier {
     if (_round.outcome.isOver) {
       _score = _score.record(_round.outcome);
       _isMatchComplete = _didCompleteMatch(_round.outcome);
+      _playRoundEndFeedback(matchComplete: _isMatchComplete);
       if (_isMatchComplete) {
         _completedMatchesThisSession++;
         _recordCompletedMatch(_round.outcome);
@@ -513,9 +520,7 @@ class TicTacToeController extends ChangeNotifier {
     if (includeHaptics && _settings.hapticsEnabled) {
       unawaited(HapticFeedback.selectionClick());
     }
-    if (_settings.soundEnabled) {
-      unawaited(SystemSound.play(SystemSoundType.click));
-    }
+    _playSystemClick();
   }
 
   void _playInvalidFeedback() {
@@ -526,8 +531,42 @@ class TicTacToeController extends ChangeNotifier {
     if (_settings.hapticsEnabled) {
       unawaited(HapticFeedback.mediumImpact());
     }
-    if (_settings.soundEnabled) {
-      unawaited(SystemSound.play(SystemSoundType.click));
+    _playSystemClick(repeatCount: 2);
+  }
+
+  void _playUiFeedback() {
+    if (!enableFeedback) {
+      return;
+    }
+
+    _playSystemClick();
+  }
+
+  void _playRoundEndFeedback({required bool matchComplete}) {
+    if (!enableFeedback) {
+      return;
+    }
+
+    if (_settings.hapticsEnabled) {
+      unawaited(HapticFeedback.mediumImpact());
+    }
+    _playSystemClick(repeatCount: matchComplete ? 3 : 2);
+  }
+
+  void _playSystemClick({int repeatCount = 1}) {
+    if (!_settings.soundEnabled) {
+      return;
+    }
+
+    unawaited(_playSystemClickSequence(repeatCount));
+  }
+
+  Future<void> _playSystemClickSequence(int repeatCount) async {
+    for (var index = 0; index < repeatCount; index++) {
+      await SystemSound.play(SystemSoundType.click);
+      if (index < repeatCount - 1) {
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+      }
     }
   }
 
