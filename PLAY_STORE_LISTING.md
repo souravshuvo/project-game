@@ -1,6 +1,6 @@
 # Pencil Pitch Play Store Listing Package
 
-Prompt P5 status: listing copy and creative briefs prepared from repository evidence only. Final feature graphic export now exists; final screenshots, app icon export, and preview video capture are not produced yet because real gameplay capture and icon production were not explicitly approved at that time.
+Prompt P5 status: listing copy and creative briefs prepared from repository evidence only. Final feature graphic and Play Store app icon exports now exist; screenshot and preview-video production packages now exist; final screenshots and final video capture are not produced yet because real gameplay capture was not explicitly approved at that time.
 
 ## Confirmed Identity
 
@@ -107,6 +107,12 @@ Text:
 
 Required export: 512 x 512 PNG, 32-bit with alpha, max 1024 KB. Also generate platform launcher icon sizes only after the final icon is approved.
 
+Final Play Store asset: `store_assets/pencil_pitch_app_icon_512.png`.
+
+Reproducible source: `tooling/generate_app_icon.ps1`.
+
+Launcher update note: platform launcher icons under `android/app/src/main/res/mipmap-*` and `ios/Runner/Assets.xcassets/AppIcon.appiconset` have not been replaced in this pass. Use the final 512 icon source to generate platform icon sizes when launcher replacement is explicitly approved.
+
 Recommended concept: `Pencil Spinner Mark`.
 
 Design:
@@ -123,11 +129,13 @@ Avoid:
 - Tiny text inside the icon.
 - Fake app badges, rankings, or trophy claims.
 
-Current risk: the repository still appears to use generated/default launcher icon assets, so a custom original icon is needed before production release.
+Current risk: the final Play Store icon exists, but platform launcher icon files still appear to use generated/default launcher art until replacement is approved.
 
 ## Preview Video Script
 
 Length target: 20 to 30 seconds. Use real app capture only. Upload as a YouTube video with ads disabled, no playlist URL, no channel URL, and no extra URL parameters.
+
+Production package: `PLAY_STORE_PREVIEW_VIDEO_PACKAGE.md`.
 
 Shot list:
 
@@ -151,11 +159,11 @@ Audio direction:
 - Confirm Play Store title: `Pencil Pitch: Pen Cricket`.
 - Confirm app label remains acceptable as `Pencil Pitch`, or update launcher label later if the store title must match exactly.
 - Confirm package name before first publish: `com.childhood.pencilpitch`.
-- Add a custom original icon and replace default/generated launcher icon assets.
+- Upload the custom Play Store icon and replace default/generated platform launcher icon assets after approval.
 - Verify/upload feature graphic at 1024 x 500 with no alpha.
 - Capture at least 4 real screenshots, recommended 6, from actual gameplay.
 - Keep screenshots free of unavailable modes, fake rankings, fake reviews, real brands, team names, player names, and fake rewards.
-- Prepare preview video only from real app capture.
+- Prepare final preview video only from real app capture, using `PLAY_STORE_PREVIEW_VIDEO_PACKAGE.md`.
 - Complete privacy policy because the repo includes AdMob and Firebase Analytics hooks.
 - Complete Data safety using final SDK behavior and Play Console disclosures.
 - Verify ad screenshots do not encourage ad clicks and ads do not obscure gameplay.
@@ -173,8 +181,9 @@ Audio direction:
 ## Remaining Risks
 
 - No final screenshots exist yet because real device/emulator capture was not approved.
-- No final app icon asset was exported yet.
+- Platform launcher icon files still need replacement from the approved icon source.
 - Store title `Pencil Pitch: Pen Cricket` should be approved before changing app labels or publishing.
-- The app icon appears to need original production artwork before release.
+- The Play Store icon exists, but Android/iOS launcher icon files still need replacement before release.
+- No final preview video exists yet because real device/emulator capture and upload were not approved.
 - Privacy policy and Data safety answers must match the final AdMob/Firebase configuration.
 - Full build, install, and release QA were not run in this P5 pass.
