@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:03,000
+Offline trail arena
+
+2
+00:00:03,000 --> 00:00:07,000
+Drag to steer
+
+3
+00:00:07,000 --> 00:00:12,000
+Grow with every seed
+
+4
+00:00:12,000 --> 00:00:17,000
+Watch every turn
+
+5
+00:00:17,000 --> 00:00:22,000
+Complete Trail Goals
+
+6
+00:00:22,000 --> 00:00:27,000
+Retry and improve

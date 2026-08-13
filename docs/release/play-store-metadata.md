@@ -119,8 +119,14 @@ Current launcher icon direction: a dark circular icon with a mint-green glowing
 trail loop and central seed. It is simple, readable, and has no text, badges,
 rank claims, price claims, or misleading symbols.
 
-Current risk: existing launcher PNGs are platform launcher sizes. A final Play
-store icon still needs a 512 x 512, 32-bit PNG with alpha, maximum 1024 KB.
+Final S4B exports:
+
+- Play Store icon: `docs/release/assets/trail-arena-play-icon.png`.
+- Launcher icon source: `docs/release/assets/trail-arena-launcher-icon-source.png`.
+
+Export status: complete for Play upload. The Play icon is 512 x 512,
+32-bit PNG with alpha, and under 1024 KB. Existing Android, iOS, and web
+launcher icons were not overwritten.
 
 Recommended icon concept: keep the current brand direction and refine it into a
 high-resolution glowing trail loop around a central seed.
@@ -152,11 +158,24 @@ Export requirements:
 - Maximum 1024 KB.
 - Keep the main loop inside the safe center so launcher masks do not crop it.
 
+Launcher update note:
+
+- Use `docs/release/assets/trail-arena-launcher-icon-source.png` as the source
+  if platform launcher icons are regenerated later.
+- Do not replace Android, iOS, or web launcher icons without a separate explicit
+  launcher-icon update approval.
+
 ## Preview Video Script
 
 Recommendation: useful after real gameplay capture is approved. Use portrait
 9:16 footage for the phone-focused listing. Keep it 20-30 seconds and disable
 YouTube ads on the video.
+
+S5B production package:
+
+- `docs/release/video/production-package.md`
+- `docs/release/video/shot-list.csv`
+- `docs/release/video/captions-en.srt`
 
 Do not include fake gameplay, unavailable features, interstitial ads, fake
 reviews, fake rankings, or fake rewards.
@@ -203,12 +222,13 @@ Production notes:
 - [ ] Title is `Trail Arena` and remains 30 characters or fewer.
 - [ ] Short description remains 80 characters or fewer.
 - [ ] Full description matches current shipped features.
-- [ ] App icon exported as 512 x 512, 32-bit PNG with alpha, max 1024 KB.
+- [x] App icon exported as 512 x 512, 32-bit PNG with alpha, max 1024 KB.
 - [x] Feature graphic exported as 1024 x 500 JPEG or 24-bit PNG without alpha.
 - [ ] At least two screenshots are uploaded; for game promotion eligibility,
   prepare at least three portrait 9:16 screenshots at 1080 x 1920 or higher.
 - [ ] Screenshots are real app captures and do not show unavailable features.
-- [ ] Preview video, if used, is a single YouTube URL with ads disabled.
+- [ ] Preview video, if used, is rendered from real gameplay and added as a
+  single YouTube URL with ads disabled.
 - [ ] Privacy policy URL is live.
 - [ ] Ads declaration is set to Yes.
 - [ ] Data safety matches AdMob, Firebase Analytics, local storage, and consent
@@ -219,7 +239,8 @@ Production notes:
 
 - Final screenshots have not been captured because device/emulator capture was
   not approved.
-- Final 512 x 512 Play icon has not been exported.
-- Preview video is a script and shot list only until real gameplay capture and
-  editing are approved.
+- Platform launcher files were not overwritten during S4B; regenerate them from
+  the exported launcher source only after explicit approval.
+- Preview video has a production package, but no final MP4 or YouTube URL exists
+  until real gameplay capture, editing, and upload are approved.
 - Store copy should be rechecked after any gameplay, ad, or progression change.

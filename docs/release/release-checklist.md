@@ -26,7 +26,10 @@
 ## Store Readiness
 
 - [ ] Capture real gameplay screenshots from the current build.
+- [x] Export 512 x 512 Play Store icon.
 - [x] Create 1024 x 500 feature graphic matching the real game theme.
+- [x] Create Play preview video production package.
+- [ ] Capture, render, and upload Play preview video from real gameplay only.
 - [ ] Review listing text for no fake multiplayer, rankings, rewards, or unavailable features.
 - [ ] Complete content rating, target audience, app access, ads declaration, and Data safety.
 - [ ] Add hosted privacy policy URL.

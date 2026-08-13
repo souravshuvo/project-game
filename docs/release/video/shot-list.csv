@@ -1,0 +1,7 @@
+time_range,real_capture,on_screen_text,optional_voiceover,editing_notes,truthfulness_gate
+"0.0-3.0s","Main menu with Play button and local goal progress","Offline trail arena","Enter a quick offline arena run.","Start with app identity, then tap Play quickly.","Use real menu state only."
+"3.0-7.0s","Ready countdown into first movement","Drag to steer","Guide the glowing trail with simple drag controls.","Show real drag response and the first turn.","No fake touch indicator or synthetic movement."
+"7.0-12.0s","Normal seeds and bright seed pickup if it appears naturally","Grow with every seed","Collect seeds, score points, and get longer.","Use real score changes and pickup feedback.","Do not edit score, seed, or growth state."
+"12.0-17.0s","Rival trails near the player","Watch every turn","Dodge walls, yourself, and offline rivals.","Keep offline rivals framed as hazards, not multiplayer.","Do not imply online multiplayer."
+"17.0-22.0s","Active Trail Goal progress during gameplay","Complete Trail Goals","Chase local goals across quick sessions.","Show only real goal progress from the current save.","Do not fake completed goals."
+"22.0-27.0s","Game over result with score and Retry","Retry and improve","Crash, learn, and jump back in.","End on the real retry flow, not a download prompt.","Use a real crash and result screen."
