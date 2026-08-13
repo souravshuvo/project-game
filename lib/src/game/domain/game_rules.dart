@@ -4,6 +4,15 @@ import 'models.dart';
 class GameRules {
   const GameRules._();
 
+  static MatchState initialState() {
+    return MatchState.fromPlacement(
+      nodeCount: BoardSpec.nodeCount,
+      player1Nodes: BoardSpec.player1StartNodes,
+      player2Nodes: BoardSpec.player2StartNodes,
+      currentPlayer: Player.player1,
+    );
+  }
+
   static List<GameMove> legalMoves(MatchState state, {int? fromNode}) {
     if (state.isGameOver) {
       return const [];
@@ -40,8 +49,10 @@ class GameRules {
     if (state.occupancy[from] != state.currentPlayer || state.isCaptureChain) {
       return const [];
     }
+
+    final neighbors = BoardSpec.adjacency[from]!.toList()..sort();
     return [
-      for (final to in BoardSpec.adjacency[from]!)
+      for (final to in neighbors)
         if (state.occupancy[to] == null)
           GameMove(
             player: state.currentPlayer,
@@ -56,6 +67,7 @@ class GameRules {
     if (state.occupancy[from] != state.currentPlayer) {
       return const [];
     }
+
     final opponent = state.currentPlayer.opponent;
     return [
       for (final path in BoardSpec.directionalJumpPaths)
@@ -73,21 +85,12 @@ class GameRules {
   }
 
   static MatchState applyMove(MatchState state, GameMove move) {
-    if (state.isGameOver) {
-      return state;
-    }
-    if (move.player != state.currentPlayer) {
+    if (state.isGameOver || move.player != state.currentPlayer) {
       return state;
     }
 
-    final legal = legalMoves(state, fromNode: move.from).any(
-      (candidate) =>
-          candidate.from == move.from &&
-          candidate.to == move.to &&
-          candidate.kind == move.kind &&
-          candidate.capturedNode == move.capturedNode,
-    );
-    if (!legal) {
+    final isLegal = legalMoves(state, fromNode: move.from).contains(move);
+    if (!isLegal) {
       return state;
     }
 
@@ -100,14 +103,25 @@ class GameRules {
 
     final movedState = state.copyWith(
       occupancy: nextOccupancy,
-      chainNode: null,
       clearChainNode: true,
+      halfTurnsSinceCapture: move.isCapture
+          ? 0
+          : state.halfTurnsSinceCapture + 1,
     );
 
+    if (movedState.beadCount(state.currentPlayer.opponent) == 0) {
+      return movedState.copyWith(
+        result: MatchResult(
+          winner: state.currentPlayer,
+          reason: MatchEndReason.capturedAll,
+        ),
+      );
+    }
+
     if (move.isCapture) {
-      final captureState = movedState.copyWith(chainNode: move.to);
-      if (captureMovesFrom(captureState, move.to).isNotEmpty) {
-        return captureState;
+      final chainState = movedState.copyWith(chainNode: move.to);
+      if (captureMovesFrom(chainState, move.to).isNotEmpty) {
+        return chainState;
       }
     }
 
@@ -122,20 +136,12 @@ class GameRules {
   }
 
   static MatchState _finishTurn(MatchState state) {
-    final opponent = state.currentPlayer.opponent;
-    if (state.beadCount(opponent) == 0) {
-      return state.copyWith(
-        result: MatchResult(
-          winner: state.currentPlayer,
-          reason: MatchEndReason.capturedAll,
-        ),
-      );
-    }
-
+    final nextPlayer = state.currentPlayer.opponent;
     final nextState = state.copyWith(
-      currentPlayer: opponent,
+      currentPlayer: nextPlayer,
       clearChainNode: true,
     );
+
     if (legalMoves(nextState).isEmpty) {
       return nextState.copyWith(
         result: MatchResult(
@@ -144,6 +150,20 @@ class GameRules {
         ),
       );
     }
-    return nextState;
+
+    if (nextState.halfTurnsSinceCapture >= 100) {
+      return nextState.copyWith(
+        result: const MatchResult(reason: MatchEndReason.noCaptureLimit),
+      );
+    }
+
+    final recordedState = nextState.recordCurrentPosition();
+    if (recordedState.currentPositionCount >= 3) {
+      return recordedState.copyWith(
+        result: const MatchResult(reason: MatchEndReason.repetition),
+      );
+    }
+
+    return recordedState;
   }
 }

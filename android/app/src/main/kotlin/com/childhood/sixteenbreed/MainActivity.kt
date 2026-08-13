@@ -1,4 +1,4 @@
-package com.childhood.rapidjump.rapid_jump
+package com.childhood.sixteenbreed
 
 import io.flutter.embedding.android.FlutterActivity
 

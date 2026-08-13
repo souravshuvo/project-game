@@ -1,5 +1,5 @@
-name: rapid_jump
-description: "An offline Sholo Guti / 16 Beads board game."
+name: sixteen_breed
+description: "An offline Sholo Guti / Sixteen Breed strategy game."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  firebase_analytics: ^12.4.6
+  firebase_core: ^4.12.1
+  google_mobile_ads: ^9.1.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

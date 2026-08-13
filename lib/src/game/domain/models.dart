@@ -10,34 +10,52 @@ enum Player {
 
 enum MatchMode {
   localTwoPlayer,
-  vsBot;
+  playerVsBot;
 
   String get label => switch (this) {
-    MatchMode.localTwoPlayer => 'Local Two Player',
-    MatchMode.vsBot => 'Player vs Bot',
+    MatchMode.localTwoPlayer => 'Local 2 Player',
+    MatchMode.playerVsBot => 'Player vs Bot',
   };
 }
 
 enum BotDifficulty {
   easy,
-  normal;
+  balanced,
+  sharp;
 
   String get label => switch (this) {
     BotDifficulty.easy => 'Easy',
-    BotDifficulty.normal => 'Normal',
+    BotDifficulty.balanced => 'Balanced',
+    BotDifficulty.sharp => 'Sharp',
+  };
+
+  String get description => switch (this) {
+    BotDifficulty.easy => 'Learns the board and takes simple captures.',
+    BotDifficulty.balanced => 'Prefers captures, mobility, and safer moves.',
+    BotDifficulty.sharp => 'Looks harder for wins, chains, and counterplay.',
   };
 }
 
-enum BoardThemeChoice {
-  classic,
-  night,
-  highContrast;
+class MatchSetup {
+  const MatchSetup.localTwoPlayer()
+    : mode = MatchMode.localTwoPlayer,
+      botDifficulty = null;
 
-  String get label => switch (this) {
-    BoardThemeChoice.classic => 'Classic',
-    BoardThemeChoice.night => 'Night',
-    BoardThemeChoice.highContrast => 'High Contrast',
-  };
+  const MatchSetup.playerVsBot(this.botDifficulty)
+    : mode = MatchMode.playerVsBot;
+
+  final MatchMode mode;
+  final BotDifficulty? botDifficulty;
+
+  bool get hasBot => mode == MatchMode.playerVsBot;
+
+  String get label {
+    final difficulty = botDifficulty;
+    if (difficulty == null) {
+      return mode.label;
+    }
+    return '${mode.label} - ${difficulty.label}';
+  }
 }
 
 class BoardNode {
@@ -53,6 +71,12 @@ class BoardEdge {
 
   final int a;
   final int b;
+
+  String get key {
+    final low = a < b ? a : b;
+    final high = a < b ? b : a;
+    return '$low-$high';
+  }
 }
 
 class JumpPath {
@@ -63,6 +87,8 @@ class JumpPath {
   final int to;
 
   JumpPath get reversed => JumpPath(to, over, from);
+
+  String get key => '$from-$over-$to';
 }
 
 enum MoveKind { normal, capture }
@@ -98,13 +124,15 @@ class GameMove {
   int get hashCode => Object.hash(player, from, to, kind, capturedNode);
 }
 
-enum MatchEndReason { capturedAll, blocked }
+enum MatchEndReason { capturedAll, blocked, repetition, noCaptureLimit }
 
 class MatchResult {
-  const MatchResult({required this.winner, required this.reason});
+  const MatchResult({required this.reason, this.winner});
 
-  final Player winner;
   final MatchEndReason reason;
+  final Player? winner;
+
+  bool get isDraw => winner == null;
 }
 
 class MatchState {
@@ -113,23 +141,37 @@ class MatchState {
     required this.currentPlayer,
     this.chainNode,
     this.result,
-  }) : occupancy = List.unmodifiable(occupancy);
+    this.halfTurnsSinceCapture = 0,
+    Map<String, int>? repetitionCounts,
+  }) : occupancy = List.unmodifiable(occupancy),
+       repetitionCounts = Map.unmodifiable(repetitionCounts ?? const {});
 
-  factory MatchState.initial() {
-    final occupancy = List<Player?>.filled(37, null);
-    for (var node = 0; node <= 15; node++) {
-      occupancy[node] = Player.player2;
-    }
-    for (var node = 21; node <= 36; node++) {
+  factory MatchState.fromPlacement({
+    required int nodeCount,
+    required Iterable<int> player1Nodes,
+    required Iterable<int> player2Nodes,
+    Player currentPlayer = Player.player1,
+  }) {
+    final occupancy = List<Player?>.filled(nodeCount, null);
+    for (final node in player1Nodes) {
       occupancy[node] = Player.player1;
     }
-    return MatchState(occupancy: occupancy, currentPlayer: Player.player1);
+    for (final node in player2Nodes) {
+      occupancy[node] = Player.player2;
+    }
+
+    return MatchState(
+      occupancy: occupancy,
+      currentPlayer: currentPlayer,
+    ).recordCurrentPosition();
   }
 
   final List<Player?> occupancy;
   final Player currentPlayer;
   final int? chainNode;
   final MatchResult? result;
+  final int halfTurnsSinceCapture;
+  final Map<String, int> repetitionCounts;
 
   bool get isGameOver => result != null;
   bool get isCaptureChain => chainNode != null;
@@ -137,7 +179,26 @@ class MatchState {
   int beadCount(Player player) =>
       occupancy.where((occupant) => occupant == player).length;
 
-  int capturedCount(Player player) => 16 - beadCount(player.opponent);
+  String get positionKey {
+    final cells = occupancy
+        .map(
+          (occupant) => switch (occupant) {
+            Player.player1 => '1',
+            Player.player2 => '2',
+            null => '0',
+          },
+        )
+        .join();
+    return '${currentPlayer.index}:$cells';
+  }
+
+  int get currentPositionCount => repetitionCounts[positionKey] ?? 0;
+
+  MatchState recordCurrentPosition() {
+    final counts = Map<String, int>.of(repetitionCounts);
+    counts[positionKey] = (counts[positionKey] ?? 0) + 1;
+    return copyWith(repetitionCounts: counts);
+  }
 
   MatchState copyWith({
     List<Player?>? occupancy,
@@ -146,60 +207,17 @@ class MatchState {
     bool clearChainNode = false,
     MatchResult? result,
     bool clearResult = false,
+    int? halfTurnsSinceCapture,
+    Map<String, int>? repetitionCounts,
   }) {
     return MatchState(
       occupancy: occupancy ?? this.occupancy,
       currentPlayer: currentPlayer ?? this.currentPlayer,
       chainNode: clearChainNode ? null : chainNode ?? this.chainNode,
       result: clearResult ? null : result ?? this.result,
+      halfTurnsSinceCapture:
+          halfTurnsSinceCapture ?? this.halfTurnsSinceCapture,
+      repetitionCounts: repetitionCounts ?? this.repetitionCounts,
     );
   }
-}
-
-class GameSettings {
-  const GameSettings({
-    this.botDifficulty = BotDifficulty.easy,
-    this.boardTheme = BoardThemeChoice.classic,
-    this.hintsEnabled = true,
-  });
-
-  final BotDifficulty botDifficulty;
-  final BoardThemeChoice boardTheme;
-  final bool hintsEnabled;
-
-  GameSettings copyWith({
-    BotDifficulty? botDifficulty,
-    BoardThemeChoice? boardTheme,
-    bool? hintsEnabled,
-  }) {
-    return GameSettings(
-      botDifficulty: botDifficulty ?? this.botDifficulty,
-      boardTheme: boardTheme ?? this.boardTheme,
-      hintsEnabled: hintsEnabled ?? this.hintsEnabled,
-    );
-  }
-}
-
-class MatchRecord {
-  const MatchRecord({
-    required this.endedAt,
-    required this.mode,
-    required this.botDifficulty,
-    required this.winner,
-    required this.reason,
-    required this.turnCount,
-    required this.captureCount,
-    required this.player1Beads,
-    required this.player2Beads,
-  });
-
-  final DateTime endedAt;
-  final MatchMode mode;
-  final BotDifficulty? botDifficulty;
-  final Player winner;
-  final MatchEndReason reason;
-  final int turnCount;
-  final int captureCount;
-  final int player1Beads;
-  final int player2Beads;
 }

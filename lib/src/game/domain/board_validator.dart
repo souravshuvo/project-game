@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'board_spec.dart';
 import 'models.dart';
 
@@ -19,141 +21,160 @@ class BoardValidationResult {
 class BoardValidator {
   const BoardValidator._();
 
-  static BoardValidationResult validate({
-    List<BoardNode> nodes = BoardSpec.nodes,
-    List<BoardEdge> edges = BoardSpec.edges,
-    List<JumpPath> jumpPaths = BoardSpec.undirectedJumpPaths,
-  }) {
+  static BoardValidationResult validate() {
     final errors = <String>[];
-    final nodeIds = nodes.map((node) => node.id).toSet();
+    _validateNodes(errors);
+    _validateEdges(errors);
+    _validateJumps(errors);
+    _validateInitialPlacement(errors);
+    return BoardValidationResult(List.unmodifiable(errors));
+  }
 
-    if (nodes.length != BoardSpec.nodeCount) {
-      errors.add('Expected 37 nodes, found ${nodes.length}.');
+  static void _validateNodes(List<String> errors) {
+    if (BoardSpec.nodes.length != BoardSpec.nodeCount) {
+      errors.add('Expected ${BoardSpec.nodeCount} nodes.');
     }
+
+    final ids = BoardSpec.nodes.map((node) => node.id).toSet();
     for (var id = 0; id < BoardSpec.nodeCount; id++) {
-      if (!nodeIds.contains(id)) {
-        errors.add('Missing node id $id.');
+      if (!ids.contains(id)) {
+        errors.add('Missing node $id.');
       }
     }
-    for (final node in nodes) {
+    if (ids.length != BoardSpec.nodes.length) {
+      errors.add('Duplicate node ids found.');
+    }
+
+    final coordinateKeys = <String>{};
+    for (final node in BoardSpec.nodes) {
       if (node.xRatio < 0 ||
           node.xRatio > 1 ||
           node.yRatio < 0 ||
           node.yRatio > 1) {
-        errors.add('Node ${node.id} has coordinates outside 0..1.');
+        errors.add('Node ${node.id} coordinate is outside 0..1.');
+      }
+      final key = '${node.xRatio}:${node.yRatio}';
+      if (!coordinateKeys.add(key)) {
+        errors.add('Duplicate coordinate $key.');
       }
     }
+  }
 
-    if (edges.length != BoardSpec.edgeCount) {
-      errors.add('Expected 76 edges, found ${edges.length}.');
+  static void _validateEdges(List<String> errors) {
+    if (BoardSpec.edges.length != BoardSpec.edgeCount) {
+      errors.add('Expected ${BoardSpec.edgeCount} direct edges.');
     }
 
     final edgeKeys = <String>{};
-    for (final edge in edges) {
-      if (!nodeIds.contains(edge.a) || !nodeIds.contains(edge.b)) {
-        errors.add('Edge ${edge.a}-${edge.b} references an unknown node.');
-        continue;
-      }
+    for (final edge in BoardSpec.edges) {
       if (edge.a == edge.b) {
-        errors.add('Edge ${edge.a}-${edge.b} connects a node to itself.');
+        errors.add('Self edge at node ${edge.a}.');
       }
-      final key = _edgeKey(edge.a, edge.b);
-      if (!edgeKeys.add(key)) {
-        errors.add('Duplicate edge $key.');
+      if (!BoardSpec.nodesById.containsKey(edge.a) ||
+          !BoardSpec.nodesById.containsKey(edge.b)) {
+        errors.add('Edge ${edge.key} references a missing node.');
       }
-    }
-
-    final adjacency = <int, Set<int>>{
-      for (final node in nodes) node.id: <int>{},
-    };
-    for (final edge in edges) {
-      if (adjacency.containsKey(edge.a) && adjacency.containsKey(edge.b)) {
-        adjacency[edge.a]!.add(edge.b);
-        adjacency[edge.b]!.add(edge.a);
-      }
-    }
-    for (final edge in edges) {
-      if (adjacency[edge.a]?.contains(edge.b) != true ||
-          adjacency[edge.b]?.contains(edge.a) != true) {
-        errors.add('Edge ${edge.a}-${edge.b} is not bidirectional.');
+      if (!edgeKeys.add(edge.key)) {
+        errors.add('Duplicate edge ${edge.key}.');
       }
     }
 
-    if (jumpPaths.length != BoardSpec.undirectedJumpPathCount) {
+    for (final edge in BoardSpec.edges) {
+      if (!BoardSpec.adjacency[edge.a]!.contains(edge.b) ||
+          !BoardSpec.adjacency[edge.b]!.contains(edge.a)) {
+        errors.add('Edge ${edge.key} is not bidirectional in adjacency.');
+      }
+    }
+  }
+
+  static void _validateJumps(List<String> errors) {
+    if (BoardSpec.undirectedJumpPaths.length !=
+        BoardSpec.undirectedJumpPathCount) {
       errors.add(
-        'Expected 56 undirected jump paths, found ${jumpPaths.length}.',
+        'Expected ${BoardSpec.undirectedJumpPathCount} undirected jump paths.',
       );
     }
+    if (BoardSpec.directionalJumpPaths.length !=
+        BoardSpec.undirectedJumpPathCount * 2) {
+      errors.add('Directional jump paths should be exactly double.');
+    }
 
-    final nodeById = {for (final node in nodes) node.id: node};
     final jumpKeys = <String>{};
-    for (final path in jumpPaths) {
-      if (!nodeIds.contains(path.from) ||
-          !nodeIds.contains(path.over) ||
-          !nodeIds.contains(path.to)) {
-        errors.add(
-          'Jump ${path.from}-${path.over}-${path.to} references an unknown node.',
-        );
+    for (final path in BoardSpec.undirectedJumpPaths) {
+      if (!jumpKeys.add(path.key)) {
+        errors.add('Duplicate jump path ${path.key}.');
+      }
+      if (!_nodeExists(path.from) ||
+          !_nodeExists(path.over) ||
+          !_nodeExists(path.to)) {
+        errors.add('Jump path ${path.key} references a missing node.');
         continue;
       }
-      if (!_hasEdge(edgeKeys, path.from, path.over) ||
-          !_hasEdge(edgeKeys, path.over, path.to)) {
-        errors.add(
-          'Jump ${path.from}-${path.over}-${path.to} is not made of direct edges.',
-        );
+      if (!_hasEdge(path.from, path.over) || !_hasEdge(path.over, path.to)) {
+        errors.add('Jump path ${path.key} is not built from direct edges.');
       }
-      if (!_isCollinear(
-        nodeById[path.from]!,
-        nodeById[path.over]!,
-        nodeById[path.to]!,
-      )) {
-        errors.add(
-          'Jump ${path.from}-${path.over}-${path.to} is not collinear.',
-        );
+      if (_hasEdge(path.from, path.to)) {
+        errors.add('Jump path ${path.key} endpoints are directly connected.');
       }
-      final key = _jumpKey(path.from, path.over, path.to);
-      final reverseKey = _jumpKey(path.to, path.over, path.from);
-      if (jumpKeys.contains(reverseKey)) {
-        errors.add(
-          'Jump ${path.from}-${path.over}-${path.to} duplicates a reversed path.',
-        );
+      if (!_isCollinear(path)) {
+        errors.add('Jump path ${path.key} is not collinear.');
       }
-      if (!jumpKeys.add(key)) {
-        errors.add('Duplicate jump ${path.from}-${path.over}-${path.to}.');
+      if (!_isMiddleBetweenEndpoints(path)) {
+        errors.add(
+          'Jump path ${path.key} middle node is not between endpoints.',
+        );
       }
     }
+  }
 
-    final directionalKeys = {
-      for (final path in [
-        for (final path in jumpPaths) ...[path, path.reversed],
-      ])
-        _jumpKey(path.from, path.over, path.to),
-    };
-    if (directionalKeys.length != jumpPaths.length * 2) {
-      errors.add(
-        'Directional jump expansion did not produce matching reverses.',
-      );
+  static void _validateInitialPlacement(List<String> errors) {
+    final player1 = BoardSpec.player1StartNodes.toSet();
+    final player2 = BoardSpec.player2StartNodes.toSet();
+    final empty = BoardSpec.emptyStartNodes.toSet();
+    final all = {...player1, ...player2, ...empty};
+
+    if (player1.length != 16 || player2.length != 16 || empty.length != 5) {
+      errors.add('Initial placement must be 16/16/5 nodes.');
     }
-
-    return BoardValidationResult(List.unmodifiable(errors));
+    if (all.length != BoardSpec.nodeCount) {
+      errors.add('Initial placement sets overlap or do not cover the board.');
+    }
+    for (final node in all) {
+      if (!_nodeExists(node)) {
+        errors.add('Initial placement references missing node $node.');
+      }
+    }
   }
 
-  static bool _hasEdge(Set<String> edgeKeys, int a, int b) {
-    return edgeKeys.contains(_edgeKey(a, b));
+  static bool _nodeExists(int id) => BoardSpec.nodesById.containsKey(id);
+
+  static bool _hasEdge(int a, int b) {
+    final edge = BoardEdge(a, b);
+    return BoardSpec.edgeKeys.contains(edge.key);
   }
 
-  static String _edgeKey(int a, int b) {
-    final min = a < b ? a : b;
-    final max = a < b ? b : a;
-    return '$min-$max';
+  static bool _isCollinear(JumpPath path) {
+    final a = BoardSpec.nodesById[path.from]!;
+    final b = BoardSpec.nodesById[path.over]!;
+    final c = BoardSpec.nodesById[path.to]!;
+    final abX = b.xRatio - a.xRatio;
+    final abY = b.yRatio - a.yRatio;
+    final bcX = c.xRatio - b.xRatio;
+    final bcY = c.yRatio - b.yRatio;
+    return (abX * bcY - abY * bcX).abs() < 0.000001;
   }
 
-  static String _jumpKey(int from, int over, int to) => '$from-$over-$to';
-
-  static bool _isCollinear(BoardNode a, BoardNode b, BoardNode c) {
-    final cross =
-        (b.xRatio - a.xRatio) * (c.yRatio - a.yRatio) -
-        (b.yRatio - a.yRatio) * (c.xRatio - a.xRatio);
-    return cross.abs() < 0.000001;
+  static bool _isMiddleBetweenEndpoints(JumpPath path) {
+    final a = BoardSpec.nodesById[path.from]!;
+    final b = BoardSpec.nodesById[path.over]!;
+    final c = BoardSpec.nodesById[path.to]!;
+    final minX = min(a.xRatio, c.xRatio);
+    final maxX = max(a.xRatio, c.xRatio);
+    final minY = min(a.yRatio, c.yRatio);
+    final maxY = max(a.yRatio, c.yRatio);
+    return b.xRatio >= minX &&
+        b.xRatio <= maxX &&
+        b.yRatio >= minY &&
+        b.yRatio <= maxY;
   }
 }

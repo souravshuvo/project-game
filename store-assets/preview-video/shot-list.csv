@@ -1,0 +1,9 @@
+shot_id,start,end,duration,required_real_capture,on_screen_text,voiceover,editing_notes
+01,00:00,00:03,3s,capture/raw/01-home-to-local.mp4,Offline 16 Beads,Play Sholo Guti anywhere.,Start on real Home screen and cut quickly to Local 2 Player.
+02,00:03,00:06,3s,capture/raw/01-home-to-local.mp4,Start A Local Match,Start a local match in seconds.,Show real starting board with 37 points and both bead colors.
+03,00:06,00:10,4s,capture/raw/02-legal-moves.mp4,See Legal Moves,Green points show where you can move.,Hold selected bead and green highlights long enough to read.
+04,00:10,00:15,5s,capture/raw/03-capture-chain.mp4,Jump To Capture,Amber jumps capture opponent beads.,Show amber path before committing the capture.
+05,00:15,00:18,3s,capture/raw/03-capture-chain.mp4,Chain Or End Turn,Continue the chain or end the turn.,Show real End Turn state after capture.
+06,00:18,00:21,3s,capture/raw/04-bot-mode.mp4,Practice vs Bot,Practice against Easy Balanced or Sharp.,Show real difficulty picker or bot thinking state.
+07,00:21,00:25,4s,capture/raw/05-match-complete.mp4,Rematch Fast,Finish rematch and play again.,Show Match Complete panel from real completed match.
+08,00:25,00:28,3s,capture/raw/06-history.mp4,Track Recent Matches,Keep recent matches on device.,Show real saved Match History then half-second brand close if needed.
