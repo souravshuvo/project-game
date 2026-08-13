@@ -48,6 +48,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _invalidHintVisible = false;
   bool _resultFlashVisible = false;
   bool _advancingChallenge = false;
+  bool _hasAimedOnce = false;
   double _aimPower = 0;
   double _aimCurve = 0;
   int _invalidHintToken = 0;
@@ -66,6 +67,9 @@ class _GameScreenState extends State<GameScreen> {
       onAimingChanged: (isAiming) {
         _setStateSafely(() {
           _isAiming = isAiming;
+          if (isAiming) {
+            _hasAimedOnce = true;
+          }
           if (isAiming) {
             _invalidHintVisible = false;
           }
@@ -329,9 +333,7 @@ class _GameScreenState extends State<GameScreen> {
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onPanStart: (details) {
-                _game.startAimFromWidget(
-                  _pointerToGame(details.localPosition),
-                );
+                _game.startAimFromWidget(_pointerToGame(details.localPosition));
               },
               onPanUpdate: (details) {
                 _game.updateAimFromWidget(
@@ -394,8 +396,8 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
           Positioned(
-            left: 32,
-            right: 32,
+            left: 24,
+            right: 24,
             top: 136,
             child: SafeArea(
               bottom: false,
@@ -404,7 +406,7 @@ class _GameScreenState extends State<GameScreen> {
                   opacity: _invalidHintVisible ? 1 : 0,
                   duration: const Duration(milliseconds: 120),
                   child: const _ToastPanel(
-                    message: 'Touch the glowing ball, then pull down.',
+                    message: 'Start below the glowing ball, then pull down.',
                   ),
                 ),
               ),
@@ -424,6 +426,7 @@ class _GameScreenState extends State<GameScreen> {
                         child: _InstructionPanel(
                           title: _challengeName,
                           objective: _objective,
+                          isFirstAim: !_hasAimedOnce,
                         ),
                       ),
                     )
@@ -490,7 +493,7 @@ class _AimMeter extends StatelessWidget {
             const SizedBox(height: 4),
             LinearProgressIndicator(value: power.clamp(0.0, 1.0).toDouble()),
             const SizedBox(height: 8),
-            Text(curveLabel, textAlign: TextAlign.center),
+            Text('$curveLabel - release to shoot', textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -616,13 +619,22 @@ class _HudPill extends StatelessWidget {
 }
 
 class _InstructionPanel extends StatelessWidget {
-  const _InstructionPanel({required this.title, required this.objective});
+  const _InstructionPanel({
+    required this.title,
+    required this.objective,
+    required this.isFirstAim,
+  });
 
   final String title;
   final String objective;
+  final bool isFirstAim;
 
   @override
   Widget build(BuildContext context) {
+    final label = isFirstAim
+        ? 'Drag below the glowing ball. Release to shoot.'
+        : '$title: $objective';
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.52),
@@ -630,24 +642,22 @@ class _InstructionPanel extends StatelessWidget {
         border: Border.all(color: Colors.white24),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(objective, textAlign: TextAlign.center),
-            const SizedBox(height: 6),
-            const Text(
-              'Touch the glowing ball, pull down for power, '
-              'slide sideways for curve.',
-              textAlign: TextAlign.center,
+            const Icon(Icons.sports_soccer, size: 18),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),

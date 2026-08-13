@@ -37,6 +37,8 @@ class RooftopCurveGame extends FlameGame with PanDetector {
   static const double _pullZoneWidth = 190;
   static const double _pullZoneHeight = 156;
   static const double _pullZoneYOffset = 58;
+  static const double _lowerAimStartPadding = 36;
+  static const double _fieldSidePadding = 8;
 
   final int initialChallengeIndex;
   final void Function(
@@ -295,20 +297,41 @@ class RooftopCurveGame extends FlameGame with PanDetector {
       width: _pullZoneWidth,
       height: _pullZoneHeight,
     );
-    return pullZone.contains(Offset(worldPosition.x, worldPosition.y));
+    if (pullZone.contains(Offset(worldPosition.x, worldPosition.y))) {
+      return true;
+    }
+
+    return worldPosition.x >= _fieldSidePadding &&
+        worldPosition.x <= fieldWidth - _fieldSidePadding &&
+        worldPosition.y >= _ball.position.y - _lowerAimStartPadding &&
+        worldPosition.y <= fieldHeight - _fieldSidePadding;
   }
 
   void _updateAim(Vector2 dragPosition) {
+    final effectiveDragPosition = _clampAimDrag(dragPosition);
     final shot = ShotPhysics.fromDrag(
       ballPosition: _ball.position,
-      dragPosition: dragPosition,
+      dragPosition: effectiveDragPosition,
     );
     _aimPreview.updateAim(
       startPosition: _ball.position,
-      dragPosition: dragPosition,
+      dragPosition: effectiveDragPosition,
       shotConfig: shot,
     );
     onAimUpdated(shot.power, shot.curve);
+  }
+
+  Vector2 _clampAimDrag(Vector2 dragPosition) {
+    const maxY = fieldHeight - _fieldSidePadding;
+    final minY = (_ball.position.y + ShotPhysics.minDrag)
+        .clamp(0, maxY)
+        .toDouble();
+    return Vector2(
+      dragPosition.x
+          .clamp(_fieldSidePadding, fieldWidth - _fieldSidePadding)
+          .toDouble(),
+      dragPosition.y.clamp(minY, maxY).toDouble(),
+    );
   }
 
   void _resolve(GameResultType type) {

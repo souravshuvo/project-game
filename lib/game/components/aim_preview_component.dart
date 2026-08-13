@@ -36,24 +36,29 @@ class AimPreviewComponent extends PositionComponent {
 
     final pullPaint = Paint()
       ..color = const Color(0xFFFFD166).withValues(alpha: 0.95)
-      ..strokeWidth = 3
+      ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
       startPosition.toOffset(),
       dragPosition.toOffset(),
       pullPaint,
     );
+    canvas.drawCircle(
+      dragPosition.toOffset(),
+      7,
+      Paint()..color = const Color(0xFFFFD166).withValues(alpha: 0.9),
+    );
 
     final previewPaint = Paint()
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.72)
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.82)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
     final path = Path()..moveTo(startPosition.x, startPosition.y);
     var previewPosition = startPosition.clone();
     var velocity = shotConfig.velocity.clone() * 0.9;
-    for (var i = 0; i < 42; i++) {
+    for (var i = 0; i < 78; i++) {
       velocity = ShotPhysics.nextVelocity(
         velocity: velocity,
         curve: shotConfig.curve,
@@ -63,5 +68,11 @@ class AimPreviewComponent extends PositionComponent {
       path.lineTo(previewPosition.x, previewPosition.y);
     }
     canvas.drawPath(path, previewPaint);
+
+    final endPaint = Paint()
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.92)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4;
+    canvas.drawCircle(previewPosition.toOffset(), 7, endPaint);
   }
 }
