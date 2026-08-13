@@ -13,6 +13,10 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+val hasReleaseSigning =
+    listOf("keyAlias", "keyPassword", "storePassword", "storeFile").all {
+        !keystoreProperties.getProperty(it).isNullOrBlank()
+    }
 
 val defaultAdmobAndroidAppId = "ca-app-pub-3940256099942544~3347511713"
 val admobAndroidAppId =
@@ -53,7 +57,11 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
