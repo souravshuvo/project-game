@@ -181,6 +181,7 @@ class MatchState {
     required this.secondInnings,
     this.target,
     this.lastDelivery,
+    this.deliveries = const <DeliveryResult>[],
   });
 
   factory MatchState.initial({
@@ -203,6 +204,7 @@ class MatchState {
   final InningsScore secondInnings;
   final int? target;
   final DeliveryResult? lastDelivery;
+  final List<DeliveryResult> deliveries;
 
   bool get canPlayDelivery {
     return phase == MatchPhase.firstInnings ||
@@ -272,6 +274,7 @@ class MatchState {
     InningsScore? secondInnings,
     int? target,
     DeliveryResult? lastDelivery,
+    List<DeliveryResult>? deliveries,
   }) {
     return MatchState(
       mode: mode ?? this.mode,
@@ -281,6 +284,7 @@ class MatchState {
       secondInnings: secondInnings ?? this.secondInnings,
       target: target ?? this.target,
       lastDelivery: lastDelivery ?? this.lastDelivery,
+      deliveries: deliveries ?? this.deliveries,
     );
   }
 }
@@ -363,7 +367,10 @@ class CricketMatch {
       detail: _detailFor(outcome, nextPhase, nextTarget),
     );
 
-    state = state.copyWith(lastDelivery: deliveryResult);
+    state = state.copyWith(
+      lastDelivery: deliveryResult,
+      deliveries: [...state.deliveries, deliveryResult],
+    );
     return deliveryResult;
   }
 

@@ -1,0 +1,7 @@
+# Copy to android/admob.properties for production builds.
+# Keep production IDs out of source control.
+#
+# Test app ID is used automatically when this file is absent:
+# ca-app-pub-3940256099942544~3347511713
+
+androidAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY

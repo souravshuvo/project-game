@@ -1,15 +1,52 @@
-# Flutter/Dart generated files
+# Flutter / Dart generated files
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
 build/
 
-# Local signing secrets
-android/key.properties
-*.jks
-*.keystore
+# Flutter build artifacts
+app.*.symbols
+app.*.map.json
+**/ios/Flutter/.last_build_id
 
-# Local editor/OS files
+# Android / Gradle generated files
+android/.gradle/
+android/.kotlin/
+android/.cxx/
+android/captures/
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# Local Android config and signing material
+android/local.properties
+android/key.properties
+android/admob.properties
+android/**/*.keystore
+android/**/*.jks
+key.properties
+**/*.keystore
+**/*.jks
+
+# iOS generated local files
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.symlinks/
+
+# IDE user state
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS/editor noise
 .DS_Store
 Thumbs.db
+*.log
+*.tmp
+*.swp

@@ -15,6 +15,12 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val admobProperties = Properties()
+val admobPropertiesFile = rootProject.file("admob.properties")
+if (admobPropertiesFile.exists()) {
+    admobProperties.load(FileInputStream(admobPropertiesFile))
+}
+
 android {
     namespace = "com.childhood.pencilpitch"
     compileSdk = flutter.compileSdkVersion
@@ -48,6 +54,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["ADMOB_APP_ID"] =
+            admobProperties["androidAppId"] as String? ?: "ca-app-pub-3940256099942544~3347511713"
     }
 
     buildTypes {
