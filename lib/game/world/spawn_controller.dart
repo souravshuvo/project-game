@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../components/hazard_component.dart';
+import '../components/pickup_component.dart';
 import '../components/platform_component.dart';
 import '../models/spawn_pattern.dart';
 import '../systems/difficulty_system.dart';
@@ -26,9 +27,11 @@ class SpawnController {
     required double startPlatformTop,
     required List<PlatformComponent> platforms,
     required List<HazardComponent> hazards,
+    required List<PickupComponent> pickups,
   }) {
     platforms.clear();
     hazards.clear();
+    pickups.clear();
     lastPlatformTop = startPlatformTop;
     lastPlatformCenterX = viewport.width / 2;
     platformsSpawned = 0;
@@ -50,6 +53,7 @@ class SpawnController {
     required int score,
     required List<PlatformComponent> platforms,
     required List<HazardComponent> hazards,
+    required List<PickupComponent> pickups,
   }) {
     final spawnTop = cameraY - viewport.height * 0.82;
 
@@ -78,6 +82,9 @@ class SpawnController {
           platform.width >= WorldConfig.hazardMinPlatformWidth) {
         hazards.add(HazardComponent.fromPlatform(platform, pattern.hazardSlot));
       }
+      if (pattern.pickupSlot != PickupSlot.none) {
+        pickups.add(_pickupFromPlatform(platform, pattern.pickupSlot));
+      }
 
       lastPlatformCenterX = centerX;
       lastPlatformTop = top;
@@ -89,9 +96,25 @@ class SpawnController {
     required double viewportHeight,
     required List<PlatformComponent> platforms,
     required List<HazardComponent> hazards,
+    required List<PickupComponent> pickups,
   }) {
     final trimY = cameraY + viewportHeight + WorldConfig.trimMargin;
     platforms.removeWhere((platform) => platform.top > trimY);
     hazards.removeWhere((hazard) => hazard.baseY > trimY);
+    pickups.removeWhere((pickup) => pickup.position.dy > trimY);
+  }
+
+  PickupComponent _pickupFromPlatform(
+    PlatformComponent platform,
+    PickupSlot slot,
+  ) {
+    final x = switch (slot) {
+      PickupSlot.left => platform.left + platform.width * 0.28,
+      PickupSlot.center => platform.left + platform.width * 0.5,
+      PickupSlot.right => platform.left + platform.width * 0.72,
+      PickupSlot.none => platform.left + platform.width * 0.5,
+    };
+
+    return PickupComponent(position: Offset(x, platform.top - 38));
   }
 }

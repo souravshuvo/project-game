@@ -1,6 +1,6 @@
 # Cloud Courier Climb
 
-Cloud Courier Climb is a small offline Flutter vertical arcade jumper prototype. The player steers a placeholder courier left and right while it auto-jumps upward across floating weather pads.
+Cloud Courier Climb is a small Flutter vertical arcade jumper. The player steers a placeholder courier left and right while it auto-jumps upward across floating weather pads.
 
 ## MVP controls
 
@@ -15,14 +15,15 @@ Cloud Courier Climb is a small offline Flutter vertical arcade jumper prototype.
 - One endless offline mode.
 - Height score and locally saved best score.
 - Placeholder visuals drawn in Flutter.
-- No ads, shop, skins, leaderboard, login, cloud sync, missions, or copied assets.
+- Production-safe AdMob and Firebase Analytics integration points with test IDs by default.
+- No shop, skins, leaderboard, login, cloud sync, or copied assets.
 - Portrait-first phone gameplay.
 
 ## Project structure
 
 - `lib/app`: Flutter app shell and overlays.
 - `lib/game`: game loop, world spawning, components, systems, and models.
-- `lib/services`: local save, analytics stub, and ads stub integration points.
+- `lib/services`: local save, analytics, feedback, AdMob gateway, and ad frequency caps.
 - `test/game` and `test/services`: focused tests for game rules and platform services.
 
 ## Manual test
@@ -35,4 +36,4 @@ Run the app with Flutter, start a run, steer onto platforms, intentionally hit a
 - Keep the upload keystore out of git.
 - Capture real gameplay screenshots from the final build.
 - Replace iOS app icon PNGs before App Store submission.
-- Complete privacy policy and Data safety as an offline game with local-only best score, unless analytics or ads are added later.
+- Review `docs/privacy_data_safety.md` before store submission.

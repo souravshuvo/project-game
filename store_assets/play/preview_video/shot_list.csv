@@ -1,0 +1,8 @@
+start_time,end_time,source,capture_action,caption,voiceover,notes
+0.0,2.5,real app menu,Show main menu with START RUN visible,Start a sky route,Start a small sky route.,Quick push-in from menu; no fake buttons.
+2.5,5.5,real app recording,Tap START RUN and show first jumps,Tap to begin,Tap start and keep the jump moving.,Use actual tap and first auto-jump.
+5.5,9.0,real app recording,Hold LEFT then RIGHT and land on two pads,Hold to steer,Hold left or right to steer each landing.,Controls and landing feedback must be visible.
+9.0,12.5,real app recording,Collect gold signal motes while climbing,Collect signal motes,Collect signal motes for route progress.,Let score or progress change remain visible.
+12.5,16.5,real app recording,Approach and avoid a red warning spark,Avoid warning sparks,Read the red sparks before you commit.,Hazard must be readable before the dodge.
+16.5,20.5,real app recording,Show route stamps score or route complete,Complete route stamps,Finish the route and chase a cleaner climb.,Use only real HUD or result state.
+20.5,24.0,real app result/restart,Show result screen and restart action,Restart fast,Restart fast and try for your best score.,Avoid ad or rewarded revive UI.

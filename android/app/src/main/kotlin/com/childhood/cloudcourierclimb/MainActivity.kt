@@ -26,5 +26,40 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "cloud_courier_climb/settings"
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "loadSettings" -> {
+                    result.success(
+                        mapOf(
+                            "soundEnabled" to preferences.getBoolean("sound_enabled", true),
+                            "hapticsEnabled" to preferences.getBoolean("haptics_enabled", true),
+                            "completedChallengeSteps" to preferences.getInt("completed_challenge_steps", 0)
+                        )
+                    )
+                }
+                "saveSettings" -> {
+                    val editor = preferences.edit()
+                    call.argument<Boolean>("soundEnabled")?.let {
+                        editor.putBoolean("sound_enabled", it)
+                    }
+                    call.argument<Boolean>("hapticsEnabled")?.let {
+                        editor.putBoolean("haptics_enabled", it)
+                    }
+                    call.argument<Int>("completedChallengeSteps")?.let {
+                        val savedSteps = preferences.getInt("completed_challenge_steps", 0)
+                        if (it > savedSteps) {
+                            editor.putInt("completed_challenge_steps", it)
+                        }
+                    }
+                    editor.apply()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 }

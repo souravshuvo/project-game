@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class PickupComponent {
   const PickupComponent({
     required this.position,
-    this.radius = 8,
-    this.scoreValue = 5,
+    this.radius = 9,
+    this.scoreValue = 12,
     this.collected = false,
   });
 

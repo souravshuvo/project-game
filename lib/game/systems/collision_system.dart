@@ -1,4 +1,5 @@
 import '../components/hazard_component.dart';
+import '../components/pickup_component.dart';
 import '../components/platform_component.dart';
 import '../components/player_component.dart';
 import '../world/world_config.dart';
@@ -43,6 +44,21 @@ class CollisionSystem {
     }
 
     return false;
+  }
+
+  int touchedPickupIndex({
+    required PlayerComponent player,
+    required List<PickupComponent> pickups,
+  }) {
+    final playerHitBox = player.rect.deflate(4);
+    for (var i = 0; i < pickups.length; i += 1) {
+      final pickup = pickups[i];
+      if (!pickup.collected && playerHitBox.overlaps(pickup.bounds)) {
+        return i;
+      }
+    }
+
+    return -1;
   }
 
   bool fellBelowCamera({

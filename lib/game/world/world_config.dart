@@ -5,6 +5,7 @@ class WorldConfig {
 
   static const gameTitle = 'Cloud Courier Climb';
   static const bestScoreChannel = 'cloud_courier_climb/best_score';
+  static const settingsChannel = 'cloud_courier_climb/settings';
 
   static const playerSize = Size(30, 40);
   static const gravity = 1600.0;
