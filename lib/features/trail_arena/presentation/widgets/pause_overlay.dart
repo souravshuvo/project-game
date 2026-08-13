@@ -6,11 +6,15 @@ class PauseOverlay extends StatelessWidget {
     required this.onResume,
     required this.onRestart,
     required this.onMenu,
+    required this.onSettings,
+    required this.onHelp,
   });
 
   final VoidCallback onResume;
   final VoidCallback onRestart;
   final VoidCallback onMenu;
+  final VoidCallback onSettings;
+  final VoidCallback onHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +39,16 @@ class PauseOverlay extends StatelessWidget {
                 onPressed: onMenu,
                 icon: const Icon(Icons.home_rounded),
                 label: const Text('Menu'),
+              ),
+              TextButton.icon(
+                onPressed: onSettings,
+                icon: const Icon(Icons.tune_rounded),
+                label: const Text('Settings'),
+              ),
+              TextButton.icon(
+                onPressed: onHelp,
+                icon: const Icon(Icons.help_outline_rounded),
+                label: const Text('Help'),
               ),
             ],
           ),

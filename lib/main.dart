@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'app_services.dart';
 import 'features/trail_arena/presentation/screens/trail_arena_game_screen.dart';
 
-void main() {
-  runApp(const TrailArenaApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final services = await AppServices.initialize();
+  runApp(TrailArenaApp(services: services));
 }
 
 class TrailArenaApp extends StatelessWidget {
-  const TrailArenaApp({super.key});
+  const TrailArenaApp({super.key, required this.services});
+
+  final AppServices services;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +35,10 @@ class TrailArenaApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const TrailArenaGameScreen(),
+      home: TrailArenaGameScreen(
+        analytics: services.analytics,
+        ads: services.ads,
+      ),
     );
   }
 }

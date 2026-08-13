@@ -1,4 +1,6 @@
 class ScoreSystem {
+  static const botCrashBonus = 25;
+
   int score = 0;
   double _survivalClock = 0;
 
@@ -12,7 +14,7 @@ class ScoreSystem {
   }
 
   void addBotCrashBonus() {
-    score += 25;
+    score += botCrashBonus;
   }
 
   void updateSurvival(double dt) {

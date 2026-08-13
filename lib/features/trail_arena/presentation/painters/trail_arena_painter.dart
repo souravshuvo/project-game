@@ -63,10 +63,13 @@ class TrailArenaPainter extends CustomPainter {
         FoodType.seed => const Color(0xFFFF8A76),
         FoodType.brightSeed => const Color(0xFFFFD166),
       };
+      final pulse =
+          1 +
+          (math.sin((game.elapsedSeconds * 7) + item.position.x * 0.02) * 0.08);
       final center = Offset(item.position.x, item.position.y);
       canvas.drawCircle(
         center,
-        item.type.radius * 2.2,
+        item.type.radius * 2.25 * pulse,
         Paint()..color = color.withValues(alpha: 0.13),
       );
       canvas.drawCircle(center, item.type.radius, Paint()..color = color);

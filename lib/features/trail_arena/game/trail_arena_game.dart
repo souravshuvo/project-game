@@ -4,8 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import '../domain/arena_food.dart';
+import '../domain/arena_difficulty_phase.dart';
 import '../domain/food_type.dart';
+import '../domain/game_feedback_event.dart';
 import '../domain/run_state.dart';
+import '../domain/run_stats.dart';
 import '../domain/vector2.dart';
 import '../services/analytics_sink.dart';
 import 'components/trail_actor_component.dart';
@@ -60,10 +63,15 @@ class TrailArenaGame extends ChangeNotifier {
 
   RunPhase phase = RunPhase.menu;
   DeathCause? deathCause;
+  GameFeedbackEvent? latestEvent;
+  RunStats runStats = RunStats.empty;
   double elapsedSeconds = 0;
   double readyRemaining = readySeconds;
   int bestScore = 0;
   int gamesPlayed = 0;
+  bool achievedBestThisRun = false;
+  int _eventId = 0;
+  ArenaDifficultyPhase? _lastLoggedDifficultyPhase;
 
   late TrailActorComponent player;
 
@@ -83,6 +91,10 @@ class TrailArenaGame extends ChangeNotifier {
 
   bool get isActive => phase == RunPhase.ready || phase == RunPhase.running;
 
+  ArenaDifficultyPhase get difficultyPhase {
+    return ArenaDifficultyPhaseRules.fromElapsed(elapsedSeconds);
+  }
+
   void hydrateSave({required int bestScore, required int gamesPlayed}) {
     this.bestScore = bestScore;
     this.gamesPlayed = gamesPlayed;
@@ -97,6 +109,10 @@ class TrailArenaGame extends ChangeNotifier {
   void startRun() {
     _score.reset();
     deathCause = null;
+    latestEvent = null;
+    runStats = RunStats.empty;
+    achievedBestThisRun = false;
+    _lastLoggedDifficultyPhase = null;
     elapsedSeconds = 0;
     readyRemaining = readySeconds;
     phase = RunPhase.ready;
@@ -114,14 +130,23 @@ class TrailArenaGame extends ChangeNotifier {
       ..addAll(_createInitialBots());
     _food.clear();
     _fillFood();
-    _analytics.log('run_started', {'bot_count': _bots.length});
+    _syncRunStats();
+    _emitFeedback(GameFeedbackKind.runStarted, position: player.head);
+    _analytics.log('game_run_start', {
+      'bot_count': _bots.length,
+      'goal_ready': 1,
+    });
+    _logDifficultyPhaseIfNeeded();
     notifyListeners();
   }
 
   void pause() {
     if (phase == RunPhase.ready || phase == RunPhase.running) {
       phase = RunPhase.paused;
-      _analytics.log('run_paused', {'duration': elapsedSeconds});
+      _analytics.log('game_pause', {
+        'duration_seconds': elapsedSeconds.floor(),
+        'score': score,
+      });
       notifyListeners();
     }
   }
@@ -130,7 +155,10 @@ class TrailArenaGame extends ChangeNotifier {
     if (phase == RunPhase.paused) {
       phase = RunPhase.ready;
       readyRemaining = 1;
-      _analytics.log('run_resumed', {'duration': elapsedSeconds});
+      _analytics.log('game_resume', {
+        'duration_seconds': elapsedSeconds.floor(),
+        'score': score,
+      });
       notifyListeners();
     }
   }
@@ -165,11 +193,14 @@ class TrailArenaGame extends ChangeNotifier {
     }
 
     elapsedSeconds += step;
+    _logDifficultyPhaseIfNeeded();
     _score.updateSurvival(step);
-    player.updateMovement(step, speedScale: _speedScale);
+    player.updateMovement(step, speedScale: _playerSpeedScale);
     _updateBots(step);
+    _syncRunStats();
     _collectFood();
     _resolveCollisions();
+    _syncRunStats();
     _fillFood();
     notifyListeners();
   }
@@ -202,7 +233,7 @@ class TrailArenaGame extends ChangeNotifier {
         continue;
       }
       _botAi.updateBot(bot: bot, food: _food, actors: actors, dt: dt);
-      bot.updateMovement(dt, speedScale: _speedScale);
+      bot.updateMovement(dt, speedScale: _botSpeedScale);
     }
   }
 
@@ -223,10 +254,26 @@ class TrailArenaGame extends ChangeNotifier {
         actor.grow(isPlayer ? item.type.playerGrowth : item.type.botGrowth);
         if (isPlayer) {
           _score.addFoodScore(item.type.score);
-          _analytics.log('food_collected', {
+          runStats = runStats.copyWith(
+            score: score,
+            foodCollected: runStats.foodCollected + 1,
+            brightFoodCollected: item.type == FoodType.brightSeed
+                ? runStats.brightFoodCollected + 1
+                : runStats.brightFoodCollected,
+            trailLength: actor.targetLength,
+          );
+          _emitFeedback(
+            item.type == FoodType.brightSeed
+                ? GameFeedbackKind.brightFoodCollected
+                : GameFeedbackKind.foodCollected,
+            position: item.position,
+            scoreDelta: item.type.score,
+          );
+          _analytics.log('game_food_collect', {
             'food_type': item.type.name,
             'score': score,
             'length': actor.targetLength,
+            'duration_seconds': elapsedSeconds.floor(),
           });
         }
         _food.removeAt(i);
@@ -269,7 +316,20 @@ class TrailArenaGame extends ChangeNotifier {
       }
       if (_collision.hitsTrail(bot.head, player, skipHeadDistance: 32)) {
         _score.addBotCrashBonus();
-        _analytics.log('bot_crashed', {'cause': 'player_trail'});
+        runStats = runStats.copyWith(
+          score: score,
+          botCrashes: runStats.botCrashes + 1,
+        );
+        _emitFeedback(
+          GameFeedbackKind.botCrashed,
+          position: bot.head,
+          scoreDelta: ScoreSystem.botCrashBonus,
+        );
+        _analytics.log('game_bot_crash', {
+          'cause': 'player_trail',
+          'score': score,
+          'duration_seconds': elapsedSeconds.floor(),
+        });
         _killBot(bot);
         continue;
       }
@@ -315,19 +375,65 @@ class TrailArenaGame extends ChangeNotifier {
   }
 
   void _endRun(DeathCause cause) {
+    _syncRunStats();
     phase = RunPhase.gameOver;
     deathCause = cause;
+    achievedBestThisRun = score > bestScore;
     if (score > bestScore) {
       bestScore = score;
     }
     gamesPlayed += 1;
-    _analytics.log('run_ended', {
+    _emitFeedback(GameFeedbackKind.playerDied, position: player.head);
+    _analytics.log('game_run_end', {
       'score': score,
-      'duration': elapsedSeconds,
+      'duration_seconds': elapsedSeconds.floor(),
       'death_cause': cause.name,
       'length': player.targetLength,
+      'difficulty_phase': difficultyPhase.name,
+      'food_collected': runStats.foodCollected,
+      'bright_food_collected': runStats.brightFoodCollected,
+      'bot_crashes': runStats.botCrashes,
+      'new_best': achievedBestThisRun,
     });
   }
 
-  double get _speedScale => 1 + math.min(elapsedSeconds / 240, 0.18);
+  void _syncRunStats() {
+    runStats = runStats.copyWith(
+      score: score,
+      survivalSeconds: elapsedSeconds,
+      trailLength: player.targetLength,
+    );
+  }
+
+  void _logDifficultyPhaseIfNeeded() {
+    final phase = difficultyPhase;
+    if (_lastLoggedDifficultyPhase == phase) {
+      return;
+    }
+    _lastLoggedDifficultyPhase = phase;
+    _analytics.log('game_difficulty_phase', {
+      'phase': phase.name,
+      'duration_seconds': elapsedSeconds.floor(),
+      'score': score,
+    });
+  }
+
+  void _emitFeedback(
+    GameFeedbackKind kind, {
+    required Vec2 position,
+    int scoreDelta = 0,
+  }) {
+    latestEvent = GameFeedbackEvent(
+      id: ++_eventId,
+      kind: kind,
+      position: position,
+      scoreDelta: scoreDelta,
+    );
+  }
+
+  double get _playerSpeedScale => 1 + math.min(elapsedSeconds / 300, 0.12);
+
+  double get _botSpeedScale {
+    return _playerSpeedScale * difficultyPhase.botSpeedScale;
+  }
 }
