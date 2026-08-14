@@ -23,7 +23,21 @@ Original Flutter crowd-control arcade game.
   events when Firebase is configured.
 - No shop, login, leaderboard, cloud sync, or live events are included.
 - Android package name: `com.childhood.magneticmarbles`.
-- Debug/development ads use Google test IDs by default. Production release
-  builds must provide `ADMOB_APP_ID` plus production interstitial ad unit IDs.
-- Release signing requires `android/key.properties` with an upload key before
-  building a Play artifact.
+- Debug/development ads use Google test IDs by default. Play-ready release
+  builds should provide `ADMOB_APP_ID` plus production interstitial ad unit IDs.
+- Play-ready release artifacts require `android/key.properties` with an upload
+  key. Local release builds use debug signing when the file is missing.
+
+## Android release signing
+
+Local release builds may run without a private upload key by falling back to
+debug signing. Play-ready release artifacts still need a private upload key.
+
+1. Create or reuse an Android upload keystore.
+2. Copy `android/key.properties.example` to `android/key.properties`.
+3. Fill in `storePassword`, `keyPassword`, `keyAlias`, and `storeFile`.
+4. Keep `android/key.properties` and the keystore file private.
+
+For a Play release build, also pass a production AdMob app ID with
+`ADMOB_APP_ID` or `-PADMOB_APP_ID=...`. If this is missing, the build uses
+Google sample ad IDs for local testing only and is not Play-ready.

@@ -10,6 +10,7 @@ plugins {
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKeystore = keystorePropertiesFile.exists()
 val isReleaseTask = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true) || it.contains("bundle", ignoreCase = true)
 }
@@ -20,17 +21,17 @@ val adMobApplicationId = (
         ?: testAdMobApplicationId
 )
 
-if (keystorePropertiesFile.exists()) {
+if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 } else if (isReleaseTask) {
-    throw org.gradle.api.GradleException(
-        "Missing android/key.properties. Configure an upload key before building release artifacts."
+    logger.warn(
+        "Missing android/key.properties. Release will use debug signing for local testing; this artifact is not Play-ready."
     )
 }
 
 if (isReleaseTask && adMobApplicationId == testAdMobApplicationId) {
-    throw org.gradle.api.GradleException(
-        "Missing production ADMOB_APP_ID. Release artifacts must not use the sample AdMob app ID."
+    logger.warn(
+        "Missing production ADMOB_APP_ID. Using Google sample AdMob app ID; this artifact is not Play-ready."
     )
 }
 
@@ -56,12 +57,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "Magnetic Marbles"
         manifestPlaceholders["adMobApplicationId"] = adMobApplicationId
     }
 
     signingConfigs {
         create("release") {
-            if (keystorePropertiesFile.exists()) {
+            if (hasReleaseKeystore) {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
                 storeFile = file(keystoreProperties["storeFile"] as String)
@@ -71,8 +73,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "Magnetic Marbles Debug"
+        }
+
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName(
+                if (hasReleaseKeystore) "release" else "debug"
+            )
         }
     }
 }
