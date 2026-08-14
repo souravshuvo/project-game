@@ -83,7 +83,9 @@ class PuzzleEngine {
   }
 
   bool isSelectable(LevelState state, String tileId) {
-    if (!state.isPlaying || !isTileOnBoard(state, tileId)) {
+    if (!state.isPlaying ||
+        !state.level.containsTile(tileId) ||
+        !isTileOnBoard(state, tileId)) {
       return false;
     }
 

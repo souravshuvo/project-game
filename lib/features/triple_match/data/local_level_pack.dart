@@ -2,7 +2,17 @@ import '../domain/level_definition.dart';
 import '../domain/tile_instance.dart';
 import '../domain/tile_kind.dart';
 
-const localLevelPack = <LevelDefinition>[
+const productionLevelCount = 50;
+
+final localLevelPack = <LevelDefinition>[
+  ..._starterLevels,
+  for (var id = _starterLevels.length + 1; id <= productionLevelCount; id++)
+    _buildGeneratedLevel(id),
+];
+
+final prototypeLevel = localLevelPack.first;
+
+const _starterLevels = <LevelDefinition>[
   LevelDefinition(
     id: 1,
     name: 'First Shelf',
@@ -360,4 +370,232 @@ const localLevelPack = <LevelDefinition>[
   ),
 ];
 
-const prototypeLevel = localLevelPack.first;
+const _kindPool = <TileKind>[
+  TileKind.jarLabel,
+  TileKind.foldedNote,
+  TileKind.berryTin,
+  TileKind.flourTag,
+  TileKind.teaPacket,
+  TileKind.seedCard,
+  TileKind.honeyMark,
+  TileKind.ribbonTab,
+  TileKind.oatStamp,
+  TileKind.cocoaSeal,
+];
+
+const _nameRoots = <String>[
+  'Pantry Row',
+  'Tea Drawer',
+  'Seed Shelf',
+  'Jar Corner',
+  'Ribbon Rack',
+  'Cocoa Nook',
+  'Honey Stack',
+  'Oat Bin',
+  'Market Notes',
+  'Flour Lane',
+];
+
+LevelDefinition _buildGeneratedLevel(int id) {
+  final plan = _planFor(id);
+  final kinds = _rotatedKinds(plan.kindCount, id);
+  final positions = _positionsFor(
+    width: plan.width,
+    height: plan.height,
+    count: plan.kindCount * 3,
+    seed: id,
+  );
+  final basePositions = <String, _Cell>{};
+
+  var cursor = 0;
+  for (var kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
+    for (var copy = 1; copy <= 3; copy++) {
+      basePositions[_tileKey(kindIndex, copy)] = positions[cursor++];
+    }
+  }
+
+  final stackPairs = _stackPairsFor(
+    stackCount: plan.stackCount,
+    kindCount: plan.kindCount,
+    seed: id,
+  );
+  final topPairByKind = {
+    for (final pair in stackPairs) pair.topKindIndex: pair,
+  };
+
+  final tiles = <TileInstance>[];
+  for (var kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
+    final kind = kinds[kindIndex];
+    for (var copy = 1; copy <= 3; copy++) {
+      final pair = topPairByKind[kindIndex];
+      final isTopCover = pair != null && copy == 3;
+      final position = isTopCover
+          ? basePositions[_tileKey(pair.bottomKindIndex, pair.bottomCopy)]!
+          : basePositions[_tileKey(kindIndex, copy)]!;
+
+      tiles.add(
+        TileInstance(
+          id: _tileId(id, kind, copy),
+          kind: kind,
+          row: position.row,
+          col: position.col,
+          layer: isTopCover ? 1 : 0,
+        ),
+      );
+    }
+  }
+
+  return LevelDefinition(
+    id: id,
+    name: _levelName(id),
+    width: plan.width,
+    height: plan.height,
+    trayCapacity: 7,
+    solutionTileIds: [
+      for (var kindIndex = 0; kindIndex < kinds.length; kindIndex++)
+        ..._solutionCopies(
+          topPairByKind.containsKey(kindIndex),
+        ).map((copy) => _tileId(id, kinds[kindIndex], copy)),
+    ],
+    tiles: tiles,
+  );
+}
+
+_LevelPlan _planFor(int id) {
+  if (id <= 10) {
+    return _LevelPlan(
+      width: 6,
+      height: 4,
+      kindCount: 6,
+      stackCount: id < 8 ? 0 : 1,
+    );
+  }
+  if (id <= 20) {
+    return _LevelPlan(
+      width: 7,
+      height: 4,
+      kindCount: 7,
+      stackCount: id.isEven ? 1 : 2,
+    );
+  }
+  if (id <= 32) {
+    return _LevelPlan(width: 8, height: 4, kindCount: 8, stackCount: 2);
+  }
+  if (id <= 42) {
+    return _LevelPlan(width: 8, height: 5, kindCount: 9, stackCount: 3);
+  }
+  return const _LevelPlan(width: 8, height: 5, kindCount: 10, stackCount: 4);
+}
+
+List<TileKind> _rotatedKinds(int count, int seed) {
+  final start = seed % _kindPool.length;
+  return [
+    for (var index = 0; index < count; index++)
+      _kindPool[(start + index) % _kindPool.length],
+  ];
+}
+
+List<_Cell> _positionsFor({
+  required int width,
+  required int height,
+  required int count,
+  required int seed,
+}) {
+  final total = width * height;
+  final stride = _coprimeStride(total);
+  final positions = <_Cell>[];
+  final used = <int>{};
+  var cursor = seed % total;
+
+  while (positions.length < count) {
+    if (used.add(cursor)) {
+      positions.add(_Cell(row: cursor ~/ width, col: cursor % width));
+    }
+    cursor = (cursor + stride) % total;
+  }
+
+  return positions;
+}
+
+List<_StackPair> _stackPairsFor({
+  required int stackCount,
+  required int kindCount,
+  required int seed,
+}) {
+  return [
+    for (var index = 0; index < stackCount; index++)
+      _StackPair(
+        topKindIndex: index,
+        bottomKindIndex: kindCount - 1 - index,
+        bottomCopy: 1 + ((seed + index) % 3),
+      ),
+  ];
+}
+
+Iterable<int> _solutionCopies(bool hasTopCover) {
+  return hasTopCover ? const [3, 1, 2] : const [1, 2, 3];
+}
+
+String _levelName(int id) {
+  final root = _nameRoots[(id - 1) % _nameRoots.length];
+  final batch = ((id - 1) ~/ _nameRoots.length) + 1;
+  return '$root $batch';
+}
+
+String _tileKey(int kindIndex, int copy) => '$kindIndex:$copy';
+
+String _tileId(int levelId, TileKind kind, int copy) {
+  return 'l$levelId-${kind.name}-$copy';
+}
+
+int _coprimeStride(int value) {
+  var stride = 5;
+  while (_greatestCommonDivisor(stride, value) != 1) {
+    stride += 2;
+  }
+  return stride;
+}
+
+int _greatestCommonDivisor(int a, int b) {
+  var left = a;
+  var right = b;
+  while (right != 0) {
+    final next = left % right;
+    left = right;
+    right = next;
+  }
+  return left;
+}
+
+class _LevelPlan {
+  const _LevelPlan({
+    required this.width,
+    required this.height,
+    required this.kindCount,
+    required this.stackCount,
+  });
+
+  final int width;
+  final int height;
+  final int kindCount;
+  final int stackCount;
+}
+
+class _Cell {
+  const _Cell({required this.row, required this.col});
+
+  final int row;
+  final int col;
+}
+
+class _StackPair {
+  const _StackPair({
+    required this.topKindIndex,
+    required this.bottomKindIndex,
+    required this.bottomCopy,
+  });
+
+  final int topKindIndex;
+  final int bottomKindIndex;
+  final int bottomCopy;
+}

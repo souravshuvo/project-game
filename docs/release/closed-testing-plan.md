@@ -1,6 +1,6 @@
 # Closed Testing Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Goal
 
@@ -20,21 +20,24 @@ stable, and worth expanding before any production release.
 - Launch a fresh install.
 - Confirm the first screen is playable gameplay.
 - Complete Level 1.
-- Complete all five current levels if possible.
+- Complete the first 10 current levels if possible.
 - Tap a covered tile on a layered level and confirm the message is useful.
 - Fill the tray on purpose and confirm the fail state feels fair.
 - Use Restart and confirm the level resets.
+- Confirm test interstitials appear only at capped completed-level transitions.
+- Confirm no ad appears during active puzzle play or immediately after a fail.
 - Close and reopen the app and confirm no crash or broken state.
 
 ## Closed Test Tasks
 
 - Play at least 10 minutes.
-- Try to complete the five v1 levels.
+- Try to complete at least 10 v1 levels.
 - Report the first moment that felt confusing.
 - Report any level that felt unfair, too easy, or boring.
 - Confirm whether tile labels, covered tiles, tray state, and result messages
   are readable.
 - Confirm whether the game should stay ad-free longer.
+- Report whether level-end test ads feel too frequent or disruptive.
 
 ## Feedback Questions
 
@@ -44,9 +47,10 @@ stable, and worth expanding before any production release.
 - Were the labels, colors, covered-tile marks, and tray readable?
 - Did the tap feedback feel satisfying enough?
 - Did the tray fail state feel fair?
-- Would you play 10-20 more levels if they were similar?
+- Would you play more levels if they were similar?
 - Would optional rewarded undo, shuffle, hint, extra slot, or continue feel
   acceptable later?
+- Did any ad appear while you were actively solving a puzzle?
 - Did anything crash, freeze, or look broken?
 - Device model and Android version?
 
@@ -57,6 +61,6 @@ stable, and worth expanding before any production release.
 - Crash notes
 - Confusing-level notes
 - Screenshot/video of any UI issue
-- Completion notes for each of the five levels
+- Completion notes for each tested level
 - Retention signal: who came back the next day
 - Top requested improvement

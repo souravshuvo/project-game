@@ -1,18 +1,20 @@
 # Crash Monitoring Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Firebase and Crashlytics are not installed in current v1.
+Firebase Analytics is integrated for gameplay analytics. Firebase Crashlytics is
+not installed in current v1.
 
-Reason: the game has no real Firebase project/config yet, and adding placeholder
-SDK setup would create misleading privacy, build, and policy work.
+Reason: the game still has no real Crashlytics project/config, and adding
+placeholder crash reporting would create misleading privacy, build, and policy
+work.
 
 ## Current Implementation
 
-No analytics or crash monitoring adapter exists in active code. No event or
-crash data is sent anywhere by current v1.
+An analytics adapter exists and safely falls back to no-op if Firebase config is
+missing or analytics is disabled. No Crashlytics adapter exists in active code.
 
 ## Crash Monitoring Gate
 

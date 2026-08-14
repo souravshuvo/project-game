@@ -19,6 +19,26 @@ void main() {
     }
   });
 
+  test('local level pack meets the production v1 content target', () {
+    expect(localLevelPack, hasLength(productionLevelCount));
+    expect(
+      localLevelPack.map((level) => level.id),
+      orderedEquals(
+        List<int>.generate(productionLevelCount, (index) => index + 1),
+      ),
+    );
+    expect(
+      localLevelPack.first.tiles.length,
+      lessThan(localLevelPack.last.tiles.length),
+    );
+    expect(
+      localLevelPack.where(
+        (level) => level.tiles.any((tile) => tile.layer > 0),
+      ),
+      isNotEmpty,
+    );
+  });
+
   test('all local levels include deterministic winning solution paths', () {
     for (final level in localLevelPack) {
       var state = engine.start(level);
@@ -141,6 +161,13 @@ void main() {
     final next = engine.selectTile(state, 'l3-honey-1');
 
     expect(identical(next, state), isTrue);
+  });
+
+  test('unknown tile ids are treated as unselectable', () {
+    final state = engine.start(prototypeLevel);
+
+    expect(engine.isSelectable(state, 'missing-tile'), isFalse);
+    expect(identical(engine.selectTile(state, 'missing-tile'), state), isTrue);
   });
 }
 

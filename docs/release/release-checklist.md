@@ -1,6 +1,6 @@
 # Release Checklist
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Identity Lock
 
@@ -43,10 +43,12 @@ Last updated: 2026-08-10
 ## Product Readiness
 
 - [x] One simple offline puzzle mode.
-- [x] Five deterministic local levels.
+- [x] 50 deterministic offline levels.
 - [x] Pure puzzle engine separated from Flutter UI.
 - [x] Tray capacity, triple clearing, covered-tile blocking, win, fail, restart,
-      and session-only next-level flow implemented.
+      next-level flow, and restored local progress implemented.
+- [x] Capped level-end interstitial integration defaults to test ads.
+- [x] Firebase Analytics adapter added with no-op fallback when not configured.
 - [x] Focused tests added for engine and controller behavior.
 - [ ] Run tests after package config is refreshed.
 - [ ] Review level difficulty with at least a small tester group.
@@ -57,7 +59,7 @@ Last updated: 2026-08-10
 
 - [ ] Privacy policy hosted at a stable public URL.
 - [ ] Data safety form completed to match actual SDK behavior.
-- [ ] Ads declaration completed. Current v1 should declare no ads.
+- [ ] Ads declaration completed. Declare ads if AdMob remains enabled.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
 - [ ] App access declaration completed; no login required.

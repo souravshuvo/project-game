@@ -1,0 +1,74 @@
+{
+  "app_name": "Larder Labels",
+  "package_name": "com.childhood.larderlabels",
+  "status": "production_brief_only",
+  "reason_final_images_not_created": "No real captured gameplay screenshots were available in the repository, and emulator/device capture was not approved for Prompt S2B.",
+  "target_export": {
+    "orientation": "portrait",
+    "width_px": 1080,
+    "height_px": 1920,
+    "formats": [
+      "JPEG",
+      "24-bit PNG without alpha"
+    ],
+    "max_overlay_area_percent": 20
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "filename": "01-home-progress.png",
+      "source_state": "Home screen showing Larder Labels, Play/Continue, Help, Settings, and progress.",
+      "overlay_text": "50 shelves to clear",
+      "alt_text": "Home screen showing Larder Labels with Play, Help, Settings, and level progress.",
+      "required_truth_check": "Must show only real available home controls and real level count."
+    },
+    {
+      "slot": 2,
+      "filename": "02-first-shelf-start.png",
+      "source_state": "Level 1, First Shelf, at the start with the HUD, full board, and empty 7-slot tray.",
+      "overlay_text": "Pick free labels",
+      "alt_text": "Level 1 board with selectable label tiles and an empty tray.",
+      "required_truth_check": "Must use the actual first playable board, not a mock layout."
+    },
+    {
+      "slot": 3,
+      "filename": "03-match-three-tray.png",
+      "source_state": "Level 1 or 2 after selecting two matching labels into the tray, before selecting the third.",
+      "overlay_text": "Match three",
+      "alt_text": "Gameplay screen showing label tiles in the tray before a triple match.",
+      "required_truth_check": "Must show real tray state with exactly two matching tiles visible."
+    },
+    {
+      "slot": 4,
+      "filename": "04-layered-labels.png",
+      "source_state": "Level 3, Lifted Labels, while layered or covered tiles are visible.",
+      "overlay_text": "Clear the top first",
+      "alt_text": "Layered board showing covered tiles dimmed until upper labels are removed.",
+      "required_truth_check": "Must show the real covered/unselectable visual state."
+    },
+    {
+      "slot": 5,
+      "filename": "05-plan-the-tray.png",
+      "source_state": "Level 4, Tight Tray, or a later real level with a nearly full tray and the Careful warning.",
+      "overlay_text": "Plan the tray",
+      "alt_text": "Puzzle screen with a nearly full tray and the Careful warning.",
+      "required_truth_check": "Must be a fair real gameplay state, not an impossible or staged fake layout."
+    },
+    {
+      "slot": 6,
+      "filename": "06-shelf-cleared.png",
+      "source_state": "Real win result panel after clearing a level.",
+      "overlay_text": "Shelf cleared",
+      "alt_text": "Win result panel showing moves and the Next action.",
+      "required_truth_check": "Must show the actual result UI and real move count."
+    },
+    {
+      "slot": 7,
+      "filename": "07-try-new-order.png",
+      "source_state": "Optional real fail state after the tray is full.",
+      "overlay_text": "Try a new order",
+      "alt_text": "Tray-full fail state with a Restart action.",
+      "required_truth_check": "Use only if the captured fail screen is clear, readable, and not misleading."
+    }
+  ]
+}

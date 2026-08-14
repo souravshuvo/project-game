@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val admobAndroidAppId: String =
+    (project.findProperty("ADMOB_ANDROID_APP_ID") as String?)
+        ?: System.getenv("ADMOB_ANDROID_APP_ID")
+        // Google sample AdMob app ID. Override before production Android ads.
+        ?: "ca-app-pub-3940256099942544~3347511713"
+
 android {
     namespace = "com.childhood.larderlabels"
     compileSdk = flutter.compileSdkVersion
@@ -22,6 +28,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["admobApplicationId"] = admobAndroidAppId
     }
 
     buildTypes {

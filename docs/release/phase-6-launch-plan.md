@@ -1,20 +1,22 @@
 # V1 Launch Readiness Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Goal
 
-Prepare Larder Labels for internal and closed testing without rushing SDKs, ads,
-or production release before the app has real signing, screenshots, policy, and
-test evidence.
+Prepare Larder Labels for internal and closed testing with capped test ads,
+analytics verification, and no production release before the app has real
+signing, screenshots, policy, and test evidence.
 
 ## Current Decisions
 
 - Keep v1 offline and privacy-light.
-- Do not add Firebase, Crashlytics, AdMob, purchases, login, cloud sync, map
-  progression, story, shop, skins, or live events.
+- Do not add Crashlytics, purchases, login, cloud sync, map progression, story,
+  shop, skins, or live events.
+- Keep AdMob test-by-default and Firebase Analytics safely disabled/no-op unless
+  real Firebase configuration is present.
 - Use one simple triple-match puzzle mode.
-- Use five deterministic local levels for first testing.
+- Use 50 deterministic offline levels for first production-content testing.
 - Use internal testing first, then closed testing, then production only after
   blockers are resolved.
 
@@ -28,9 +30,9 @@ test evidence.
 | Store screenshots | Pending | Capture from real current gameplay |
 | Launcher icons | Pending | Regenerate Larder Labels icons |
 | Release signing | Pending | Create private keystore and wire Gradle |
-| Analytics | Deferred | Add only after privacy decision |
+| Analytics | Adapter added | Verify Firebase config and DebugView |
 | Crash monitoring | Deferred | Add only after real project/config |
-| Monetization | Deferred | Add only after gameplay is stable |
+| Monetization | Test integration | Verify caps and no active-play ads |
 | Internal testing | Pending | Upload signed `.aab` |
 | Closed testing | Pending | Recruit testers and collect feedback |
 | Production release | Pending | Only after stability and policy checks |

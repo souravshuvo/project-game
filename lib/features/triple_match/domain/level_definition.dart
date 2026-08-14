@@ -19,6 +19,10 @@ class LevelDefinition {
   final List<TileInstance> tiles;
   final List<String> solutionTileIds;
 
+  bool containsTile(String tileId) {
+    return tiles.any((tile) => tile.id == tileId);
+  }
+
   TileInstance tileById(String tileId) {
     return tiles.firstWhere(
       (tile) => tile.id == tileId,

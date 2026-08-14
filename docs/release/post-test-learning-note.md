@@ -1,6 +1,6 @@
 # Post-Test Learning Note
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 Fill this after internal or closed testing.
 
@@ -31,12 +31,17 @@ Fill this after internal or closed testing.
 ## Gameplay Signals
 
 - Level 1 completion:
-- First five level completion:
+- First 10 level completion:
+- Full 50-level completion:
 - Restart count:
 - Fail count:
 - Highest tray fill:
 - Covered-tile tap confusion:
 - Day 1 return:
+- Interstitial show rate:
+- Interstitial close/continue behavior:
+- Ad-related complaints:
+- Analytics config verified:
 
 ## Monetization Signal
 

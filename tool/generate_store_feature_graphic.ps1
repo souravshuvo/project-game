@@ -78,19 +78,20 @@ $bitmap = New-Object System.Drawing.Bitmap 1024, 500, ([System.Drawing.Imaging.P
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
 $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#276B63"))
+$graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#E3F2EA"))
 
 $panel = New-Brush "#F1F7F4"
 $deep = New-Brush "#16443F"
 $amber = New-Brush "#F0B429"
+$surface = New-Brush "#FFFFFF"
 
-Add-RoundedRectangle $graphics $deep 604 58 332 332 34
-Add-RoundedRectangle $graphics $panel 584 38 332 332 34
+Add-RoundedRectangle $graphics $deep 604 68 332 332 34
+Add-RoundedRectangle $graphics $panel 584 48 332 332 34
 
 $tileSize = 86
 $gap = 18
 $startX = 622
-$startY = 72
+$startY = 82
 Add-LabelTile $graphics $startX $startY $tileSize "#E9F6EE" "#8ACAA4" "JAR" "#276B43"
 Add-LabelTile $graphics ($startX + $tileSize + $gap) $startY $tileSize "#EAF1FF" "#9BB8F1" "NOTE" "#345AA6"
 Add-LabelTile $graphics ($startX + (($tileSize + $gap) * 2)) $startY $tileSize "#FFE9E5" "#FFA59B" "TIN" "#B54138"
@@ -101,20 +102,22 @@ Add-LabelTile $graphics $startX ($startY + (($tileSize + $gap) * 2)) $tileSize "
 Add-LabelTile $graphics ($startX + $tileSize + $gap) ($startY + (($tileSize + $gap) * 2)) $tileSize "#E9F3F7" "#93C9DD" "RIB" "#2B6D88"
 Add-LabelTile $graphics ($startX + (($tileSize + $gap) * 2)) ($startY + (($tileSize + $gap) * 2)) $tileSize "#F3F1E6" "#D4C981" "OAT" "#6C6642"
 
-Add-LabelTile $graphics 84 88 126 "#FFF5D8" "#F0C24D" "3x" "#16443F"
-Add-Text $graphics "Larder Labels" "Segoe UI" 74 ([System.Drawing.FontStyle]::Bold) "#FFFFFF" 76 226
-Add-Text $graphics "Match three. Clear the shelf." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#E3F2EA" 80 320
+Add-RoundedRectangle $graphics $deep 76 74 380 116 26
+Add-RoundedRectangle $graphics $surface 88 86 356 92 22
+Add-RoundedRectangle $graphics $amber 106 106 222 52 18
+Add-LabelTile $graphics 112 96 72 "#E9F6EE" "#8ACAA4" "JAR" "#276B43"
+Add-LabelTile $graphics 188 96 72 "#E9F6EE" "#8ACAA4" "JAR" "#276B43"
+Add-LabelTile $graphics 264 96 72 "#E9F6EE" "#8ACAA4" "JAR" "#276B43"
 
-$sparkPen = New-Pen "#F0B429" 8
-$graphics.DrawLine($sparkPen, 456, 112, 500, 112)
-$graphics.DrawLine($sparkPen, 478, 90, 478, 134)
-$sparkPen.Dispose()
+Add-Text $graphics "Larder Labels" "Segoe UI" 76 ([System.Drawing.FontStyle]::Bold) "#16443F" 76 226
+Add-Text $graphics "Match three. Clear the shelf." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#276B63" 80 322
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 
 $panel.Dispose()
 $deep.Dispose()
 $amber.Dispose()
+$surface.Dispose()
 $graphics.Dispose()
 $bitmap.Dispose()
 
