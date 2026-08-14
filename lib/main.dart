@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import 'features/signal_reef/application/signal_reef_ads.dart';
 import 'features/signal_reef/application/signal_reef_controller.dart';
+import 'features/signal_reef/application/signal_reef_firebase_telemetry.dart';
 import 'features/signal_reef/application/signal_reef_telemetry.dart';
 import 'features/signal_reef/data/signal_reef_save_store.dart';
 import 'features/signal_reef/domain/save_data.dart';
@@ -15,8 +19,18 @@ Future<void> main() async {
 
   final saveStore = SharedPreferencesSignalReefSaveStore();
   final initialSave = await saveStore.load();
+  final telemetry = await FirebaseSignalReefTelemetry.create();
+  final ads = SignalReefAdService(telemetry: telemetry);
+  unawaited(ads.initialize());
 
-  runApp(SignalReefApp(saveStore: saveStore, initialSave: initialSave));
+  runApp(
+    SignalReefApp(
+      saveStore: saveStore,
+      initialSave: initialSave,
+      telemetry: telemetry,
+      ads: ads,
+    ),
+  );
 }
 
 class SignalReefApp extends StatefulWidget {
@@ -24,10 +38,14 @@ class SignalReefApp extends StatefulWidget {
     super.key,
     required this.saveStore,
     required this.initialSave,
+    required this.telemetry,
+    required this.ads,
   });
 
   final SignalReefSaveStore saveStore;
   final SignalReefSaveData initialSave;
+  final SignalReefTelemetry telemetry;
+  final SignalReefAdService ads;
 
   @override
   State<SignalReefApp> createState() => _SignalReefAppState();
@@ -42,13 +60,16 @@ class _SignalReefAppState extends State<SignalReefApp> {
     _controller = SignalReefController(
       saveStore: widget.saveStore,
       initialSave: widget.initialSave,
-      telemetry: const NoOpSignalReefTelemetry(),
+      telemetry: widget.telemetry,
+      ads: widget.ads,
     );
+    _controller.trackAppOpen();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    widget.ads.dispose();
     super.dispose();
   }
 

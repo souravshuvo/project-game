@@ -19,20 +19,27 @@ class SignalReefHud extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HudPill(
-            icon: Icons.waves_rounded,
-            label: 'Wave',
-            value: '${game.currentWaveNumber}/3',
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _HudPill(
+                  icon: Icons.radar_rounded,
+                  label: 'Wave',
+                  value: '${game.currentWaveNumber}/${game.totalWaves}',
+                ),
+                _HudPill(
+                  icon: Icons.star_rounded,
+                  label: 'Score',
+                  value: '${game.score}',
+                ),
+                _HullPill(hull: game.hull),
+              ],
+            ),
           ),
-          const SizedBox(width: 8),
-          _HudPill(
-            icon: Icons.star_rounded,
-            label: 'Score',
-            value: '${game.score}',
-          ),
-          const Spacer(),
-          _HullPill(hull: game.hull),
           const SizedBox(width: 6),
           IconButton.filledTonal(
             onPressed: controller.pause,
@@ -63,14 +70,19 @@ class _HullPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(SignalReefGame.startingHull, (index) {
-            return Icon(
-              index < hull
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              size: 18,
-              color: index < hull
-                  ? SignalReefColors.danger
-                  : SignalReefColors.mutedInk,
+            final isFilled = index < hull;
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 140),
+              child: Icon(
+                isFilled
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                key: ValueKey('$index-$isFilled'),
+                size: 18,
+                color: isFilled
+                    ? SignalReefColors.danger
+                    : SignalReefColors.mutedInk,
+              ),
             );
           }),
         ),
@@ -105,11 +117,15 @@ class _HudPill extends StatelessWidget {
           children: [
             Icon(icon, size: 17, color: SignalReefColors.primary),
             const SizedBox(width: 6),
-            Text(
-              '$label $value',
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 140),
+              child: Text(
+                '$label $value',
+                key: ValueKey('$label-$value'),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),

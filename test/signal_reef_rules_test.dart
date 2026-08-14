@@ -7,26 +7,42 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  test('enemy and wave score rules match the prototype design', () {
+  test('enemy and wave score rules match the production design', () {
     expect(SignalReefScoreRules.enemyDestroyed(SignalEnemyType.driftNode), 10);
     expect(SignalReefScoreRules.enemyDestroyed(SignalEnemyType.pulseSeed), 30);
     expect(SignalReefScoreRules.waveCleared(3), 150);
     expect(SignalReefScoreRules.winBonus, 500);
   });
 
-  test('prototype waves are sequential and produce full spawn queues', () {
-    expect(prototypeWaveDefinitions.map((wave) => wave.number), [1, 2, 3]);
+  test('production waves meet the v1 content target', () {
+    expect(productionWaveDefinitions, hasLength(20));
+    expect(
+      productionWaveDefinitions.map((wave) => wave.number),
+      List.generate(20, (index) => index + 1),
+    );
 
-    for (final wave in prototypeWaveDefinitions) {
+    var previousTotal = 0;
+    var previousSpawnInterval = double.infinity;
+    for (final wave in productionWaveDefinitions) {
       expect(wave.totalEnemies, greaterThan(0));
       expect(wave.buildSpawnQueue(), hasLength(wave.totalEnemies));
-      expect(wave.spawnInterval, greaterThan(0));
-      expect(wave.maxActiveEnemies, greaterThan(0));
+      expect(wave.totalEnemies, greaterThanOrEqualTo(previousTotal));
+      expect(wave.spawnInterval, greaterThanOrEqualTo(0.46));
+      expect(wave.spawnInterval, lessThanOrEqualTo(previousSpawnInterval));
+      expect(wave.maxActiveEnemies, inInclusiveRange(4, 8));
+      expect(wave.maxActiveEnemies, lessThanOrEqualTo(wave.totalEnemies));
+
+      if (wave.number >= 3) {
+        expect(wave.enemyCounts[SignalEnemyType.pulseSeed], greaterThan(0));
+      }
+
+      previousTotal = wave.totalEnemies;
+      previousSpawnInterval = wave.spawnInterval;
     }
   });
 
   test('mixed waves distribute pulse seeds through the queue', () {
-    final wave = prototypeWaveDefinitions[1];
+    final wave = productionWaveDefinitions[2];
     final queue = wave.buildSpawnQueue();
 
     expect(
@@ -38,14 +54,14 @@ void main() {
   });
 
   test(
-    'shared preferences save store roundtrips Signal Reef settings',
+    'shared preferences save store roundtrips Signal Reef progress and settings',
     () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSignalReefSaveStore();
       const data = SignalReefSaveData(
         bestScore: 740,
+        bestWaveReached: 14,
         soundEnabled: false,
-        musicEnabled: false,
         hapticsEnabled: false,
         runsPlayed: 4,
       );
@@ -54,8 +70,8 @@ void main() {
       final loaded = await store.load();
 
       expect(loaded.bestScore, 740);
+      expect(loaded.bestWaveReached, 14);
       expect(loaded.soundEnabled, isFalse);
-      expect(loaded.musicEnabled, isFalse);
       expect(loaded.hapticsEnabled, isFalse);
       expect(loaded.runsPlayed, 4);
     },

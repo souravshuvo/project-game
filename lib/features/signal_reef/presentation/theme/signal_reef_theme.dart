@@ -8,13 +8,13 @@ class SignalReefColors {
 
   static const ink = Color(0xFFEAF7F4);
   static const mutedInk = Color(0xFF9CB9B9);
-  static const canvas = Color(0xFF07131E);
-  static const surface = Color(0xFF102A34);
-  static const surfaceHigh = Color(0xFF163D45);
-  static const primary = Color(0xFF50D6C7);
+  static const canvas = Color(0xFF050710);
+  static const surface = Color(0xFF111B31);
+  static const surfaceHigh = Color(0xFF1A2B4A);
+  static const primary = Color(0xFF61E4FF);
   static const accent = Color(0xFFFFC857);
   static const danger = Color(0xFFFF6B6B);
-  static const line = Color(0xFF285766);
+  static const line = Color(0xFF2D5E7A);
 }
 
 class SignalReefTheme {
@@ -81,15 +81,20 @@ class SignalReefBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF07131E), Color(0xFF102333), Color(0xFF092621)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return SizedBox.expand(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050710), Color(0xFF0B1024), Color(0xFF061A24)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: CustomPaint(
+          painter: const _CurrentPainter(),
+          child: SizedBox.expand(child: child),
         ),
       ),
-      child: CustomPaint(painter: const _CurrentPainter(), child: child),
     );
   }
 }
@@ -106,11 +111,12 @@ class SignalReefPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: SignalReefColors.surface.withValues(alpha: 0.88),
+    return Material(
+      color: SignalReefColors.surface.withValues(alpha: 0.88),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: SignalReefColors.line),
+        side: const BorderSide(color: SignalReefColors.line),
       ),
       child: Padding(padding: padding, child: child),
     );
@@ -136,24 +142,28 @@ class _CurrentPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = SignalReefColors.primary.withValues(alpha: 0.14)
+    final lanePaint = Paint()
+      ..color = SignalReefColors.primary.withValues(alpha: 0.10)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.3;
-    final sparkPaint = Paint()
-      ..color = SignalReefColors.accent.withValues(alpha: 0.28);
+      ..strokeWidth = 1;
+    final starPaint = Paint();
 
-    for (var y = -40.0; y < size.height + 80; y += 92) {
-      final path = Path()
-        ..moveTo(-20, y)
-        ..quadraticBezierTo(size.width * 0.4, y + 46, size.width + 20, y + 8);
-      canvas.drawPath(path, linePaint);
+    for (var x = -size.width; x < size.width * 2; x += 92) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.width * 0.34, size.height),
+        lanePaint,
+      );
     }
 
-    for (var index = 0; index < 28; index++) {
+    for (var index = 0; index < 42; index++) {
       final x = ((index * 53) % math.max(1, size.width.toInt())).toDouble();
       final y = ((index * 89) % math.max(1, size.height.toInt())).toDouble();
-      canvas.drawCircle(Offset(x, y), index.isEven ? 1.4 : 0.8, sparkPaint);
+      final color = index % 7 == 0
+          ? SignalReefColors.accent.withValues(alpha: 0.34)
+          : SignalReefColors.ink.withValues(alpha: 0.26);
+      starPaint.color = color;
+      canvas.drawCircle(Offset(x, y), index.isEven ? 1.3 : 0.8, starPaint);
     }
   }
 
@@ -168,27 +178,51 @@ class _SignalDiverPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final shell = Paint()..color = SignalReefColors.primary;
     final accent = Paint()..color = SignalReefColors.accent;
-    final core = Paint()..color = Colors.white;
+    final wing = Paint()..color = SignalReefColors.surfaceHigh;
+    final core = Paint()..color = const Color(0xFF06101D);
+    final highlight = Paint()..color = Colors.white;
+    final leftWing = Path()
+      ..moveTo(size.width * 0.22, size.height * 0.42)
+      ..lineTo(size.width * 0.02, size.height * 0.78)
+      ..lineTo(size.width * 0.34, size.height * 0.70)
+      ..close();
+    final rightWing = Path()
+      ..moveTo(size.width * 0.78, size.height * 0.42)
+      ..lineTo(size.width * 0.98, size.height * 0.78)
+      ..lineTo(size.width * 0.66, size.height * 0.70)
+      ..close();
     final ship = Path()
       ..moveTo(size.width / 2, 0)
-      ..lineTo(size.width * 0.88, size.height * 0.72)
-      ..quadraticBezierTo(
-        size.width / 2,
-        size.height,
-        size.width * 0.12,
-        size.height * 0.72,
-      )
+      ..lineTo(size.width * 0.72, size.height * 0.75)
+      ..lineTo(size.width * 0.60, size.height * 0.94)
+      ..lineTo(size.width * 0.40, size.height * 0.94)
+      ..lineTo(size.width * 0.28, size.height * 0.75)
       ..close();
 
+    canvas.drawPath(leftWing, wing);
+    canvas.drawPath(rightWing, wing);
     canvas.drawPath(ship, shell);
-    canvas.drawCircle(
-      Offset(size.width / 2, size.height * 0.44),
-      size.width * 0.11,
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, size.height * 0.47),
+        width: size.width * 0.20,
+        height: size.height * 0.24,
+      ),
       core,
     );
+    canvas.drawCircle(
+      Offset(size.width * 0.55, size.height * 0.42),
+      size.width * 0.035,
+      highlight,
+    );
     canvas.drawLine(
-      Offset(size.width / 2, size.height * 0.82),
-      Offset(size.width / 2, size.height * 1.08),
+      Offset(size.width * 0.42, size.height * 0.90),
+      Offset(size.width * 0.42, size.height * 1.08),
+      accent..strokeWidth = size.width * 0.05,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.58, size.height * 0.90),
+      Offset(size.width * 0.58, size.height * 1.08),
       accent..strokeWidth = size.width * 0.08,
     );
   }

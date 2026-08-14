@@ -10,8 +10,8 @@ abstract class SignalReefSaveStore {
 
 class SharedPreferencesSignalReefSaveStore implements SignalReefSaveStore {
   static const _bestScoreKey = 'signal_reef.best_score';
+  static const _bestWaveReachedKey = 'signal_reef.best_wave_reached';
   static const _soundEnabledKey = 'signal_reef.sound_enabled';
-  static const _musicEnabledKey = 'signal_reef.music_enabled';
   static const _hapticsEnabledKey = 'signal_reef.haptics_enabled';
   static const _runsPlayedKey = 'signal_reef.runs_played';
 
@@ -22,8 +22,8 @@ class SharedPreferencesSignalReefSaveStore implements SignalReefSaveStore {
 
       return SignalReefSaveData(
         bestScore: preferences.getInt(_bestScoreKey) ?? 0,
+        bestWaveReached: preferences.getInt(_bestWaveReachedKey) ?? 0,
         soundEnabled: preferences.getBool(_soundEnabledKey) ?? true,
-        musicEnabled: preferences.getBool(_musicEnabledKey) ?? true,
         hapticsEnabled: preferences.getBool(_hapticsEnabledKey) ?? true,
         runsPlayed: preferences.getInt(_runsPlayedKey) ?? 0,
       );
@@ -38,8 +38,8 @@ class SharedPreferencesSignalReefSaveStore implements SignalReefSaveStore {
       final preferences = await SharedPreferences.getInstance();
 
       await preferences.setInt(_bestScoreKey, data.bestScore);
+      await preferences.setInt(_bestWaveReachedKey, data.bestWaveReached);
       await preferences.setBool(_soundEnabledKey, data.soundEnabled);
-      await preferences.setBool(_musicEnabledKey, data.musicEnabled);
       await preferences.setBool(_hapticsEnabledKey, data.hapticsEnabled);
       await preferences.setInt(_runsPlayedKey, data.runsPlayed);
     } on Object {

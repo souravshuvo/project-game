@@ -18,63 +18,76 @@ class SignalReefPlayPage extends StatefulWidget {
 
 class _SignalReefPlayPageState extends State<SignalReefPlayPage> {
   SignalReefGame? _game;
-  Widget? _gameWidget;
 
   @override
   void initState() {
     super.initState();
-    _attachGame();
+    _game = widget.controller.game;
   }
 
   @override
   void didUpdateWidget(covariant SignalReefPlayPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller.game != _game) {
-      _attachGame();
+      _game = widget.controller.game;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final game = _game;
-    final gameWidget = _gameWidget;
 
-    if (game == null || gameWidget == null) {
+    if (game == null) {
       return const Scaffold(body: SignalReefBackdrop(child: SizedBox()));
     }
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: (details) => game.movePlayerTo(details.localPosition),
-              onPanUpdate: (details) =>
-                  game.movePlayerTo(details.localPosition),
-              child: gameWidget,
+      resizeToAvoidBottomInset: false,
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SizedBox.expand(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onPanStart: (details) =>
+                          game.beginPlayerDrag(details.localPosition),
+                      onPanUpdate: (details) =>
+                          game.updatePlayerDrag(details.localPosition),
+                      onPanEnd: (_) => game.endPlayerDrag(),
+                      onPanCancel: game.endPlayerDrag,
+                      child: ClipRect(
+                        child: GameWidget<SignalReefGame>(
+                          key: ValueKey(game),
+                          game: game,
+                          loadingBuilder: (_) => const SizedBox.expand(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          SafeArea(
-            child: SignalReefHud(controller: widget.controller, game: game),
-          ),
-          if (game.runState == SignalReefRunState.ready)
-            const Center(child: _ReadyCard()),
-          if (widget.controller.isPaused)
-            SignalReefPauseOverlay(controller: widget.controller),
-        ],
+            SafeArea(
+              child: SignalReefHud(controller: widget.controller, game: game),
+            ),
+            IgnorePointer(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: game.runState == SignalReefRunState.ready
+                    ? const Center(key: ValueKey('ready'), child: _ReadyCard())
+                    : const SizedBox.shrink(key: ValueKey('playing')),
+              ),
+            ),
+            if (widget.controller.isPaused)
+              SignalReefPauseOverlay(controller: widget.controller),
+          ],
+        ),
       ),
     );
-  }
-
-  void _attachGame() {
-    _game = widget.controller.game;
-    final game = _game;
-    _gameWidget = game == null
-        ? null
-        : ClipRect(
-            child: GameWidget<SignalReefGame>(key: ValueKey(game), game: game),
-          );
   }
 }
 
@@ -84,11 +97,25 @@ class _ReadyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SignalReefPanel(
-      child: Text(
-        'Ready',
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Ready',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Drag anywhere to steer\nShots fire automatically',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: SignalReefColors.mutedInk,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

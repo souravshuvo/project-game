@@ -1,3 +1,7 @@
+param(
+    [switch] $StoreOnly
+)
+
 Add-Type -AssemblyName System.Drawing
 
 $ErrorActionPreference = "Stop"
@@ -16,7 +20,7 @@ function New-Pen($hex, $width) {
 }
 
 function Add-SignalReefIcon($path, $size) {
-    $bitmap = New-Object System.Drawing.Bitmap $size, $size
+    $bitmap = New-Object System.Drawing.Bitmap $size, $size, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#07131E"))
@@ -68,6 +72,14 @@ function Add-SignalReefIcon($path, $size) {
     $bitmap.Dispose()
 }
 
+$storeIconPath = Join-Path $Root "store_assets/icon/play-store-icon.png"
+Add-SignalReefIcon $storeIconPath 512
+
+if ($StoreOnly) {
+    Write-Host "Generated Signal Reef Play Store icon at $storeIconPath"
+    return
+}
+
 $androidIcons = @{
     "android/app/src/main/res/mipmap-mdpi/ic_launcher.png" = 48
     "android/app/src/main/res/mipmap-hdpi/ic_launcher.png" = 72
@@ -102,4 +114,4 @@ foreach ($entry in $iosIcons.GetEnumerator()) {
     Add-SignalReefIcon (Join-Path $Root $entry.Key) $entry.Value
 }
 
-Write-Host "Generated Signal Reef launcher icons."
+Write-Host "Generated Signal Reef launcher icons and Play Store icon."

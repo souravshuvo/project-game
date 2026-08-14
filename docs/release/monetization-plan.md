@@ -1,43 +1,79 @@
 # Signal Reef Monetization Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Do not add monetization SDKs in the current build.
+AdMob is implemented for production-safe testing, with test ads as the default.
 
-Reason: the first testing goal is to validate whether movement, shooting, waves, damage, and retry are fun. Monetization should not distort early tester feedback.
+Current placements:
 
-## Options
+- Home banner: non-gameplay screen only.
+- Result banner: after a run ends.
+- Result interstitial: natural result transition only, never during active gameplay.
 
-| Option | Pros | Risks | Decision |
-| --- | --- | --- | --- |
-| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Recommended for internal test |
-| Rewarded revive | Clear optional value after game over | Needs AdMob, consent/policy review, pacing design | Consider after gameplay feel pass |
-| Rewarded temporary booster | User-controlled and pre-run only | Can blur balance if added too early | Defer |
-| Interstitial after run | Natural transition point | Can hurt retention and reviews | Defer |
-| Paid app or IAP | Cleaner than forced ads | Higher setup and support burden | Defer |
+## Test And Production Separation
 
-## Recommended First Monetization Test
+Default behavior uses Google Mobile Ads sample IDs:
 
-If testers like the core loop, test one optional rewarded revive:
+- Android app ID fallback: configured through `admobApplicationId` in Gradle.
+- iOS app ID fallback: configured through `GAD_APPLICATION_IDENTIFIER` in xcconfig.
+- Runtime ad units default to Google test ad unit IDs.
 
-- Offer only after game over.
-- Max once per run.
-- Restore 1 hull and restart at the current wave.
-- Never show ads during active gameplay, countdown, pause, or immediate retry.
-- Add frequency caps before any live ad units.
+Production ads require explicit build configuration:
 
-## AdMob Gate
+- `SIGNAL_REEF_USE_PRODUCTION_ADS=true`
+- `SIGNAL_REEF_ANDROID_BANNER_AD_UNIT_ID`
+- `SIGNAL_REEF_ANDROID_INTERSTITIAL_AD_UNIT_ID`
+- `SIGNAL_REEF_IOS_BANNER_AD_UNIT_ID`
+- `SIGNAL_REEF_IOS_INTERSTITIAL_AD_UNIT_ID`
+- Android Gradle property `ADMOB_ANDROID_APP_ID`
+- iOS `GAD_APPLICATION_IDENTIFIER`
 
-Only add AdMob after:
+If production unit IDs are incomplete, runtime ad units fall back to test IDs.
 
-- Monetization choice is final for the next update.
-- AdMob account and app IDs exist.
-- Android and iOS app IDs are added to platform config.
-- Test ads are verified before any live ad unit is used.
-- Privacy policy, Data safety, and Ads declaration are updated.
-- Child-directed status is confirmed before serving ads.
+## Frequency Caps
+
+Interstitials:
+
+- Only considered on the result screen.
+- Never shown during active gameplay, ready state, pause menu, retry tap, or countdown.
+- Minimum 3 completed runs between interstitial attempts.
+- Minimum 2 minutes between shown interstitials.
+- Failure to load or show is non-blocking.
+
+Rewarded ads:
+
+- Not implemented in the current version.
+- Do not add rewarded revive until tester feedback confirms the core loop can support it.
+
+## Analytics
+
+Ad events are sent through the Signal Reef telemetry boundary:
+
+- `ad_sdk_initialized`
+- `ad_sdk_failed`
+- `ad_load_start`
+- `ad_loaded`
+- `ad_load_failed`
+- `ad_showed`
+- `ad_dismissed`
+- `ad_show_failed`
+- `ad_skipped`
+
+Each ad event includes placement and ad environment.
+
+## Release Requirements
+
+Before Play submission:
+
+- Verify test ads on a physical device.
+- Replace app IDs and ad unit IDs with real AdMob IDs.
+- Add or verify Google UMP consent handling before serving live ads in regions that require consent.
+- Confirm no live ads are used during development testing.
+- Update Play Console Ads declaration.
+- Update Data safety and privacy policy for Google Mobile Ads data collection.
+- Confirm target audience and child-directed status before serving ads.
 
 ## Official References
 

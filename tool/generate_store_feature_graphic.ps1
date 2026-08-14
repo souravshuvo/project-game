@@ -109,17 +109,17 @@ for ($y = -60; $y -lt 560; $y += 96) {
     $path.Dispose()
 }
 
-Add-SignalShip $graphics 690 306 1.18
-Add-DriftNode $graphics 814 132 35
-Add-DriftNode $graphics 900 218 28
-Add-PulseSeed $graphics 774 222 62 74
+Add-SignalShip $graphics 744 306 1.06
+Add-DriftNode $graphics 862 132 31
+Add-DriftNode $graphics 918 226 25
+Add-PulseSeed $graphics 824 226 58 70
 
-$graphics.DrawArc($pulsePen, 610, 118, 292, 230, 205, 118)
-$graphics.DrawLine($pulsePen, 604, 374, 942, 174)
-$graphics.DrawLine($enemyPulsePen, 774, 262, 774, 332)
+$graphics.DrawArc($pulsePen, 642, 116, 284, 220, 205, 116)
+$graphics.DrawLine($pulsePen, 626, 368, 928, 188)
+$graphics.DrawLine($enemyPulsePen, 824, 264, 824, 326)
 
 Add-Text $graphics "Signal Reef" "Segoe UI" 78 ([System.Drawing.FontStyle]::Bold) "#EAF7F4" 72 142
-Add-Text $graphics "Bounce signal shots through short wave runs" "Segoe UI" 32 ([System.Drawing.FontStyle]::Regular) "#B7FFF6" 78 244
+Add-Text $graphics "Bounce shots. Clear waves." "Segoe UI" 34 ([System.Drawing.FontStyle]::Regular) "#B7FFF6" 78 244
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 

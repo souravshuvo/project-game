@@ -1,6 +1,6 @@
 # Signal Reef Privacy And Data Safety Draft
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Current App Data Behavior
 
@@ -8,23 +8,15 @@ Current build status:
 
 - No account system
 - No login
-- No ads SDK
-- No analytics SDK
+- Google Mobile Ads SDK added for banners and capped result-screen interstitials
+- Firebase Analytics adapter added, but disabled unless Firebase dart-defines are configured
 - No crash-reporting SDK
 - No purchases
-- No backend API
+- No backend API owned by this app
 - No location, contacts, camera, microphone, SMS, call log, files, health, or nearby-device permissions
-- Local best score and settings are saved on-device with `shared_preferences`
-- No-op telemetry hooks exist in code, but no telemetry data is transmitted in the current build
+- Local best score, best wave reached, runs played, sound settings, and haptic settings are saved on-device with `shared_preferences`
 
-Because the current app does not transmit user data off the device, the initial Play Console Data safety draft should be:
-
-- Data collected: No
-- Data shared: No
-- Data encrypted in transit: Not applicable while no data leaves the device
-- Users can request data deletion: Not applicable while no account/server-side data exists
-
-This must be updated before release if ads, analytics, crash reporting, purchases, cloud save, login, or any SDK that collects identifiers is added.
+Because AdMob is now included, the Play Console Data safety draft must be reviewed for Google Mobile Ads data collection before release. Do not keep the previous "Data collected: No" answer without checking SDK behavior and the final production configuration.
 
 ## Privacy Policy Draft
 
@@ -37,20 +29,20 @@ Effective date: [Add date]
 
 Signal Reef is an arcade space shooter game by Childhood.
 
-Data collection
-Signal Reef does not currently collect, transmit, sell, or share personal data.
-
 Local game progress
-The app saves best score, runs played, sound settings, music settings, and haptic settings locally on your device. This information stays on your device and is not sent to us.
+The app saves best score, best wave reached, runs played, sound settings, and haptic settings locally on your device.
+
+Advertising
+Signal Reef uses Google Mobile Ads to show ads on non-gameplay screens. Ads are not shown during active gameplay. Google Mobile Ads may collect or use device identifiers, advertising data, diagnostics, and related information as described by Google.
+
+Analytics
+Signal Reef may use Firebase Analytics to understand gameplay balance, session length, ad performance, and retention. Analytics events do not include names, emails, precise location, contacts, photos, or free-text personal content.
 
 Children
 Signal Reef is not currently configured as a child-directed app. If this changes, this policy and the app's store declarations will be updated before release.
 
-Third-party services
-The current version does not include advertising, analytics, account login, payment, cloud-sync, or crash-reporting services.
-
 Changes
-If future versions add ads, analytics, purchases, cloud save, crash reporting, or online features, this policy will be updated to describe what data is collected and why.
+If future versions add purchases, cloud save, login, crash reporting, or online features, this policy will be updated to describe what data is collected and why.
 
 Contact
 For privacy questions, contact: [Add support email]
@@ -59,11 +51,12 @@ For privacy questions, contact: [Add support email]
 ## Play Console App Content Draft
 
 - Privacy policy URL: required before production listing.
-- Ads declaration: No, for the current build.
+- Ads declaration: Yes, if AdMob remains enabled in the release build.
 - App access: All features are accessible without login.
 - Content rating: Complete questionnaire in Play Console; likely arcade shooter/fantasy space combat with no graphic violence or user-generated content.
 - Target audience: Confirm before upload. Draft assumes general audience, not child-directed.
-- Data safety: Complete even if no data is collected.
+- Data safety: Update for Google Mobile Ads and Firebase Analytics if analytics is enabled.
+- Consent: Add or verify Google UMP consent handling before serving live ads in regions that require consent.
 
 ## Official References
 

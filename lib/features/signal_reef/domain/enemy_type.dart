@@ -17,8 +17,8 @@ extension SignalEnemyTypeRules on SignalEnemyType {
 
   double get baseSpeed {
     return switch (this) {
-      SignalEnemyType.driftNode => 74,
-      SignalEnemyType.pulseSeed => 52,
+      SignalEnemyType.driftNode => 92,
+      SignalEnemyType.pulseSeed => 68,
     };
   }
 }

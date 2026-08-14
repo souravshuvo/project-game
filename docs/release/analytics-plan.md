@@ -1,76 +1,67 @@
 # Signal Reef Privacy-Safe Analytics Plan
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Do not add analytics SDKs in the current build.
+Firebase Analytics support is implemented behind a configuration gate.
 
-Reason: Signal Reef is still validating control feel, shooting feedback, wave readability, and store-readiness. Adding analytics now would create Data safety/privacy work before the product needs it.
+Default behavior:
 
-## Current Implementation
+- No Firebase project values are bundled in source.
+- `FirebaseSignalReefTelemetry.create()` returns `NoOpSignalReefTelemetry` unless Firebase dart-defines are supplied.
+- Gameplay and ad events still use the local `SignalReefTelemetry` boundary.
 
-The app has a no-op telemetry boundary:
+Production analytics requires:
 
-- `lib/features/signal_reef/application/signal_reef_telemetry.dart`
-- Default adapter: `NoOpSignalReefTelemetry`
+- `SIGNAL_REEF_FIREBASE_ANALYTICS_ENABLED=true`
+- `SIGNAL_REEF_FIREBASE_API_KEY`
+- `SIGNAL_REEF_FIREBASE_APP_ID`
+- `SIGNAL_REEF_FIREBASE_MESSAGING_SENDER_ID`
+- `SIGNAL_REEF_FIREBASE_PROJECT_ID`
 
-This is only an internal code boundary. It does not transmit data, does not add Firebase, and does not change the current Data safety draft.
+## Implemented Events
 
-## If Analytics Is Added Later
+Gameplay and difficulty:
 
-Only add analytics after deciding:
-
-- Which product questions must be answered.
-- Which events are required.
-- Whether device identifiers or advertising IDs are collected.
-- Whether consent, opt-out, or regional handling is needed.
-- How the Play Console Data safety form and privacy policy must change.
-
-## Candidate Events
-
-Keep event names simple and avoid personal data:
-
+- `app_open`
 - `game_start`
 - `wave_start`
 - `wave_complete`
 - `player_damage`
 - `player_death`
 - `game_win`
+- `game_result`
 - `game_restart`
 - `pause_open`
 - `pause_resume`
 - `settings_changed`
 - `best_score_updated`
 
-Suggested event properties:
+Ad impact:
 
-- `wave_number`
-- `score`
-- `hull_remaining`
-- `source`
-- `setting`
+- `ad_sdk_initialized`
+- `ad_sdk_failed`
+- `ad_load_start`
+- `ad_loaded`
+- `ad_load_failed`
+- `ad_showed`
+- `ad_dismissed`
+- `ad_show_failed`
+- `ad_skipped`
 
-Do not collect names, emails, precise location, contacts, photos, free-text input, or unrelated device data.
+## Measurement Goals
 
-## MVP Metrics
+- Session/run length through `duration_seconds`.
+- Difficulty by wave through `wave_number`, `total_enemies`, `pulse_seeds`, `max_active_enemies`, `spawn_interval_ms`, `hull_remaining`, and death wave.
+- Retention proxies through `app_open`, `runs_played`, `best_score`, and `best_wave_reached`.
+- Ad impact through ad load/show/failure/skip events and retry behavior after result screens.
 
-- Run start rate
-- Wave 1 completion rate
-- Wave 2 completion rate
-- Wave 3 completion rate
-- Damage count per run
-- Death wave
-- Retry rate
-- Day 1 return rate, only if analytics can be implemented with a compliant privacy setup
+## Privacy Rules
 
-## Before Adding Any SDK
-
-- Update `docs/release/privacy-and-data-safety.md`.
-- Update the hosted privacy policy.
-- Update Play Console Data safety.
-- Re-check permissions and generated manifests.
-- Confirm SDK behavior from the vendor documentation.
+- Do not log names, emails, precise location, contacts, photos, free-text input, or unrelated device data.
+- Boolean values are converted to numeric flags before Firebase logging.
+- Update Play Console Data safety and the hosted privacy policy before enabling Firebase Analytics in production.
 
 ## Official References
 

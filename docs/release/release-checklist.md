@@ -1,6 +1,6 @@
 # Signal Reef Release Checklist
 
-Last updated: 2026-08-10
+Last updated: 2026-08-14
 
 ## Identity Lock
 
@@ -24,6 +24,8 @@ Last updated: 2026-08-10
 
 ## Store Assets
 
+- [x] Play Store listing package prepared in `docs/release/play-store-metadata.md`.
+- [x] Screenshot storyboard prepared for real Signal Reef screens.
 - [x] Signal Reef launcher icon generator updated.
 - [x] Android splash mark updated.
 - [x] Feature graphic generator updated for Signal Reef.
@@ -37,8 +39,9 @@ Last updated: 2026-08-10
 ## Play Console App Content
 
 - [ ] Privacy policy hosted at public URL.
-- [ ] Data safety form completed.
-- [ ] Ads declaration completed.
+- [ ] Data safety form completed for Google Mobile Ads and any enabled Firebase Analytics collection.
+- [ ] Ads declaration completed; current build includes AdMob placements.
+- [ ] Consent handling reviewed; add or verify Google UMP before serving live ads in regions that require consent.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
 - [ ] App access declaration completed; no login required.
@@ -46,11 +49,13 @@ Last updated: 2026-08-10
 
 ## Product Readiness
 
-- [x] First playable prototype exists: 3 waves, player, enemies, bullets, score, hull, pause/retry/result.
+- [x] Production v1 wave content exists: 20 waves, player, enemies, bullets, score, hull, pause/retry/result.
 - [ ] Complete feel pass: drag offset, hit flash, bounce spark, damage feedback.
 - [ ] Run internal test with 5-10 real players.
 - [ ] Fill `docs/release/post-test-learning-note.md`.
-- [ ] Decide whether analytics/crash reporting is needed after internal test.
+- [x] Production-safe AdMob and analytics boundaries implemented.
+- [ ] Configure real AdMob and Firebase IDs, then verify on device.
+- [ ] Decide whether crash reporting is needed after internal test.
 - [ ] Confirm support email and developer website.
 - [ ] Confirm app category and tags.
 

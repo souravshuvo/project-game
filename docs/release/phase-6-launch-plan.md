@@ -4,13 +4,13 @@ Last updated: 2026-08-10
 
 ## Goal
 
-Prepare Signal Reef for internal and closed testing without rushing SDKs, ads, or production release before the game has real tester evidence.
+Prepare Signal Reef for internal and closed testing with production-safe ads and analytics configured carefully before any Play release.
 
 ## Decisions
 
-- Keep the current build privacy-light: no network SDKs yet.
-- Do not add Crashlytics until the Firebase project is created and `flutterfire configure` can run with real app IDs.
-- Do not add AdMob until the monetization decision is final and real test ad flow is verified.
+- AdMob is implemented with test defaults and non-gameplay placements only.
+- Firebase Analytics is implemented behind dart-define configuration; no real Firebase IDs are stored in source.
+- Do not add Crashlytics until the Firebase project is created and a test crash can be verified.
 - Use internal testing first, then closed testing, then production.
 
 ## Readiness Table
@@ -20,10 +20,10 @@ Prepare Signal Reef for internal and closed testing without rushing SDKs, ads, o
 | App identity | Mostly prepared | Confirm package ID before first Play upload |
 | Release signing | Config prepared | Create private keystore and `android/key.properties` |
 | Store assets | Partially prepared | Regenerate icons/feature graphic; recapture real Signal Reef screenshots |
-| Privacy/Data safety | Drafted | Add support email and hosted privacy policy URL |
-| Analytics | Deferred | Keep no-op telemetry until needed |
+| Privacy/Data safety | Needs update | Include AdMob and any enabled Firebase Analytics collection |
+| Analytics | Gated | Supply Firebase dart-defines and verify DebugView |
 | Crash monitoring | Planned | Add Crashlytics after Firebase setup |
-| Monetization | Deferred | Keep ad-free during first internal test |
+| Monetization | Implemented safely | Verify test ads, caps, and non-gameplay placements |
 | Internal testing | Pending | Upload signed `.aab` to Play internal testing |
 | Closed testing | Pending | Recruit testers and collect structured feedback |
 | Production release | Pending | Only after stability, retention, and policy checks |
@@ -45,10 +45,11 @@ Prepare Signal Reef for internal and closed testing without rushing SDKs, ads, o
 4. Install/test locally or through Play internal testing.
 5. Capture real gameplay screenshots.
 6. Complete Play App content declarations.
-7. Run internal testing.
-8. Review feedback and crash/performance notes.
-9. Run closed testing.
-10. Decide production release or next update.
+7. Verify AdMob test ads and Firebase Analytics DebugView, if analytics is enabled.
+8. Run internal testing.
+9. Review feedback and crash/performance notes.
+10. Run closed testing.
+11. Decide production release or next update.
 
 ## Official References
 
