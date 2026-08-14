@@ -1,6 +1,5 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.gradle.api.GradleException
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -19,6 +18,17 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val hasReleaseKeystore = keystorePropertiesFile.exists()
 if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+val releaseKeystoreConfigured =
+    hasReleaseKeystore &&
+        listOf("keyAlias", "keyPassword", "storeFile", "storePassword").all { key ->
+            !keystoreProperties.getProperty(key).isNullOrBlank()
+        }
+
+check(!hasReleaseKeystore || releaseKeystoreConfigured) {
+    "android/key.properties exists but is missing one or more required values: " +
+        "keyAlias, keyPassword, storeFile, storePassword."
 }
 
 val adMobAndroidAppId = providers.gradleProperty("ADMOB_ANDROID_APP_ID")
@@ -48,7 +58,7 @@ android {
 
     signingConfigs {
         create("release") {
-            if (hasReleaseKeystore) {
+            if (releaseKeystoreConfigured) {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
                 storeFile = file(keystoreProperties["storeFile"] as String)
@@ -59,7 +69,7 @@ android {
 
     buildTypes {
         release {
-            if (hasReleaseKeystore) {
+            if (releaseKeystoreConfigured) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
@@ -73,18 +83,5 @@ flutter {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
-    }
-}
-
-tasks.matching {
-    it.name.contains("Release", ignoreCase = true)
-}.configureEach {
-    doFirst {
-        if (!hasReleaseKeystore) {
-            throw GradleException(
-                "Missing android/key.properties. Copy android/key.properties.example " +
-                    "to android/key.properties and fill it with upload-keystore values."
-            )
-        }
     }
 }

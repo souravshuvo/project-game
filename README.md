@@ -27,8 +27,10 @@ Production v1 candidate for offline Dots and Boxes matches.
 Focused tests live in `test/dots_and_boxes_game_test.dart`.
 
 Release signing uses `android/key.properties`, which is intentionally ignored by
-git. Copy `android/key.properties.example` to `android/key.properties` and fill
-it with upload-keystore values before creating a release build.
+git. Without that file, Gradle may create an unsigned local release APK for
+smoke testing, but it is not Play-ready. For a signed release artifact, copy
+`android/key.properties.example` to `android/key.properties`, fill it with real
+upload-keystore values, and keep the keystore and passwords out of git.
 
 ## AdMob and Analytics
 
