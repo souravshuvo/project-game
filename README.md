@@ -4,7 +4,7 @@ An original Flutter water sort puzzle game where players pour rain, sun, and mis
 
 ## Getting Started
 
-Production v1 is focused on offline handcrafted levels, undo, restart, local progress, and no ads or online accounts.
+Production v1 is focused on offline handcrafted levels, undo, restart, local progress, production-safe level-end ads, analytics, and no online accounts.
 
 A few resources to get you started if this is your first Flutter project:
 

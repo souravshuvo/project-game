@@ -1,40 +1,46 @@
 # Monetization Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Do not add monetization SDKs in the current build.
+Use production-safe AdMob plumbing with non-personalized level-end interstitials only. Ads must never appear during active puzzle play, must fail open, and must be disabled unless app/ad unit IDs are valid for the selected build environment.
 
-Reason: the first testing goal is to validate whether the puzzle loop is fun, readable, and replayable. Monetization should not distort early tester feedback.
+Configured Android production IDs:
+
+- App ID: `ca-app-pub-1358699173061266~8502526686`
+- Level-end interstitial: `ca-app-pub-1358699173061266/1193410127`
+
+The app-open, banner, native, rewarded, and rewarded-interstitial units exist in AdMob but are deliberately not requested by this version. They need a separately approved placement and UX design first.
 
 ## Options
 
 | Option | Pros | Risks | Phase 6 Decision |
 | --- | --- | --- | --- |
-| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Recommended for first internal test |
-| Rewarded ads for extra hints | Natural fit with current hint system | Needs AdMob, consent/policy review, pacing design | Consider after first tester feedback |
-| Interstitial ads between levels | Easy revenue path | Can hurt retention and reviews in puzzle games | Defer |
+| No ads in v1 | Best user trust and simplest privacy story | No revenue test | Still available with `WEATHER_SORT_ADS_ENABLED=false` |
+| Rewarded ads for extra hints | Natural fit after a real hint system exists | Needs hint design and balance | Defer |
+| Interstitial ads between levels | Easy revenue path | Can hurt retention and reviews in puzzle games | Implement only at capped level-end transitions |
 | Paid app | Simple product experience | Higher friction for unknown new game | Defer |
 | In-app purchase hint packs | Cleaner than forced ads | Needs billing setup, product economy, refund support | Defer |
 
 ## Recommended First Monetization Test
 
-If testers like the core loop, test rewarded hints first in a later update:
+The first monetization test is capped level-end interstitials:
 
-- Keep undo free.
-- Offer one optional rewarded hint only after a real hint system exists.
-- Never show ads after every tap or during active puzzle solving.
-- Cap ad prompts so the game still feels calm.
+- Placement: after level complete, before entering the next level.
+- Frequency cap: first opportunity after 3 completed transitions, then at least 3 completed transitions and 3 minutes between ads.
+- Session cap: maximum 4 interstitials per session.
+- Request type: non-personalized ads.
+- Failure behavior: skip the ad and continue gameplay.
 
 ## AdMob Gate
 
-Only add AdMob after:
+Production upload still requires:
 
-- Monetization choice is final for the next update.
-- AdMob account and app IDs exist.
-- Android and iOS app IDs are added to platform config.
-- Test ads are verified before any live ad unit is used.
+- Android production app ID and level-end interstitial ID are configured.
+- A production build must explicitly use `--dart-define=WEATHER_SORT_ADS_ENV=production`; all other builds use official test ad units.
+- iOS `GAD_APPLICATION_IDENTIFIER` changed from the sample ID to the real iOS AdMob app ID.
+- Test ads verified before any live ad unit is used.
 - Privacy policy, Data safety, and Ads declaration are updated.
 - Child-directed status is confirmed before serving ads.
 

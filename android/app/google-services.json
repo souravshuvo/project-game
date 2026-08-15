@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "96319682520",
+    "project_id": "weather-lab-sort-dfbb7",
+    "storage_bucket": "weather-lab-sort-dfbb7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96319682520:android:a7f5d624c232d937e7a4ad",
+        "android_client_info": {
+          "package_name": "com.childhood.weatherlabsort"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFZNLenmQ7vSyfar9-c-rGYhmuqslSWvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

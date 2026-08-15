@@ -1,7 +1,9 @@
 enum WeatherEssence {
   rain('R', 'Rain'),
   sun('S', 'Sun'),
-  mist('M', 'Mist');
+  mist('M', 'Mist'),
+  cloud('C', 'Cloud'),
+  frost('F', 'Frost');
 
   const WeatherEssence(this.symbol, this.label);
 

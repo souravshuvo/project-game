@@ -51,7 +51,7 @@ class WaterSettingsPage extends StatelessWidget {
                   color: WeatherSortColors.wash,
                   borderColor: const Color(0xFFC9DAE8),
                   child: Text(
-                    'Weather Lab Sort saves progress only on this device. No ads, accounts, or analytics are active in this build.',
+                    'Progress stays on this device. Sound and haptic feedback can be changed at any time.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: WeatherSortColors.mutedInk,
                       fontWeight: FontWeight.w600,

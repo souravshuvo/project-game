@@ -1,6 +1,6 @@
 # Release Checklist
 
-Last updated: 2026-08-10
+Last updated: 2026-08-15
 
 ## Identity Lock
 
@@ -9,7 +9,7 @@ Last updated: 2026-08-10
 - [x] iOS bundle ID: `com.childhood.weatherlabsort`
 - [x] Android launcher label: `Weather Lab Sort`
 - [x] iOS display name: `Weather Lab Sort`
-- [ ] Confirm `com.childhood.weatherlabsort` is final before first Play Console upload. Package names cannot be reused for a different app after publishing.
+- [x] Confirm `com.childhood.weatherlabsort` is final before first Play Console upload. Package names cannot be reused for a different app after publishing.
 
 ## Build Readiness
 
@@ -25,7 +25,7 @@ Last updated: 2026-08-10
 ## Gameplay Readiness
 
 - [x] One offline water-sort mode.
-- [x] 10 handcrafted v1 levels.
+- [x] 50 handcrafted v1 levels.
 - [x] Local progress, unlocks, best moves, and best stars.
 - [x] Undo and restart.
 - [x] Level validation logic and focused test coverage.
@@ -35,19 +35,23 @@ Last updated: 2026-08-10
 
 ## Store Assets
 
-- [ ] Regenerate Weather Lab Sort launcher icons.
-- [ ] Capture final phone screenshots from real Weather Lab Sort gameplay.
-- [ ] Create feature graphic: 1024 x 500 PNG/JPEG, no alpha.
-- [ ] Review screenshots for status bar cleanliness, no debug banners, no misleading text.
-- [ ] Add alt text for uploaded screenshots.
+- [x] Regenerate Play 512 x 512 icon and iOS AppIcon PNGs for Weather Lab Sort.
+- [x] Add Android Weather Lab runtime icon assets.
+- [x] Create final phone screenshot upload candidates from real Weather Lab Sort UI.
+- [x] Create feature graphic: 1024 x 500 PNG/JPEG, no alpha.
+- [x] Create preview video production package.
+- [ ] Capture real gameplay preview video and add approved YouTube URL.
+- [ ] Final QA feature graphic in Play Console safe areas.
+- [x] Review screenshot package for readable text/icons, no debug banners, no misleading text, and no old Arrow Puzzle UI.
+- [x] Add alt text for screenshot package.
 
-Existing `store_assets/` files may be stale from the earlier Arrow Puzzle prototype and must not be uploaded until regenerated from the current app.
+Final screenshot upload candidates are in `store_assets/screenshots/weather_lab_sort_phone/final_png/`. Do not upload the old `store_assets/screenshots/phone/` files or raw `source_png/` files. The widget capture helper writes source images with `SCREENSHOT_EXIT_AFTER_CAPTURE=true`, but Flutter reports `did not complete` because the process exits after capture; use `store_assets/screenshots/weather_lab_sort_phone/README.md` for exact commands and caveats.
 
 ## Play Console App Content
 
 - [ ] Privacy policy hosted at public URL.
 - [ ] Data safety form completed.
-- [ ] Ads declaration completed as "No" for the current build.
+- [ ] Ads declaration completed as "Yes" for AdMob-enabled builds.
 - [ ] Target audience selected.
 - [ ] Content rating questionnaire completed.
 - [ ] App access declaration completed; no login required.
@@ -55,9 +59,11 @@ Existing `store_assets/` files may be stale from the earlier Arrow Puzzle protot
 
 ## Product Readiness
 
-- [ ] Confirm first 10 levels are enough for internal testing.
-- [x] Add no-op telemetry boundary for future analytics.
-- [x] Keep ads and analytics SDKs out of v1.
+- [ ] Confirm the 50-level v1 pack is fair and readable in internal testing.
+- [x] Add Firebase Analytics adapter with no-op fallback.
+- [x] Add AdMob level-end interstitial path with test/prod separation.
+- [ ] Add real Firebase config files and verify events in DebugView.
+- [ ] Replace test AdMob app/ad unit IDs before production upload.
 - [ ] Confirm support email and developer website.
 - [ ] Confirm app category and tags.
 

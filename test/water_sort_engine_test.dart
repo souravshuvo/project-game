@@ -158,10 +158,52 @@ void main() {
   test('v1 level ids are unique and sequential', () {
     final ids = localWaterLevelPack.map((level) => level.id).toList();
 
+    expect(localWaterLevelPack, hasLength(50));
     expect(ids.toSet().length, localWaterLevelPack.length);
     expect(
       ids,
       List.generate(localWaterLevelPack.length, (index) => index + 1),
     );
   });
+
+  test('v1 weather essences are introduced gradually', () {
+    final openingPack = localWaterLevelPack.take(10);
+    final cloudPack = localWaterLevelPack.skip(10).take(10);
+    final frostPack = localWaterLevelPack.skip(20).take(10);
+    final pressurePack = localWaterLevelPack.skip(30).take(10);
+    final masteryPack = localWaterLevelPack.skip(40).take(10);
+
+    expect(
+      openingPack.any((level) => _usesSymbol(level.tubeSymbols, 'C')),
+      isFalse,
+    );
+    expect(
+      openingPack.any((level) => _usesSymbol(level.tubeSymbols, 'F')),
+      isFalse,
+    );
+    expect(
+      cloudPack.any((level) => _usesSymbol(level.tubeSymbols, 'C')),
+      isTrue,
+    );
+    expect(
+      cloudPack.any((level) => _usesSymbol(level.tubeSymbols, 'F')),
+      isFalse,
+    );
+    expect(
+      frostPack.any((level) => _usesSymbol(level.tubeSymbols, 'F')),
+      isTrue,
+    );
+    expect(
+      pressurePack.every((level) => _usesSymbol(level.tubeSymbols, 'F')),
+      isTrue,
+    );
+    expect(
+      masteryPack.every((level) => _usesSymbol(level.tubeSymbols, 'F')),
+      isTrue,
+    );
+  });
+}
+
+bool _usesSymbol(List<String> tubeSymbols, String symbol) {
+  return tubeSymbols.any((tube) => tube.contains(symbol));
 }

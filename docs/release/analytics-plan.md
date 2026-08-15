@@ -1,45 +1,59 @@
 # Privacy-Safe Analytics Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Do not add analytics SDKs in the current build.
-
-Reason: Weather Lab Sort is still validating core gameplay, levels, presentation, and store-readiness. Adding analytics now would create Data safety/privacy work before the product needs it.
+Use Firebase Analytics for production builds once real Firebase app config is added. The adapter is safe to ship in test builds because it disables itself if Firebase initialization fails.
 
 ## Current Implementation
 
-The app has a no-op telemetry boundary:
+The app has a telemetry boundary and Firebase adapter:
 
 - `lib/features/weather_sort/application/game_telemetry.dart`
-- Default adapter: `NoOpGameTelemetry`
+- `lib/features/weather_sort/application/firebase_game_telemetry.dart`
+- Default runtime adapter: `FirebaseGameTelemetry`
+- Test/fallback adapter: `NoOpGameTelemetry`
 
-This is only an internal code boundary. It does not transmit data, does not add Firebase, and does not change the current Data safety draft.
+`FirebaseGameTelemetry` buffers early events, maps reserved names such as `app_open` and `screen_view` to safe custom event names, and disables itself if Firebase is not configured. Set `WEATHER_SORT_ANALYTICS_ENABLED=false` to disable analytics at build time.
 
-## If Analytics Is Added Later
+## Before Production Upload
 
-Only add analytics after deciding:
+Complete these items before production upload:
 
-- Which product questions must be answered.
-- Which events are required.
-- Whether device identifiers or advertising IDs are collected.
-- Whether consent, opt-out, or regional handling is needed.
-- How the Play Console Data safety form and privacy policy must change.
+- Add real Firebase config files using the approved package `com.childhood.weatherlabsort`.
+- Run `flutterfire configure` when dependency/network commands are approved.
+- Verify events in Firebase DebugView.
+- Update hosted privacy policy and Play Console Data safety.
+- Confirm regional consent/opt-out handling for analytics and ads.
 
-## Candidate Events
+## Events
 
 Keep event names simple and avoid personal data:
 
 - `app_open`
+- `screen_view`
 - `level_start`
+- `level_exit`
 - `level_complete`
 - `level_restart`
 - `pour_valid`
 - `pour_invalid`
 - `undo_used`
-- `settings_sound_toggle`
-- `settings_haptics_toggle`
+- `settings_changed`
+- `ad_init_complete`
+- `ad_init_skipped`
+- `ad_init_failed`
+- `ad_load_start`
+- `ad_load_complete`
+- `ad_load_failed`
+- `ad_opportunity`
+- `ad_frequency_capped`
+- `ad_skipped`
+- `ad_show`
+- `ad_dismissed`
+- `ad_show_failed`
+- `ad_show_timeout`
 
 Suggested event properties:
 
@@ -49,6 +63,9 @@ Suggested event properties:
 - `stars`
 - `invalid_reason`
 - `layers_moved`
+- `placement`
+- `format`
+- `reason`
 
 Do not collect names, emails, precise location, contacts, photos, free-text input, or unrelated device data.
 
@@ -60,15 +77,10 @@ Do not collect names, emails, precise location, contacts, photos, free-text inpu
 - Average moves per level
 - Invalid move rate
 - Undo use rate
-- Day 1 return rate, only if analytics can be implemented with a compliant privacy setup
-
-## Before Adding Any SDK
-
-- Update `docs/release/privacy-and-data-safety.md`.
-- Update the hosted privacy policy.
-- Update Play Console Data safety.
-- Re-check permissions and generated manifests.
-- Confirm SDK behavior from the vendor documentation.
+- Day 1 return rate
+- Ad opportunity-to-show rate
+- Ad load failure rate
+- Completion rate before and after interstitial exposure
 
 ## Official References
 

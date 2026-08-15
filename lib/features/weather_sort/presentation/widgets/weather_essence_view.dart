@@ -10,6 +10,8 @@ extension WeatherEssenceView on WeatherEssence {
       WeatherEssence.rain => WeatherSortColors.rain,
       WeatherEssence.sun => WeatherSortColors.sun,
       WeatherEssence.mist => WeatherSortColors.mist,
+      WeatherEssence.cloud => WeatherSortColors.cloud,
+      WeatherEssence.frost => WeatherSortColors.frost,
     };
   }
 
@@ -18,6 +20,8 @@ extension WeatherEssenceView on WeatherEssence {
       WeatherEssence.rain => Colors.white,
       WeatherEssence.sun => const Color(0xFF4B3C12),
       WeatherEssence.mist => const Color(0xFF284540),
+      WeatherEssence.cloud => Colors.white,
+      WeatherEssence.frost => const Color(0xFF17434B),
     };
   }
 
@@ -26,6 +30,8 @@ extension WeatherEssenceView on WeatherEssence {
       WeatherEssence.rain => Icons.water_drop_rounded,
       WeatherEssence.sun => Icons.wb_sunny_rounded,
       WeatherEssence.mist => Icons.air_rounded,
+      WeatherEssence.cloud => Icons.cloud_rounded,
+      WeatherEssence.frost => Icons.ac_unit_rounded,
     };
   }
 

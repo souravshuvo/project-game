@@ -1,16 +1,16 @@
 # Firebase And Crash Monitoring Plan
 
-Last updated: 2026-08-02
+Last updated: 2026-08-14
 
 ## Current Decision
 
-Firebase is not installed in the current build.
+Firebase Analytics is wired behind the game telemetry boundary, but production release still requires real Firebase app configuration.
 
-Reason: the game has no real Firebase project/config yet, and adding Firebase placeholders would create misleading privacy, build, and policy work.
+Crashlytics is still deferred. Reason: crash monitoring needs a real Firebase project, release crash handlers, a verified test crash, and updated privacy/Data safety disclosures.
 
 ## What Is Implemented Now
 
-The app now has a no-op `GameTelemetry` boundary in code.
+The app has a `GameTelemetry` boundary in code and a `FirebaseGameTelemetry` adapter. The adapter buffers early events, initializes Firebase if real config is present, and disables itself if Firebase initialization fails.
 
 Tracked internal event names:
 
@@ -18,19 +18,35 @@ Tracked internal event names:
 - `screen_view`
 - `level_start`
 - `level_complete`
-- `level_retry`
-- `hint_claim`
-- `hint_use`
-- `settings_sound_toggle`
-- `settings_haptics_toggle`
+- `level_exit`
+- `level_restart`
+- `pour_valid`
+- `pour_invalid`
+- `undo_used`
+- `settings_changed`
+- `ad_init_complete`
+- `ad_init_skipped`
+- `ad_init_failed`
+- `ad_load_start`
+- `ad_load_complete`
+- `ad_load_failed`
+- `ad_opportunity`
+- `ad_frequency_capped`
+- `ad_skipped`
+- `ad_show`
+- `ad_dismissed`
+- `ad_show_failed`
+- `ad_show_timeout`
 
-Current adapter: `NoOpGameTelemetry`
+Current runtime adapter: `FirebaseGameTelemetry`
 
-This means no event data is sent anywhere in the current build.
+Fallback/test adapter: `NoOpGameTelemetry`
 
-## Firebase Analytics Gate
+Analytics can be disabled at build time with `WEATHER_SORT_ANALYTICS_ENABLED=false`.
 
-Only add Firebase Analytics after these are ready:
+## Firebase Analytics Production Gate
+
+Do not treat Analytics as production-ready until these are done:
 
 - Firebase project created.
 - Android app registered with package `com.childhood.weatherlabsort`.
@@ -51,10 +67,13 @@ Only add Crashlytics after these are ready:
 
 ## Implementation Notes For Later
 
-Expected packages:
+Implemented packages:
 
 - `firebase_core`
 - `firebase_analytics`
+
+Expected package when Crashlytics is approved:
+
 - `firebase_crashlytics`
 
 Expected setup command:
@@ -63,11 +82,11 @@ Expected setup command:
 flutterfire configure
 ```
 
-Expected adapter file:
+Implemented adapter file:
 
 - `lib/features/weather_sort/application/firebase_game_telemetry.dart`
 
-The adapter should translate `GameTelemetryEvent` to Firebase Analytics events and keep the event/property names already defined in `game_telemetry.dart`.
+The adapter translates `GameTelemetryEvent` to Firebase Analytics events and keeps event/property names aligned with `game_telemetry.dart`.
 
 ## Do Not Collect
 
@@ -77,7 +96,7 @@ The adapter should translate `GameTelemetryEvent` to Firebase Analytics events a
 - Contacts
 - Photos
 - Free-text input
-- Advertising ID unless monetization explicitly requires it and policy docs are updated
+- Advertising ID beyond what the configured Google/Firebase SDK behavior requires and what policy docs disclose
 
 ## Official References
 

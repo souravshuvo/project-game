@@ -13,6 +13,8 @@ class WeatherSortColors {
   static const rain = Color(0xFF2F80B9);
   static const sun = Color(0xFFF6C65B);
   static const mist = Color(0xFF88B4AE);
+  static const cloud = Color(0xFF7B6FB3);
+  static const frost = Color(0xFF9FDDE7);
   static const mint = Color(0xFF35A878);
   static const coral = Color(0xFFE56F55);
   static const line = Color(0xFFD8E3EC);
@@ -58,7 +60,11 @@ class WeatherSortTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -67,7 +73,11 @@ class WeatherSortTheme {
           minimumSize: const Size.fromHeight(52),
           side: const BorderSide(color: WeatherSortColors.primary, width: 1.2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(

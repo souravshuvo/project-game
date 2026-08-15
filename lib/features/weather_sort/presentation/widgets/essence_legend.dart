@@ -5,7 +5,9 @@ import '../theme/weather_sort_theme.dart';
 import 'weather_essence_view.dart';
 
 class EssenceLegend extends StatelessWidget {
-  const EssenceLegend({super.key});
+  const EssenceLegend({super.key, required this.essences});
+
+  final List<WeatherEssence> essences;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +16,7 @@ class EssenceLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (final essence in WeatherEssence.values)
+        for (final essence in essences)
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
