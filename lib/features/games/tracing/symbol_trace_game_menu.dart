@@ -36,7 +36,10 @@ class SymbolTraceGameMenu extends StatefulWidget {
     required this.audioCue,
     required this.progressRepository,
     required this.analytics,
+    required this.difficultyTier,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
     super.key,
   });
 
@@ -48,7 +51,10 @@ class SymbolTraceGameMenu extends StatefulWidget {
   final LetterAudioCue audioCue;
   final ProgressRepository progressRepository;
   final GameAnalytics analytics;
+  final String difficultyTier;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   @override
   State<SymbolTraceGameMenu> createState() => _SymbolTraceGameMenuState();
@@ -56,6 +62,7 @@ class SymbolTraceGameMenu extends StatefulWidget {
 
 class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
   late Set<String> _completedEntryIds;
+  final Map<String, DateTime> _contentStartedAt = <String, DateTime>{};
   bool _completionReported = false;
 
   @override
@@ -81,15 +88,19 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
   }
 
   Future<void> _openEntry(TraceGameEntry entry) async {
+    unawaited(widget.audioCue.playTap().catchError((Object _) {}));
     final entryIndex = _entryIndex(entry.id);
+    final nextEntry = _nextEntryAfterCompleting(entry.id);
+    _contentStartedAt[entry.id] = DateTime.now();
     widget.analytics.contentStarted(
       gameId: widget.gameId,
       contentId: entry.id,
       contentIndex: entryIndex,
       contentTotal: widget.entries.length,
+      difficultyTier: widget.difficultyTier,
     );
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+    final result = await Navigator.of(context).push<_TraceRouteAction>(
+      MaterialPageRoute<_TraceRouteAction>(
         settings: RouteSettings(name: '/games/trace/${entry.id}'),
         builder: (context) => SymbolTraceScreen(
           definition: entry.definition,
@@ -97,6 +108,12 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
           audioCue: widget.audioCue,
           accentColor: entry.accentColor,
           secondaryColor: entry.secondaryColor,
+          nextSymbolLabel: nextEntry?.label ?? widget.nextGameTitle,
+          onPlayNext: nextEntry != null
+              ? () => Navigator.of(context).pop(_TraceRouteAction.playNext)
+              : widget.onPlayNextGame == null
+              ? null
+              : () => Navigator.of(context).pop(_TraceRouteAction.playNextGame),
           onCompleted: () => _markEntryComplete(entry.id),
         ),
       ),
@@ -105,17 +122,30 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
     if (mounted) {
       setState(() {});
     }
+
+    if (mounted && result == _TraceRouteAction.playNext && nextEntry != null) {
+      await _openEntry(nextEntry);
+    }
+
+    if (mounted && result == _TraceRouteAction.playNextGame) {
+      widget.onPlayNextGame?.call();
+    }
   }
 
   void _markEntryComplete(String id) {
     if (!_completedEntryIds.add(id)) {
       return;
     }
+    final startedAt = _contentStartedAt.remove(id);
     widget.analytics.contentCompleted(
       gameId: widget.gameId,
       contentId: id,
       contentIndex: _entryIndex(id),
       contentTotal: widget.entries.length,
+      difficultyTier: widget.difficultyTier,
+      durationMs: startedAt == null
+          ? null
+          : DateTime.now().difference(startedAt).inMilliseconds,
     );
     unawaited(
       widget.progressRepository
@@ -158,6 +188,7 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
     final completed = _completedEntryIds.length;
     final total = widget.entries.length;
     final progress = total == 0 ? 0.0 : completed / total;
+    final nextEntry = _nextEntry();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF4),
@@ -247,6 +278,16 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: _TraceMissionPanel(
+                  entry: nextEntry,
+                  symbolKind: widget.symbolKind,
+                  completed: completed,
+                  total: total,
+                  onPressed: () => _openEntry(nextEntry),
+                ),
+              ),
               Expanded(
                 child: GridView.builder(
                   key: const ValueKey('trace-entry-grid'),
@@ -272,6 +313,124 @@ class _SymbolTraceGameMenuState extends State<SymbolTraceGameMenu> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  TraceGameEntry _nextEntry() {
+    return widget.entries.firstWhere(
+      (entry) => !_completedEntryIds.contains(entry.id),
+      orElse: () => widget.entries.first,
+    );
+  }
+
+  TraceGameEntry? _nextEntryAfterCompleting(String completedId) {
+    final completedAfterThis = <String>{..._completedEntryIds, completedId};
+    for (final entry in widget.entries) {
+      if (!completedAfterThis.contains(entry.id)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+}
+
+enum _TraceRouteAction { playNext, playNextGame }
+
+class _TraceMissionPanel extends StatelessWidget {
+  const _TraceMissionPanel({
+    required this.entry,
+    required this.symbolKind,
+    required this.completed,
+    required this.total,
+    required this.onPressed,
+  });
+
+  final TraceGameEntry entry;
+  final String symbolKind;
+  final int completed;
+  final int total;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final allDone = total > 0 && completed >= total;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: entry.accentColor.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [entry.accentColor, entry.secondaryColor],
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: SizedBox.square(
+              dimension: 58,
+              child: Center(
+                child: Text(
+                  entry.label,
+                  textScaler: TextScaler.noScaling,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  allDone ? 'Replay challenge' : 'Trace next',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF392C68),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  allDone
+                      ? 'Practice your favorite $symbolKind again.'
+                      : '$completed/$total complete. Start at ${entry.label}.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF746A87),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox.square(
+            dimension: 58,
+            child: IconButton.filled(
+              tooltip: allDone ? 'Replay trace' : 'Trace next',
+              onPressed: onPressed,
+              style: IconButton.styleFrom(
+                backgroundColor: entry.accentColor,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.play_arrow_rounded, size: 30),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -367,11 +526,11 @@ class _TraceEntryCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Align(
+                  Align(
                     alignment: Alignment.bottomLeft,
                     child: Text(
-                      'Trace path',
-                      style: TextStyle(
+                      completed ? 'Replay path' : 'Trace path',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,

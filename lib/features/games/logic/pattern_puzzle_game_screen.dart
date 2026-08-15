@@ -10,10 +10,14 @@ class PatternPuzzleGameScreen extends StatefulWidget {
     required this.audioCue,
     super.key,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _PatternPuzzleGameScreenState.contentCount;
 
@@ -134,6 +138,8 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
 
   int _roundIndex = 0;
   String? _selectedOption;
+  int _streak = 0;
+  int _mistakes = 0;
   bool _roundSolved = false;
   bool _completionSent = false;
 
@@ -151,6 +157,12 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
     setState(() {
       _selectedOption = option;
       _roundSolved = solved;
+      if (solved) {
+        _streak += 1;
+      } else {
+        _streak = 0;
+        _mistakes += 1;
+      }
     });
 
     if (solved) {
@@ -174,6 +186,8 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
       setState(() {
         _roundIndex = 0;
         _selectedOption = null;
+        _streak = 0;
+        _mistakes = 0;
         _roundSolved = false;
         _completionSent = false;
       });
@@ -192,6 +206,8 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
     setState(() {
       _roundIndex = 0;
       _selectedOption = null;
+      _streak = 0;
+      _mistakes = 0;
       _roundSolved = false;
       _completionSent = false;
     });
@@ -208,6 +224,8 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      statusLabel: 'Streak $_streak',
+      statusIcon: Icons.local_fire_department_rounded,
       onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -305,7 +323,7 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
           LogicFeedbackBanner(
             message: _roundSolved
                 ? _isLastRound
-                      ? 'Pattern champion! You solved them all!'
+                      ? 'Pattern champion! ${_starsForMistakes(_mistakes)} star run!'
                       : 'Yes! The pattern keeps going.'
                 : madeWrongChoice
                 ? 'Almost! Say the pattern slowly and try again.'
@@ -316,20 +334,38 @@ class _PatternPuzzleGameScreenState extends State<PatternPuzzleGameScreen> {
                 ? LogicFeedbackTone.encouragement
                 : LogicFeedbackTone.neutral,
           ),
+          if (_roundSolved && _isLastRound) ...[
+            const SizedBox(height: 12),
+            LogicRunSummary(
+              stars: _starsForMistakes(_mistakes),
+              title: 'Pattern path complete',
+              subtitle: _mistakes == 0
+                  ? 'Perfect pattern run.'
+                  : 'Replay to chase a cleaner pattern streak.',
+              color: accent,
+            ),
+          ],
           if (_roundSolved) ...[
             const SizedBox(height: 16),
-            LogicRoundButton(
-              label: _isLastRound ? 'Play patterns again' : 'Next pattern',
+            LogicCompletionActions(
+              isLastRound: _isLastRound,
+              nextRoundLabel: 'Next pattern',
+              replayLabel: 'Play patterns again',
               color: accent,
-              icon: _isLastRound
-                  ? Icons.replay_rounded
-                  : Icons.arrow_forward_rounded,
-              onPressed: _continue,
+              onContinue: _continue,
+              onPlayNextGame: widget.onPlayNextGame,
+              nextGameTitle: widget.nextGameTitle,
             ),
           ],
         ],
       ),
     );
+  }
+
+  int _starsForMistakes(int mistakes) {
+    if (mistakes == 0) return 3;
+    if (mistakes <= 2) return 2;
+    return 1;
   }
 }
 

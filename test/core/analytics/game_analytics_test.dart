@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rapid_jump/core/analytics/game_analytics.dart';
+import 'package:kidsland/core/analytics/game_analytics.dart';
 
 void main() {
   test('analytics names and parameters stay Firebase-safe', () {

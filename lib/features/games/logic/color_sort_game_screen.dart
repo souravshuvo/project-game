@@ -10,10 +10,14 @@ class ColorSortGameScreen extends StatefulWidget {
     required this.audioCue,
     super.key,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _ColorSortGameScreenState.contentCount;
 
@@ -312,6 +316,8 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
   int _roundIndex = 0;
   late Set<int> _remainingPieceIds;
   int? _selectedPieceId;
+  int _streak = 0;
+  int _mistakes = 0;
   bool _roundSolved = false;
   bool _completionSent = false;
   String _feedback = 'Drag a shape, or tap it and then tap a basket.';
@@ -375,6 +381,7 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
 
     setState(() {
       if (isCorrect) {
+        _streak += 1;
         _remainingPieceIds.remove(pieceId);
         _selectedPieceId = null;
         _feedback = 'Great sorting! The ${piece.label} found its basket.';
@@ -387,6 +394,8 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
               : 'Beautiful! This group is all sorted.';
         }
       } else {
+        _streak = 0;
+        _mistakes += 1;
         _selectedPieceId = pieceId;
         _feedback =
             'Good try! This ${piece.label} is ${correctBucket.name.toLowerCase()}.';
@@ -412,6 +421,8 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
         _roundIndex = 0;
         _remainingPieceIds = _idsForRound(0);
         _selectedPieceId = null;
+        _streak = 0;
+        _mistakes = 0;
         _roundSolved = false;
         _completionSent = false;
         _feedback = 'Drag a shape, or tap it and then tap a basket.';
@@ -436,6 +447,8 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
       _roundIndex = 0;
       _remainingPieceIds = _idsForRound(0);
       _selectedPieceId = null;
+      _streak = 0;
+      _mistakes = 0;
       _roundSolved = false;
       _completionSent = false;
       _feedback = 'Drag a shape, or tap it and then tap a basket.';
@@ -505,9 +518,9 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
                 onTap: () => _tapBasket(bucket.id),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  width: 108,
-                  height: 128,
-                  padding: const EdgeInsets.all(10),
+                  width: 112,
+                  height: 148,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: bucket.color.withValues(
                       alpha: hovering ? 0.25 : 0.14,
@@ -524,24 +537,28 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
                       Icon(
                         Icons.shopping_basket_rounded,
                         color: bucket.color,
-                        size: 53,
+                        size: 44,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         bucket.name,
                         textScaler: TextScaler.noScaling,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF433C55),
-                          fontSize: 17,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                       Text(
                         '$placedCount/2',
                         textScaler: TextScaler.noScaling,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: bucket.color,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -566,6 +583,8 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      statusLabel: 'Streak $_streak',
+      statusIcon: Icons.local_fire_department_rounded,
       onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -631,19 +650,37 @@ class _ColorSortGameScreenState extends State<ColorSortGameScreen> {
           ),
           const SizedBox(height: 20),
           LogicFeedbackBanner(message: _feedback, tone: _feedbackTone),
+          if (_roundSolved && _isLastRound) ...[
+            const SizedBox(height: 12),
+            LogicRunSummary(
+              stars: _starsForMistakes(_mistakes),
+              title: 'Sorting path complete',
+              subtitle: _mistakes == 0
+                  ? 'Perfect color sort.'
+                  : 'Replay to sort with fewer misses.',
+              color: accent,
+            ),
+          ],
           if (_roundSolved) ...[
             const SizedBox(height: 16),
-            LogicRoundButton(
-              label: _isLastRound ? 'Sort again' : 'Next color mix',
+            LogicCompletionActions(
+              isLastRound: _isLastRound,
+              nextRoundLabel: 'Next color mix',
+              replayLabel: 'Sort again',
               color: accent,
-              icon: _isLastRound
-                  ? Icons.replay_rounded
-                  : Icons.arrow_forward_rounded,
-              onPressed: _continue,
+              onContinue: _continue,
+              onPlayNextGame: widget.onPlayNextGame,
+              nextGameTitle: widget.nextGameTitle,
             ),
           ],
         ],
       ),
     );
+  }
+
+  int _starsForMistakes(int mistakes) {
+    if (mistakes == 0) return 3;
+    if (mistakes <= 3) return 2;
+    return 1;
   }
 }

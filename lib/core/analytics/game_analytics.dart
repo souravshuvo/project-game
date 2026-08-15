@@ -40,11 +40,29 @@ extension GameAnalyticsEvents on GameAnalytics {
     );
   }
 
+  void appSessionEnd({
+    required int durationMs,
+    required int lifecycleTransitions,
+  }) {
+    _fireAndForget(
+      'app_session_end',
+      parameters: <String, Object?>{
+        'duration_ms': durationMs,
+        'lifecycle_transitions': lifecycleTransitions,
+      },
+    );
+  }
+
   void gameStarted({
     required String gameId,
     required String title,
     required int completedGames,
     required int totalGames,
+    String? category,
+    String? difficultyTier,
+    int? contentTotal,
+    int? gameIndex,
+    bool? replay,
   }) {
     _fireAndForget(
       'game_start',
@@ -53,6 +71,11 @@ extension GameAnalyticsEvents on GameAnalytics {
         'game_title': title,
         'completed_games': completedGames,
         'total_games': totalGames,
+        if (category != null) 'category': category,
+        if (difficultyTier != null) 'difficulty_tier': difficultyTier,
+        if (contentTotal != null) 'content_total': contentTotal,
+        if (gameIndex != null) 'game_index': gameIndex,
+        if (replay != null) 'replay': replay,
       },
     );
   }
@@ -63,6 +86,12 @@ extension GameAnalyticsEvents on GameAnalytics {
     required int durationMs,
     required int completedGames,
     required int totalGames,
+    String? category,
+    String? difficultyTier,
+    int? contentTotal,
+    int? gameIndex,
+    bool? replay,
+    int? progressPercent,
   }) {
     _fireAndForget(
       'game_complete',
@@ -72,6 +101,12 @@ extension GameAnalyticsEvents on GameAnalytics {
         'duration_ms': durationMs,
         'completed_games': completedGames,
         'total_games': totalGames,
+        if (category != null) 'category': category,
+        if (difficultyTier != null) 'difficulty_tier': difficultyTier,
+        if (contentTotal != null) 'content_total': contentTotal,
+        if (gameIndex != null) 'game_index': gameIndex,
+        if (replay != null) 'replay': replay,
+        if (progressPercent != null) 'progress_percent': progressPercent,
       },
     );
   }
@@ -81,6 +116,12 @@ extension GameAnalyticsEvents on GameAnalytics {
     required String title,
     required bool completed,
     required int durationMs,
+    String? category,
+    String? difficultyTier,
+    int? contentTotal,
+    int? gameIndex,
+    int? completedGames,
+    int? totalGames,
   }) {
     _fireAndForget(
       'game_exit',
@@ -89,6 +130,12 @@ extension GameAnalyticsEvents on GameAnalytics {
         'game_title': title,
         'completed': completed ? 1 : 0,
         'duration_ms': durationMs,
+        if (category != null) 'category': category,
+        if (difficultyTier != null) 'difficulty_tier': difficultyTier,
+        if (contentTotal != null) 'content_total': contentTotal,
+        if (gameIndex != null) 'game_index': gameIndex,
+        if (completedGames != null) 'completed_games': completedGames,
+        if (totalGames != null) 'total_games': totalGames,
       },
     );
   }
@@ -98,6 +145,7 @@ extension GameAnalyticsEvents on GameAnalytics {
     required String contentId,
     required int contentIndex,
     required int contentTotal,
+    String? difficultyTier,
   }) {
     _fireAndForget(
       'content_start',
@@ -106,6 +154,7 @@ extension GameAnalyticsEvents on GameAnalytics {
         'content_id': contentId,
         'content_index': contentIndex,
         'content_total': contentTotal,
+        if (difficultyTier != null) 'difficulty_tier': difficultyTier,
       },
     );
   }
@@ -115,6 +164,8 @@ extension GameAnalyticsEvents on GameAnalytics {
     required String contentId,
     required int contentIndex,
     required int contentTotal,
+    String? difficultyTier,
+    int? durationMs,
   }) {
     _fireAndForget(
       'content_complete',
@@ -123,6 +174,25 @@ extension GameAnalyticsEvents on GameAnalytics {
         'content_id': contentId,
         'content_index': contentIndex,
         'content_total': contentTotal,
+        if (difficultyTier != null) 'difficulty_tier': difficultyTier,
+        if (durationMs != null) 'duration_ms': durationMs,
+      },
+    );
+  }
+
+  void gameFlowAction({
+    required String action,
+    required String gameId,
+    required String nextGameId,
+    required String nextGameTitle,
+  }) {
+    _fireAndForget(
+      'game_flow_action',
+      parameters: <String, Object?>{
+        'action': action,
+        'game_id': gameId,
+        'next_game_id': nextGameId,
+        'next_game_title': nextGameTitle,
       },
     );
   }
@@ -144,6 +214,12 @@ extension GameAnalyticsEvents on GameAnalytics {
     required String decision,
     required String reason,
     String? gameId,
+    String? gameTitle,
+    int? completedGames,
+    int? totalGames,
+    int? gameDurationMs,
+    int? completionsSinceLastAd,
+    int? interstitialsShown,
   }) {
     _fireAndForget(
       'ad_opportunity',
@@ -154,6 +230,14 @@ extension GameAnalyticsEvents on GameAnalytics {
         'decision': decision,
         'reason': reason,
         if (gameId != null) 'game_id': gameId,
+        if (gameTitle != null) 'game_title': gameTitle,
+        if (completedGames != null) 'completed_games': completedGames,
+        if (totalGames != null) 'total_games': totalGames,
+        if (gameDurationMs != null) 'game_duration_ms': gameDurationMs,
+        if (completionsSinceLastAd != null)
+          'completions_since_ad': completionsSinceLastAd,
+        if (interstitialsShown != null)
+          'interstitials_shown': interstitialsShown,
       },
     );
   }
@@ -165,6 +249,9 @@ extension GameAnalyticsEvents on GameAnalytics {
     required String adMode,
     String? gameId,
     String? reason,
+    String? currencyCode,
+    int? valueMicros,
+    String? precision,
   }) {
     _fireAndForget(
       'ad_$event',
@@ -174,6 +261,9 @@ extension GameAnalyticsEvents on GameAnalytics {
         'ad_mode': adMode,
         if (gameId != null) 'game_id': gameId,
         if (reason != null) 'reason': reason,
+        if (currencyCode != null) 'currency_code': currencyCode,
+        if (valueMicros != null) 'value_micros': valueMicros,
+        if (precision != null) 'precision': precision,
       },
     );
   }

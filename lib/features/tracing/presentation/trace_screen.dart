@@ -55,6 +55,8 @@ class SymbolTraceScreen extends StatefulWidget {
     this.audioCue,
     this.onCompleted,
     this.header,
+    this.nextSymbolLabel,
+    this.onPlayNext,
     this.accentColor = const Color(0xFF7257E8),
     this.secondaryColor = const Color(0xFFFFA62B),
     super.key,
@@ -65,6 +67,8 @@ class SymbolTraceScreen extends StatefulWidget {
   final LetterAudioCue? audioCue;
   final TraceCompletionCallback? onCompleted;
   final Widget? header;
+  final String? nextSymbolLabel;
+  final VoidCallback? onPlayNext;
   final Color accentColor;
   final Color secondaryColor;
 
@@ -326,8 +330,10 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
                   symbol: _symbol,
                   symbolKind: widget.symbolKind,
                   accentColor: widget.accentColor,
+                  nextSymbolLabel: widget.nextSymbolLabel,
                   onAgain: _playAgain,
                   onHome: () => Navigator.of(context).maybePop(),
+                  onPlayNext: widget.onPlayNext,
                 ),
             ],
           ),
@@ -459,29 +465,47 @@ class _SymbolTraceScreenState extends State<SymbolTraceScreen>
         children: [
           Semantics(
             liveRegion: true,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _traceState.status == TraceStatus.offPath
-                      ? Icons.touch_app_rounded
-                      : Icons.auto_awesome_rounded,
-                  color: _traceState.status == TraceStatus.offPath
-                      ? const Color(0xFFD67700)
-                      : widget.accentColor,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    _instruction,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFF4D4660),
-                      fontWeight: FontWeight.w700,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.96, end: 1).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutBack,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
+              child: Row(
+                key: ValueKey(_traceState.status),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _traceState.status == TraceStatus.offPath
+                        ? Icons.touch_app_rounded
+                        : Icons.auto_awesome_rounded,
+                    color: _traceState.status == TraceStatus.offPath
+                        ? const Color(0xFFD67700)
+                        : widget.accentColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _instruction,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: const Color(0xFF4D4660),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -621,6 +645,8 @@ class _CelebrationOverlay extends StatelessWidget {
     required this.symbol,
     required this.symbolKind,
     required this.accentColor,
+    this.nextSymbolLabel,
+    this.onPlayNext,
     required this.onAgain,
     required this.onHome,
   });
@@ -628,11 +654,15 @@ class _CelebrationOverlay extends StatelessWidget {
   final String symbol;
   final String symbolKind;
   final Color accentColor;
+  final String? nextSymbolLabel;
   final VoidCallback onAgain;
   final VoidCallback onHome;
+  final VoidCallback? onPlayNext;
 
   @override
   Widget build(BuildContext context) {
+    final canPlayNext = onPlayNext != null && nextSymbolLabel != null;
+
     return Positioned.fill(
       key: const ValueKey('celebration-overlay'),
       child: ColoredBox(
@@ -716,6 +746,30 @@ class _CelebrationOverlay extends StatelessWidget {
                                   ),
                             ),
                             const SizedBox(height: 24),
+                            if (canPlayNext) ...[
+                              FilledButton.icon(
+                                key: const ValueKey('celebration-next'),
+                                onPressed: onPlayNext,
+                                iconAlignment: IconAlignment.end,
+                                icon: const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 26,
+                                ),
+                                label: Text(
+                                  'Play Next: $nextSymbolLabel',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: accentColor,
+                                  minimumSize: const Size.fromHeight(62),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

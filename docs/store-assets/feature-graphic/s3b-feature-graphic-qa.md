@@ -38,7 +38,7 @@ characters, third-party logos, or watermarks.
 
 ## Remaining Risks
 
-- Final screenshots and preview video still need real gameplay capture.
-- The current launcher icon is still the default Flutter icon, so icon work
-  should be completed before final Play Store asset QA.
-- Re-run S6 after screenshot, icon, and video assets are complete.
+- A minimum real screenshot set exists, but the strongest listing still needs
+  fresh captures for additional mini-game variety.
+- Preview video still needs real gameplay recording and a YouTube URL.
+- Re-run S6 after the preview video and any fresh screenshots are complete.

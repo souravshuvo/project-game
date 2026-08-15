@@ -9,11 +9,15 @@ class ShapeMatchGameScreen extends StatefulWidget {
   const ShapeMatchGameScreen({
     required this.audioCue,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
     super.key,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _ShapeMatchGameScreenState.contentCount;
 
@@ -304,6 +308,8 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
   int _roundIndex = 0;
   late Set<int> _remainingIds;
   int? _selectedId;
+  int _streak = 0;
+  int _mistakes = 0;
   bool _roundSolved = false;
   bool _completionReported = false;
   String _feedback = 'Drag a shape, or tap it and then tap its home.';
@@ -366,6 +372,7 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
 
     setState(() {
       if (isCorrect) {
+        _streak += 1;
         _remainingIds.remove(shapeId);
         _selectedId = null;
         _feedback = 'Yes! The ${shape.name} fits right there.';
@@ -378,6 +385,8 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
               : 'This shape board is complete.';
         }
       } else {
+        _streak = 0;
+        _mistakes += 1;
         _selectedId = shapeId;
         _feedback = 'Close! Match the shape, not just the color.';
         _feedbackTone = LogicFeedbackTone.encouragement;
@@ -402,6 +411,8 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
         _roundIndex = 0;
         _remainingIds = _idsForRound(0);
         _selectedId = null;
+        _streak = 0;
+        _mistakes = 0;
         _roundSolved = false;
         _completionReported = false;
         _feedback = 'Drag a shape, or tap it and then tap its home.';
@@ -426,6 +437,8 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
       _roundIndex = 0;
       _remainingIds = _idsForRound(0);
       _selectedId = null;
+      _streak = 0;
+      _mistakes = 0;
       _roundSolved = false;
       _completionReported = false;
       _feedback = 'Drag a shape, or tap it and then tap its home.';
@@ -553,6 +566,8 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      statusLabel: 'Streak $_streak',
+      statusIcon: Icons.local_fire_department_rounded,
       onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -619,19 +634,37 @@ class _ShapeMatchGameScreenState extends State<ShapeMatchGameScreen> {
           ),
           const SizedBox(height: 20),
           LogicFeedbackBanner(message: _feedback, tone: _feedbackTone),
+          if (_roundSolved && _isLastRound) ...[
+            const SizedBox(height: 12),
+            LogicRunSummary(
+              stars: _starsForMistakes(_mistakes),
+              title: 'Shape path complete',
+              subtitle: _mistakes == 0
+                  ? 'Every shape landed first try.'
+                  : 'Replay to earn a cleaner shape run.',
+              color: accent,
+            ),
+          ],
           if (_roundSolved) ...[
             const SizedBox(height: 16),
-            LogicRoundButton(
-              label: _isLastRound ? 'Match again' : 'Next board',
+            LogicCompletionActions(
+              isLastRound: _isLastRound,
+              nextRoundLabel: 'Next board',
+              replayLabel: 'Match again',
               color: accent,
-              icon: _isLastRound
-                  ? Icons.replay_rounded
-                  : Icons.arrow_forward_rounded,
-              onPressed: _continue,
+              onContinue: _continue,
+              onPlayNextGame: widget.onPlayNextGame,
+              nextGameTitle: widget.nextGameTitle,
             ),
           ],
         ],
       ),
     );
+  }
+
+  int _starsForMistakes(int mistakes) {
+    if (mistakes == 0) return 3;
+    if (mistakes <= 3) return 2;
+    return 1;
   }
 }

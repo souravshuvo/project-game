@@ -33,10 +33,10 @@ fake UI, screenshots, or tiny unreadable details.
 
 ## Launcher Update Notes
 
-The live Android and iOS launcher icons were not overwritten in this pass.
+The live Android and iOS launcher icons have been replaced with KidsLand icon
+exports.
 
-To apply the Android launcher icons later, copy the matching preview exports
-from `docs/store-assets/app-icon/android-launcher-preview/` into:
+Android files updated:
 
 - `android/app/src/main/res/mipmap-mdpi/ic_launcher.png`
 - `android/app/src/main/res/mipmap-hdpi/ic_launcher.png`
@@ -44,10 +44,12 @@ from `docs/store-assets/app-icon/android-launcher-preview/` into:
 - `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png`
 - `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`
 
-For iOS, use `kidsland-launcher-icon-source-1024.png` as the source for the
-AppIcon asset catalog sizes, then replace the matching files in
-`ios/Runner/Assets.xcassets/AppIcon.appiconset/` only after iOS icon update is
-explicitly approved.
+iOS files updated:
+
+- `ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png`
+
+The iOS exports are opaque PNGs generated from
+`kidsland-launcher-icon-source-1024.png`.
 
 ## QA Checklist
 
@@ -62,7 +64,7 @@ explicitly approved.
 
 ## Remaining Risks
 
-- Live launcher icon files are still the default Flutter icon until explicitly
-  replaced.
-- Final Play Store asset QA should be re-run after launcher replacement,
-  screenshots, and preview video production are complete.
+- Final Play Store asset QA should be re-run after fresh screenshots and
+  preview video production are complete.
+- If the icon artwork changes, regenerate Android and iOS launcher exports from
+  the same approved source so Play, Android, and iOS stay visually consistent.

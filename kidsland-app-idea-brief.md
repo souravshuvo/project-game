@@ -253,7 +253,7 @@ Do not attach identifiers, free text, raw touch coordinates, or precise timestam
 
 ## Technical Plan
 
-- **Project base:** Treat the current `rapid_jump` default scaffold as a fresh Flutter base; reuse only after this reduced scope is accepted
+- **Project base:** Treat the current KidsLand Flutter scaffold as the fresh app base; reuse only after this reduced scope is accepted
 - **Tentative Android application ID:** `com.childhood.kidsland` (confirm ownership and uniqueness before the first Play upload; do not change it in task 1)
 - **Initial version:** `0.1.0+1` for closed testing
 - **Minimum Android:** API 23 (assumption; verify against the final dependency/device matrix)

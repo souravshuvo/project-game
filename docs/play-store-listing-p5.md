@@ -1,7 +1,9 @@
 # KidsLand Play Store Listing Package - P5
 
-Status: planning and copy package only. No final screenshots, feature graphic,
-icon, or video assets were generated in this pass.
+Status: listing package plus asset production update. A Play icon, feature
+graphic, minimum truthful phone screenshot export set, and branded Android/iOS
+launcher icons now exist. Preview video remains blocked until real gameplay
+recording is captured and uploaded to YouTube.
 
 ## Confirmed App Identity
 
@@ -9,6 +11,7 @@ icon, or video assets were generated in this pass.
 - On-device app label: `KidsLand`
 - Android package name: `com.childhood.kidsland`
 - iOS bundle identifier: `com.childhood.kidsland`
+- Dart package name: `kidsland`
 - Package slug: `kidsland`
 - Package convention check: passes `com.childhood.<game_slug>` because the slug
   is lowercase ASCII, starts with a letter, and has no spaces, hyphens, or
@@ -56,31 +59,51 @@ KidsLand does not use accounts, child profiles, camera, microphone, or location.
 
 ## Screenshot Plan
 
-Target: phone portrait screenshots at 1080 x 1920 or higher, JPEG or 24-bit PNG
-without alpha. Use real app captures only. Do not include test ad creatives,
-fake device frames, fake ratings, fake awards, or unavailable features.
+Target: phone portrait screenshots, JPEG or 24-bit PNG without alpha. Use real
+app captures only. For Play recommendation eligibility, use at least three
+9:16 portrait gameplay screenshots at 1080 x 1920 or higher for games, and
+prefer 4-8 total screenshots. Do not include test ad creatives, fake device
+frames, fake ratings, fake awards, or unavailable features.
+
+Verified real screenshot exports now available:
+
+- `docs/store-assets/screenshots/kidsland-01-letter-tracing.png`
+- `docs/store-assets/screenshots/kidsland-02-balloon-pop.png`
+- `docs/store-assets/screenshots/kidsland-03-guided-hints.png`
+- `docs/store-assets/screenshots/kidsland-04-game-hub.png`
+- `docs/store-assets/screenshots/kidsland-05-letter-paths.png`
+
+These are final-format 1080 x 1920 24-bit PNG exports from real app capture
+evidence. They are upload-capable as a minimum truthful set, but the listing
+would be stronger with additional fresh captures for number/counting, color
+sorting, shape matching, memory, and drawing.
 
 | Slot | Real Screen Or Moment | Overlay Copy | Alt Text |
 | --- | --- | --- | --- |
-| 1 | Home grid showing KidsLand and multiple game cards | Ten playful preschool games | KidsLand home screen with colorful cards for tracing, drawing, memory, balloons, shapes, and puzzles. |
-| 2 | Letter Tracing menu or active A trace canvas | Trace letters A to Z | Letter tracing screen with a large guided letter path and child-friendly controls. |
-| 3 | Number Tracing or Count & Choose gameplay | Practice numbers 1 to 10 | Number game screen showing large touch targets for early counting and number practice. |
-| 4 | Color Sorting gameplay | Sort colors with simple moves | Color sorting board with bright buckets and pieces for red, blue, and yellow sorting. |
-| 5 | Shape Match gameplay | Match shapes by touch | Shape Match board with large colorful shapes and clear matching homes. |
-| 6 | Memory Match gameplay | Build memory with pairs | Memory Match board showing child-friendly cards and a simple matching task. |
-| 7 | Magic Drawing gameplay | Draw with gentle prompts | Drawing screen with a prompt, color tools, and a large canvas for creative play. |
-| 8 | Parent Corner settings/privacy screen | Parent controls included | Parent Corner screen with progress, sound, haptic, privacy, and reset controls. |
+| 1 | Letter Tracing active A trace canvas | Real UI only | Letter tracing gameplay with a large guided letter path and progress controls. |
+| 2 | Balloon Pop active wave | Real UI only | Balloon popping gameplay with bright balloons, score, streak, and wave progress. |
+| 3 | Letter Tracing hint feedback | Real UI only | Tracing gameplay showing a helpful hint after an incorrect touch. |
+| 4 | Home hub with next-up, mission, and progress | Real UI only | KidsLand game hub with next-up game, play plan, mission, and progress cards. |
+| 5 | Letter Tracing menu | Real UI only | Letter tracing menu showing colorful A to Z trace path cards. |
+| 6 | Number Tracing or Count & Choose gameplay | Capture needed | Number game screen showing large touch targets for early counting and number practice. |
+| 7 | Color Sorting gameplay | Capture needed | Color sorting board with bright buckets and pieces for red, blue, and yellow sorting. |
+| 8 | Shape Match, Memory Match, or Magic Drawing gameplay | Capture needed | Additional KidsLand gameplay showing another real mini-game mode. |
 
 Capture notes:
 
 - Prioritize slots 1-3 for the first Play listing row.
-- Keep overlay text under roughly 20 percent of each screenshot.
+- Keep any future overlay text under roughly 20 percent of each screenshot.
 - Capture active gameplay states, not only menus.
 - Avoid showing interstitials or ad banners in screenshots.
 - Use clean status bar state with no notifications.
 - Re-capture after final icon, Firebase, AdMob, and release config are stable.
+- Required missing captures for a stronger 6-8 screenshot listing:
+  number/count gameplay, color sorting, shape matching, memory matching,
+  drawing, and a clean parent/settings screen if included.
 
 ## Feature Graphic Brief
+
+Current final asset: `docs/store-assets/feature-graphic/kidsland-feature-graphic-1024x500.png`
 
 Target export: 1024 x 500, JPEG or 24-bit PNG without alpha.
 
@@ -136,9 +159,11 @@ balloon, drawing, and puzzle objects.
 
 ## App Icon Brief
 
-Current icon review: the Android launcher icon is still the default Flutter
-logo. It does not communicate KidsLand, preschool games, tracing, or the
-current brand. This is a store asset blocker before upload.
+Current Play icon asset: `docs/store-assets/app-icon/kidsland-play-icon-512.png`
+
+Current launcher icon review: Android and iOS launcher icon files have been
+replaced with the approved KidsLand Star Pencil Path concept. The Play Store
+icon asset also exists separately at the required 512 x 512 size.
 
 Target Play icon export: 512 x 512, 32-bit PNG with alpha, max 1024 KB.
 
@@ -174,9 +199,8 @@ symbols, no copyrighted characters.
 
 Launcher update notes:
 
-- Replace Android mipmap launcher icons only after final icon approval.
-- Update iOS app icon assets in the matching asset catalog when iOS release is
-  in scope.
+- Android mipmap launcher icons are replaced.
+- iOS AppIcon asset catalog images are replaced with opaque KidsLand exports.
 - Re-check icon at 48 px, 96 px, and 512 px before upload.
 
 ## Preview Video Script
@@ -209,6 +233,9 @@ Music and pacing:
 - Use simple cross-dissolves or short pop transitions.
 - Keep app sound effects low under narration/captions.
 
+Capture blocker: no real gameplay recording exists in the repository, and no
+new emulator/device recording was approved in this P5 pass.
+
 Capture checklist:
 
 - Capture real app gameplay after final release config is stable.
@@ -224,9 +251,12 @@ Capture checklist:
 - Confirm package: `com.childhood.kidsland`.
 - Select appropriate app/game category and target audience settings.
 - Mark Contains ads if production AdMob remains enabled.
-- Upload final 512 x 512 icon after replacing default Flutter icon.
-- Upload final 1024 x 500 feature graphic.
-- Upload at least 4 portrait phone screenshots; 6-8 recommended.
+- Upload final 512 x 512 Play icon from `docs/store-assets/app-icon/kidsland-play-icon-512.png`.
+- Confirm branded launcher icons are present in Android/iOS before production
+  release.
+- Upload final 1024 x 500 feature graphic from `docs/store-assets/feature-graphic/kidsland-feature-graphic-1024x500.png`.
+- Upload the five produced portrait phone screenshots, or replace/extend them
+  with 6-8 fresh captures for stronger gameplay variety.
 - Add alt text for screenshots and feature graphic.
 - Add preview video YouTube URL only after real gameplay video is produced.
 - Add privacy policy URL.
@@ -242,9 +272,8 @@ Capture checklist:
 - Play developer contact and support email.
 - Final production AdMob app IDs and ad unit IDs.
 - Firebase project configuration files.
-- Approved final app icon asset.
-- Approved feature graphic asset.
-- Real screenshots from final build or approved device/emulator capture.
+- Fresh real screenshots from final build or approved device/emulator capture
+  for missing gameplay slots.
 - Real preview video footage from final build.
 - Target locale list for translated listing copy and overlay text.
 
@@ -258,9 +287,11 @@ Capture checklist:
 
 ## Remaining Risks
 
-- Store assets are planned, not generated.
-- The current launcher icon is still the default Flutter icon.
-- Listing cannot be considered upload-ready until real screenshots and preview
-  video are captured from the final app.
+- Feature graphic, Play icon, launcher icons, and minimum phone screenshots
+  exist.
+- Preview video cannot be considered ready until real gameplay footage exists
+  and a YouTube URL is available.
+- Screenshot variety is still weaker than ideal because several mini-games do
+  not yet have final real captures.
 - Final Play policy, Families, AdMob, Firebase, privacy policy, and Data safety
   checks still need P6 release readiness review.

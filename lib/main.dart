@@ -55,7 +55,11 @@ AppAdsController _openAdsController({
   required GameAnalytics analytics,
 }) {
   if (!config.servesAds) {
-    return NoopAppAdsController(reason: config.disabledReason ?? 'disabled');
+    return NoopAppAdsController(
+      reason: config.disabledReason ?? 'disabled',
+      adMode: config.modeName,
+      analytics: analytics,
+    );
   }
   return GoogleMobileAdsController(config: config, analytics: analytics);
 }

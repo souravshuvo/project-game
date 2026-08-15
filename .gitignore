@@ -92,6 +92,12 @@ desktop.ini
 *.log
 
 # =========================
+# Local visual QA captures
+# =========================
+device_check/
+test/p2c_visual/
+
+# =========================
 # Coverage
 # =========================
 coverage/

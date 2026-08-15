@@ -1,65 +1,61 @@
 # KidsLand Screenshot Production Brief - S2B
 
-Status: production-ready brief only. No final screenshot image files were
-created because the repository does not contain real captured gameplay
-screenshots, and emulator/device capture was not approved for this pass.
+Status: minimum real screenshot export set is complete. The stronger 8-shot
+gameplay-variety set still needs fresh real capture for modes that are not
+represented in the current evidence.
 
 ## Source Rule
 
-Final screenshots must use actual KidsLand app UI captured from the final
-runnable app. Do not generate or mock gameplay. Do not show test ads,
-interstitials, debug banners, notification clutter, fake device frames,
-fake ratings, awards, rankings, or unavailable features.
+Final screenshots must use actual KidsLand app UI captured from the runnable
+app. Do not generate or mock gameplay. Do not show test ads, interstitials,
+debug banners, notification clutter, fake device frames, fake ratings, awards,
+rankings, or unavailable features.
 
-Reference: Google Play preview asset guidance says screenshots should depict
-the actual in-app or in-game experience, use captured footage of the app or
-game itself, avoid call-to-action copy, and keep taglines small and readable.
+Reference: Google Play preview asset guidance requires screenshots to show the
+actual app/game experience, use JPEG or 24-bit PNG without alpha, avoid
+misleading claims, and keep any additional tagline text small and readable.
 
-## Export Specs
+## Final Export Specs
 
 - Device type: phone screenshots.
 - Orientation: portrait.
-- Target size: 1080 x 1920 px or higher.
-- Format: JPEG or 24-bit PNG without alpha.
-- Minimum viable set: 4 portrait screenshots.
-- Recommended set: all 8 approved gameplay screenshots below.
-- Text overlay area: keep under 20 percent of each screenshot.
-- Status bar: clean, no notifications, full battery/Wi-Fi/cell indicators if
-  status bar is visible.
+- Size: 1080 x 1920 px.
+- Format: 24-bit PNG without alpha.
+- Overlay text: none added; screenshots show real app UI only.
+- Status/navigation bars: cropped out where practical.
+- Minimum viable upload set: produced.
+- Recommended full variety set: capture-needed.
 
-## Approved Screenshot Set
+## Produced Screenshot Set
 
-| Slot | File Name | Real Gameplay Moment | Overlay Copy | Alt Text |
+| Slot | File Name | Real Screen Or Moment | Status | Alt Text |
 | --- | --- | --- | --- | --- |
-| 1 | `kidsland-01-letter-tracing.png` | Letter Tracing active canvas, letter A or B with path progress visible | Trace letters | Letter tracing gameplay with a large guided letter path and progress controls. |
-| 2 | `kidsland-02-number-tracing.png` | Number Tracing active canvas, number 1 or 2 in progress | Trace numbers | Number tracing gameplay with a large guided number path. |
-| 3 | `kidsland-03-count-choose.png` | Count & Choose with objects visible and answer buttons shown | Count and choose | Counting gameplay with objects to count and large answer buttons. |
-| 4 | `kidsland-04-color-sorting.png` | Color Sorting with buckets and draggable pieces visible | Sort colors | Color sorting gameplay with colored baskets and movable shapes. |
-| 5 | `kidsland-05-shape-match.png` | Shape Match with shape homes and pieces visible | Match shapes | Shape matching gameplay with colorful shape homes and pieces. |
-| 6 | `kidsland-06-memory-match.png` | Memory Match mid-board with at least one revealed pair | Find pairs | Memory matching gameplay with cards and revealed matching symbols. |
-| 7 | `kidsland-07-balloon-pop.png` | Balloon Pop during an active wave, before all balloons are popped | Pop balloons | Balloon popping gameplay with bright balloons in a touch grid. |
-| 8 | `kidsland-08-magic-drawing.png` | Magic Drawing with prompt, canvas, and color tools visible | Draw prompts | Drawing gameplay with a prompt, canvas, and color tools. |
+| 1 | `kidsland-01-letter-tracing.png` | Letter Tracing active canvas, letter A path visible | produce-now | Letter tracing gameplay with a large guided letter path and progress controls. |
+| 2 | `kidsland-02-balloon-pop.png` | Balloon Pop active wave with balloons, score, streak, and progress visible | produce-now | Balloon popping gameplay with bright balloons, score, streak, and wave progress. |
+| 3 | `kidsland-03-guided-hints.png` | Letter Tracing invalid-move hint showing "Nice try - find the glowing dot" | produce-now | Tracing gameplay showing a helpful hint after an incorrect touch. |
+| 4 | `kidsland-04-game-hub.png` | KidsLand hub with next-up card, continue card, mission, and progress | produce-now | KidsLand game hub with next-up game, play plan, mission, and progress cards. |
+| 5 | `kidsland-05-letter-paths.png` | Letter Tracing menu with letter cards and continue path | produce-now | Letter tracing menu showing colorful A to Z trace path cards. |
 
-## Capture Steps
+## Recommended Capture-Needed Set
 
-1. Resolve dependencies and release blockers before capture.
-2. Use a final stable build or approved capture build.
-3. Disable ads for capture so no third-party ad creative appears.
-4. Launch on a portrait phone device or emulator approved for capture.
-5. Capture each gameplay state from the table above.
-6. Prefer active mid-play moments over empty start states.
-7. Export each image at 1080 x 1920 px or higher.
-8. Add only the approved overlay copy, using large readable text.
-9. Save final screenshots to `docs/store-assets/screenshots/`.
+| Slot | File Name | Real Gameplay Moment | Status |
+| --- | --- | --- | --- |
+| 6 | `kidsland-06-number-tracing.png` | Number Tracing active canvas, number 1 or 2 in progress | capture-needed |
+| 7 | `kidsland-07-count-choose.png` | Count & Choose with objects visible and answer buttons shown | capture-needed |
+| 8 | `kidsland-08-color-sorting.png` | Color Sorting with buckets and draggable pieces visible | capture-needed |
+| 9 | `kidsland-09-shape-match.png` | Shape Match with shape homes and pieces visible | capture-needed |
+| 10 | `kidsland-10-memory-match.png` | Memory Match mid-board with at least one revealed pair | capture-needed |
+| 11 | `kidsland-11-magic-drawing.png` | Magic Drawing with prompt, canvas, and color tools visible | capture-needed |
 
-## Overlay Style
+## Capture Steps For Remaining Shots
 
-- Position: top or bottom safe area, never covering active controls.
-- Type: bold rounded sans serif, high contrast.
-- Background: subtle solid or translucent band only if needed for readability.
-- Copy: use the exact short phrases in the approved set.
-- Avoid: "best", "#1", "top", "new", "free", "download now",
-  "install now", ratings, awards, or review-style claims.
+1. Use a final stable build or approved capture build.
+2. Disable ads for capture so no third-party ad creative appears.
+3. Launch on a portrait phone device or emulator approved for capture.
+4. Capture active mid-play moments instead of empty start states.
+5. Export each image at 1080 x 1920 px or higher.
+6. Save final screenshots to `docs/store-assets/screenshots/`.
+7. Re-run this QA after any UI changes.
 
 ## QA Checklist
 
@@ -67,9 +63,7 @@ game itself, avoid call-to-action copy, and keep taglines small and readable.
 - No fake UI, fake gameplay, or generated gameplay.
 - No unavailable feature shown.
 - No ads, debug banners, or notification clutter.
-- First three screenshots are real gameplay.
-- Overlay text is readable on a phone and uses less than 20 percent of image.
-- Important UI is not covered by overlay text.
+- First two screenshots are real active gameplay.
 - File format is JPEG or 24-bit PNG without alpha.
 - Dimensions are 1080 x 1920 px or higher.
 - Alt text is 140 characters or less.
@@ -77,10 +71,11 @@ game itself, avoid call-to-action copy, and keep taglines small and readable.
 
 ## Remaining Risks
 
-- Final screenshots still need real capture.
-- Current launcher icon is still the default Flutter icon, so screenshot
-  styling should be rechecked after final icon and feature graphic work.
+- Current minimum set is truthful but weighted toward tracing; the stronger
+  listing still needs more game-mode variety.
+- The hub screenshot includes a naturally clipped horizontal quick-play card,
+  which is okay as app UI but weaker than a clean full-card capture.
 - If production AdMob remains enabled, store listing must declare ads, but
   screenshots should still avoid showing third-party ad creatives.
-- If UI changes before capture, re-check every screenshot against the current
+- If UI changes before upload, re-check every screenshot against the current
   app so the listing does not drift from real gameplay.

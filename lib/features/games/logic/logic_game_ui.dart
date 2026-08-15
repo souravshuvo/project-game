@@ -13,6 +13,8 @@ class LogicGameScaffold extends StatelessWidget {
     required this.totalRounds,
     required this.child,
     this.onRestart,
+    this.statusLabel,
+    this.statusIcon = Icons.stars_rounded,
     super.key,
   });
 
@@ -23,6 +25,8 @@ class LogicGameScaffold extends StatelessWidget {
   final int totalRounds;
   final Widget child;
   final VoidCallback? onRestart;
+  final String? statusLabel;
+  final IconData statusIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +105,14 @@ class LogicGameScaffold extends StatelessWidget {
                                       size: 28,
                                     ),
                                   ),
+                                ),
+                              ],
+                              if (statusLabel case final label?) ...[
+                                const SizedBox(width: 8),
+                                _LogicStatusPill(
+                                  icon: statusIcon,
+                                  label: label,
+                                  color: accentColor,
                                 ),
                               ],
                               const SizedBox(width: 8),
@@ -186,6 +198,50 @@ class LogicGameScaffold extends StatelessWidget {
   }
 }
 
+class _LogicStatusPill extends StatelessWidget {
+  const _LogicStatusPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 48, maxWidth: 112),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              textScaler: TextScaler.noScaling,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Color(0xFF443B62),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class LogicFeedbackBanner extends StatelessWidget {
   const LogicFeedbackBanner({
     required this.message,
@@ -261,6 +317,105 @@ class LogicFeedbackBanner extends StatelessWidget {
   }
 }
 
+class LogicRunSummary extends StatelessWidget {
+  const LogicRunSummary({
+    required this.stars,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    super.key,
+  });
+
+  final int stars;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      label: '$title. $stars stars. $subtitle',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: KidConfettiOverlay(
+          active: true,
+          density: 14,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, Color.lerp(color, Colors.white, 0.24)!],
+              ),
+            ),
+            child: Row(
+              children: [
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(9),
+                    child: Icon(
+                      Icons.emoji_events_rounded,
+                      color: Color(0xFFFFA928),
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(3, (index) {
+                    return Icon(
+                      index < stars
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: const Color(0xFFFFD86B),
+                      size: 25,
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class LogicRoundButton extends StatelessWidget {
   const LogicRoundButton({
     required this.label,
@@ -291,6 +446,9 @@ class LogicRoundButton extends StatelessWidget {
           icon: Icon(icon, size: 30),
           label: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textScaler: TextScaler.noScaling,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
           style: FilledButton.styleFrom(
@@ -305,6 +463,83 @@ class LogicRoundButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class LogicCompletionActions extends StatelessWidget {
+  const LogicCompletionActions({
+    required this.isLastRound,
+    required this.nextRoundLabel,
+    required this.replayLabel,
+    required this.color,
+    required this.onContinue,
+    this.onPlayNextGame,
+    this.nextGameTitle,
+    super.key,
+  });
+
+  final bool isLastRound;
+  final String nextRoundLabel;
+  final String replayLabel;
+  final Color color;
+  final VoidCallback onContinue;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isLastRound) {
+      return LogicRoundButton(
+        label: nextRoundLabel,
+        color: color,
+        icon: Icons.arrow_forward_rounded,
+        onPressed: onContinue,
+      );
+    }
+
+    final canPlayNextGame = onPlayNextGame != null && nextGameTitle != null;
+    if (!canPlayNextGame) {
+      return LogicRoundButton(
+        label: replayLabel,
+        color: color,
+        icon: Icons.replay_rounded,
+        onPressed: onContinue,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LogicRoundButton(
+          label: 'Play next: $nextGameTitle',
+          color: color,
+          icon: Icons.arrow_forward_rounded,
+          onPressed: onPlayNextGame!,
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 56,
+          child: OutlinedButton.icon(
+            onPressed: onContinue,
+            icon: const Icon(Icons.replay_rounded),
+            label: Text(
+              replayLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textScaler: TextScaler.noScaling,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: color,
+              side: BorderSide(color: color.withValues(alpha: 0.5), width: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

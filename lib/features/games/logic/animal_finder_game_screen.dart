@@ -10,10 +10,14 @@ class AnimalFinderGameScreen extends StatefulWidget {
     required this.audioCue,
     super.key,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _AnimalFinderGameScreenState.contentCount;
 
@@ -153,6 +157,8 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
 
   int _roundIndex = 0;
   String? _lastChoiceName;
+  int _streak = 0;
+  int _mistakes = 0;
   bool _roundSolved = false;
   bool _completionSent = false;
 
@@ -170,6 +176,12 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
     setState(() {
       _lastChoiceName = choice.name;
       _roundSolved = solved;
+      if (solved) {
+        _streak += 1;
+      } else {
+        _streak = 0;
+        _mistakes += 1;
+      }
     });
 
     if (solved) {
@@ -193,6 +205,8 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
       setState(() {
         _roundIndex = 0;
         _lastChoiceName = null;
+        _streak = 0;
+        _mistakes = 0;
         _roundSolved = false;
         _completionSent = false;
       });
@@ -211,6 +225,8 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
     setState(() {
       _roundIndex = 0;
       _lastChoiceName = null;
+      _streak = 0;
+      _mistakes = 0;
       _roundSolved = false;
       _completionSent = false;
     });
@@ -227,6 +243,8 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      statusLabel: 'Streak $_streak',
+      statusIcon: Icons.local_fire_department_rounded,
       onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -337,7 +355,7 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
           LogicFeedbackBanner(
             message: _roundSolved
                 ? _isLastRound
-                      ? 'You found every animal — fantastic!'
+                      ? 'You found every animal with ${_starsForMistakes(_mistakes)} stars!'
                       : 'You found the ${_round.target.name}!'
                 : madeWrongChoice
                 ? 'That animal is lovely too. Look again for the ${_round.target.name}!'
@@ -348,19 +366,37 @@ class _AnimalFinderGameScreenState extends State<AnimalFinderGameScreen> {
                 ? LogicFeedbackTone.encouragement
                 : LogicFeedbackTone.neutral,
           ),
+          if (_roundSolved && _isLastRound) ...[
+            const SizedBox(height: 12),
+            LogicRunSummary(
+              stars: _starsForMistakes(_mistakes),
+              title: 'Finder trail complete',
+              subtitle: _mistakes == 0
+                  ? 'Clean search. Every animal found first try.'
+                  : 'Replay to sharpen the search.',
+              color: accent,
+            ),
+          ],
           if (_roundSolved) ...[
             const SizedBox(height: 16),
-            LogicRoundButton(
-              label: _isLastRound ? 'Find them again' : 'Next animal',
+            LogicCompletionActions(
+              isLastRound: _isLastRound,
+              nextRoundLabel: 'Next animal',
+              replayLabel: 'Find them again',
               color: accent,
-              icon: _isLastRound
-                  ? Icons.replay_rounded
-                  : Icons.arrow_forward_rounded,
-              onPressed: _continue,
+              onContinue: _continue,
+              onPlayNextGame: widget.onPlayNextGame,
+              nextGameTitle: widget.nextGameTitle,
             ),
           ],
         ],
       ),
     );
+  }
+
+  int _starsForMistakes(int mistakes) {
+    if (mistakes == 0) return 3;
+    if (mistakes <= 2) return 2;
+    return 1;
   }
 }

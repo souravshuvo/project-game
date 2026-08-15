@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:rapid_jump/features/tracing/data/hive_progress_repository.dart';
+import 'package:kidsland/features/tracing/data/hive_progress_repository.dart';
 
 void main() {
   late Directory tempDirectory;

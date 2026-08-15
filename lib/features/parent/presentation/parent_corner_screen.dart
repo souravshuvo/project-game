@@ -230,11 +230,15 @@ class _ParentCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFF392C68),
-                    fontWeight: FontWeight.w900,
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: const Color(0xFF392C68),
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../application/trace_controller.dart';
@@ -88,6 +90,10 @@ class TracePainter extends CustomPainter {
               currentStroke.checkpoints.length - 1,
             )
           : 0;
+      final nextIndex = (targetIndex + 1).clamp(
+        0,
+        currentStroke.checkpoints.length - 1,
+      );
       final target = currentStroke.checkpoints[targetIndex].point;
       final center = _offset(target, size);
       final pulseColor = state.status == TraceStatus.offPath
@@ -108,6 +114,65 @@ class TracePainter extends CustomPainter {
         pulseRadius * 0.38,
         Paint()..color = Colors.white,
       );
+
+      if (nextIndex != targetIndex) {
+        _drawMovingGuide(
+          canvas: canvas,
+          size: size,
+          from: target,
+          to: currentStroke.checkpoints[nextIndex].point,
+          color: pulseColor,
+        );
+      }
+      _drawTargetSparkles(canvas, center, size, pulseColor);
+    }
+  }
+
+  void _drawMovingGuide({
+    required Canvas canvas,
+    required Size size,
+    required TracePoint from,
+    required TracePoint to,
+    required Color color,
+  }) {
+    final start = _offset(from, size);
+    final end = _offset(to, size);
+    final guidePaint = Paint()
+      ..color = color.withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = size.shortestSide * 0.018;
+    canvas.drawLine(start, end, guidePaint);
+
+    for (var index = 0; index < 3; index += 1) {
+      final t = ((pulse.value + (index * 0.22)) % 1.0).clamp(0.0, 1.0);
+      final bead = Offset.lerp(start, end, t)!;
+      final radius = size.shortestSide * (0.013 + (index * 0.002));
+      canvas.drawCircle(
+        bead,
+        radius * 2.3,
+        Paint()..color = Colors.white.withValues(alpha: 0.72),
+      );
+      canvas.drawCircle(bead, radius, Paint()..color = color);
+    }
+  }
+
+  void _drawTargetSparkles(
+    Canvas canvas,
+    Offset center,
+    Size size,
+    Color color,
+  ) {
+    final sparklePaint = Paint()
+      ..color = color.withValues(alpha: 0.52)
+      ..style = PaintingStyle.fill;
+    final orbit = size.shortestSide * (0.065 + (pulse.value * 0.012));
+    final radius = size.shortestSide * 0.008;
+
+    for (var index = 0; index < 3; index += 1) {
+      final angle = (pulse.value * math.pi * 2) + (index * math.pi * 0.72);
+      final point = center + Offset(math.cos(angle), math.sin(angle)) * orbit;
+      canvas.drawCircle(point, radius, sparklePaint);
     }
   }
 

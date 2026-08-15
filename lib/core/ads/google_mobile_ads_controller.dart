@@ -24,6 +24,7 @@ class GoogleMobileAdsController implements AppAdsController {
   late final Future<bool> _initialization;
   InterstitialAd? _interstitialAd;
   bool _isLoadingInterstitial = false;
+  bool _isShowingInterstitial = false;
   bool _disposed = false;
 
   @override
@@ -53,6 +54,9 @@ class GoogleMobileAdsController implements AppAdsController {
   Future<void> recordCompletedGameBreak({
     required String gameId,
     required String gameTitle,
+    required int completedGames,
+    required int totalGames,
+    required int gameDurationMs,
   }) async {
     if (!isEnabled) {
       analytics.adOpportunity(
@@ -62,6 +66,28 @@ class GoogleMobileAdsController implements AppAdsController {
         decision: 'blocked',
         reason: config.disabledReason ?? 'ads_disabled',
         gameId: gameId,
+        gameTitle: gameTitle,
+        completedGames: completedGames,
+        totalGames: totalGames,
+        gameDurationMs: gameDurationMs,
+      );
+      return;
+    }
+
+    if (_isShowingInterstitial) {
+      analytics.adOpportunity(
+        placement: 'completed_game_home_return',
+        format: 'interstitial',
+        adMode: config.modeName,
+        decision: 'blocked',
+        reason: 'already_showing',
+        gameId: gameId,
+        gameTitle: gameTitle,
+        completedGames: completedGames,
+        totalGames: totalGames,
+        gameDurationMs: gameDurationMs,
+        completionsSinceLastAd: _frequencyCap.completionsSinceLastInterstitial,
+        interstitialsShown: _frequencyCap.shownThisSession,
       );
       return;
     }
@@ -75,13 +101,25 @@ class GoogleMobileAdsController implements AppAdsController {
       decision: decision.allowed ? 'allowed' : 'blocked',
       reason: decision.reason,
       gameId: gameId,
+      gameTitle: gameTitle,
+      completedGames: completedGames,
+      totalGames: totalGames,
+      gameDurationMs: gameDurationMs,
+      completionsSinceLastAd: _frequencyCap.completionsSinceLastInterstitial,
+      interstitialsShown: _frequencyCap.shownThisSession,
     );
     if (!decision.allowed) {
       preloadInterstitial();
       return;
     }
 
-    await _showInterstitial(gameId: gameId);
+    await _showInterstitial(
+      gameId: gameId,
+      gameTitle: gameTitle,
+      completedGames: completedGames,
+      totalGames: totalGames,
+      gameDurationMs: gameDurationMs,
+    );
   }
 
   Future<bool> _initialize() async {
@@ -92,7 +130,7 @@ class GoogleMobileAdsController implements AppAdsController {
       await MobileAds.instance.updateRequestConfiguration(
         RequestConfiguration(
           maxAdContentRating: MaxAdContentRating.g,
-          tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
+          ageRestrictedTreatment: AgeRestrictedTreatment.child,
           testDeviceIds: config.testDeviceIds,
         ),
       );
@@ -164,7 +202,13 @@ class GoogleMobileAdsController implements AppAdsController {
     }
   }
 
-  Future<void> _showInterstitial({required String gameId}) async {
+  Future<void> _showInterstitial({
+    required String gameId,
+    required String gameTitle,
+    required int completedGames,
+    required int totalGames,
+    required int gameDurationMs,
+  }) async {
     try {
       final ready = await _initialization;
       final ad = _interstitialAd;
@@ -177,11 +221,30 @@ class GoogleMobileAdsController implements AppAdsController {
           decision: 'blocked',
           reason: 'not_loaded',
           gameId: gameId,
+          gameTitle: gameTitle,
+          completedGames: completedGames,
+          totalGames: totalGames,
+          gameDurationMs: gameDurationMs,
+          completionsSinceLastAd:
+              _frequencyCap.completionsSinceLastInterstitial,
+          interstitialsShown: _frequencyCap.shownThisSession,
         );
         preloadInterstitial();
         return;
       }
 
+      ad.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
+        analytics.adEvent(
+          event: 'paid',
+          placement: 'completed_game_home_return',
+          format: 'interstitial',
+          adMode: config.modeName,
+          gameId: gameId,
+          currencyCode: currencyCode,
+          valueMicros: valueMicros.round(),
+          precision: precision.name,
+        );
+      };
       ad.fullScreenContentCallback = FullScreenContentCallback(
         onAdShowedFullScreenContent: (ad) {
           _frequencyCap.recordInterstitialShown();
@@ -213,6 +276,7 @@ class GoogleMobileAdsController implements AppAdsController {
         },
         onAdDismissedFullScreenContent: (ad) {
           unawaited(ad.dispose());
+          _isShowingInterstitial = false;
           analytics.adEvent(
             event: 'dismiss',
             placement: 'completed_game_home_return',
@@ -224,6 +288,7 @@ class GoogleMobileAdsController implements AppAdsController {
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           unawaited(ad.dispose());
+          _isShowingInterstitial = false;
           analytics.adEvent(
             event: 'error',
             placement: 'completed_game_home_return',
@@ -236,8 +301,10 @@ class GoogleMobileAdsController implements AppAdsController {
         },
       );
 
+      _isShowingInterstitial = true;
       await ad.show();
     } on Object catch (error) {
+      _isShowingInterstitial = false;
       analytics.adEvent(
         event: 'error',
         placement: 'completed_game_home_return',
@@ -342,6 +409,17 @@ class _SafeHomeBannerAdState extends State<SafeHomeBannerAd> {
               placement: 'home_footer',
               format: 'banner',
               adMode: widget.config.modeName,
+            );
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            widget.analytics.adEvent(
+              event: 'paid',
+              placement: 'home_footer',
+              format: 'banner',
+              adMode: widget.config.modeName,
+              currencyCode: currencyCode,
+              valueMicros: valueMicros.round(),
+              precision: precision.name,
             );
           },
         ),

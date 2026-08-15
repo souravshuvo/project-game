@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rapid_jump/features/tracing/application/trace_controller.dart';
-import 'package:rapid_jump/features/tracing/domain/trace_definition.dart';
+import 'package:kidsland/features/tracing/application/trace_controller.dart';
+import 'package:kidsland/features/tracing/domain/trace_definition.dart';
 
 void main() {
   group('uppercase A definition', () {

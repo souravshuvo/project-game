@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rapid_jump/core/ads/ad_config.dart';
-import 'package:rapid_jump/core/ads/ad_frequency_cap.dart';
+import 'package:kidsland/core/ads/ad_config.dart';
+import 'package:kidsland/core/ads/ad_frequency_cap.dart';
+import 'package:kidsland/core/ads/google_mobile_ads_controller.dart';
 
 void main() {
   test('interstitial cap blocks first ad until enough completions', () {
@@ -60,5 +61,10 @@ void main() {
     expect(releaseConfig.mode, AdMobMode.disabled);
     expect(releaseConfig.servesAds, isFalse);
     expect(releaseConfig.disabledReason, 'release_test_ads_disabled');
+  });
+
+  test('google mobile ads controller API compiles without SDK calls', () {
+    expect(GoogleMobileAdsController, isNotNull);
+    expect(SafeHomeBannerAd, isNotNull);
   });
 }

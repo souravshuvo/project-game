@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rapid_jump/features/games/creative/balloon_pop_game_screen.dart';
-import 'package:rapid_jump/features/games/creative/drawing_game_screen.dart';
-import 'package:rapid_jump/features/games/creative/memory_match_game_screen.dart';
-import 'package:rapid_jump/features/games/creative/shape_match_game_screen.dart';
-import 'package:rapid_jump/features/games/game_catalog.dart';
-import 'package:rapid_jump/features/games/logic/animal_finder_game_screen.dart';
-import 'package:rapid_jump/features/games/logic/color_sort_game_screen.dart';
-import 'package:rapid_jump/features/games/logic/counting_game_screen.dart';
-import 'package:rapid_jump/features/games/logic/pattern_puzzle_game_screen.dart';
-import 'package:rapid_jump/features/games/tracing/letter_tracing_game_screen.dart';
-import 'package:rapid_jump/features/games/tracing/number_tracing_game_screen.dart';
-import 'package:rapid_jump/features/tracing/domain/trace_definition.dart';
+import 'package:kidsland/features/games/creative/balloon_pop_game_screen.dart';
+import 'package:kidsland/features/games/creative/drawing_game_screen.dart';
+import 'package:kidsland/features/games/creative/memory_match_game_screen.dart';
+import 'package:kidsland/features/games/creative/shape_match_game_screen.dart';
+import 'package:kidsland/features/games/game_catalog.dart';
+import 'package:kidsland/features/games/logic/animal_finder_game_screen.dart';
+import 'package:kidsland/features/games/logic/color_sort_game_screen.dart';
+import 'package:kidsland/features/games/logic/counting_game_screen.dart';
+import 'package:kidsland/features/games/logic/pattern_puzzle_game_screen.dart';
+import 'package:kidsland/features/games/tracing/letter_tracing_game_screen.dart';
+import 'package:kidsland/features/games/tracing/number_tracing_game_screen.dart';
+import 'package:kidsland/features/tracing/domain/trace_definition.dart';
 
 void main() {
   test('game catalog keeps ten unique production games', () {
@@ -32,6 +32,28 @@ void main() {
     expect(ColorSortGameScreen.contentCount, greaterThanOrEqualTo(10));
     expect(AnimalFinderGameScreen.contentCount, greaterThanOrEqualTo(10));
     expect(PatternPuzzleGameScreen.contentCount, greaterThanOrEqualTo(10));
+  });
+
+  test('catalog exposes analytics-safe content and difficulty metadata', () {
+    final contentCountsById = <String, int>{
+      'letter-tracing': LetterTracingGameScreen.contentCount,
+      'number-tracing': NumberTracingGameScreen.contentCount,
+      'magic-drawing': DrawingGameScreen.contentCount,
+      'memory-match': MemoryMatchGameScreen.contentCount,
+      'balloon-pop': BalloonPopGameScreen.contentCount,
+      'shape-match': ShapeMatchGameScreen.contentCount,
+      'counting': CountingGameScreen.contentCount,
+      'color-sort': ColorSortGameScreen.contentCount,
+      'animal-finder': AnimalFinderGameScreen.contentCount,
+      'pattern-puzzle': PatternPuzzleGameScreen.contentCount,
+    };
+
+    for (final game in kidsGameCatalog) {
+      expect(game.contentTotal, contentCountsById[game.id]);
+      expect(game.difficultyTier, isIn(<String>['easy', 'medium', 'hard']));
+      expect(game.category.trim(), isNotEmpty);
+      expect(game.mission.trim(), isNotEmpty);
+    }
   });
 
   test('letter and number tracing entries have valid unique geometry', () {

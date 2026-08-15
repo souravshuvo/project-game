@@ -10,11 +10,15 @@ class DrawingGameScreen extends StatefulWidget {
   const DrawingGameScreen({
     required this.audioCue,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
     super.key,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _DrawingGameScreenState.contentCount;
 
@@ -52,6 +56,7 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
   ];
 
   static int get contentCount => _missions.length;
+  static const int _minimumSparkScore = 24;
 
   final List<_DrawingStroke> _strokes = <_DrawingStroke>[];
   int _missionIndex = 0;
@@ -61,6 +66,18 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
   bool _completionReported = false;
 
   bool get _hasDrawing => _strokes.any((stroke) => stroke.points.isNotEmpty);
+  int get _sparkScore {
+    final pointCount = _strokes.fold<int>(
+      0,
+      (total, stroke) => total + stroke.points.length,
+    );
+    final colorsUsed = _strokes.map((stroke) => stroke.color).toSet().length;
+    return (pointCount + (_strokes.length * 3) + (colorsUsed * 4))
+        .clamp(0, 99)
+        .toInt();
+  }
+
+  bool get _readyToComplete => _sparkScore >= _minimumSparkScore;
   String get _mission => _missions[_missionIndex];
   bool get _isLastMission => _missionIndex == _missions.length - 1;
 
@@ -105,7 +122,11 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
   }
 
   void _complete() {
-    if (!_hasDrawing || _isComplete) return;
+    if (_isComplete) return;
+    if (!_readyToComplete) {
+      _playFeedback((cue) => cue.playInvalidAction());
+      return;
+    }
     setState(() => _isComplete = true);
     if (_isLastMission && !_completionReported) {
       _playFeedback((cue) => cue.playWin());
@@ -160,10 +181,15 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                 mission: _mission,
                 missionNumber: _missionIndex + 1,
                 totalMissions: _missions.length,
+                isLastMission: _isLastMission,
                 hasDrawing: _hasDrawing,
+                readyToComplete: _readyToComplete,
                 isComplete: _isComplete,
+                sparkScore: _sparkScore,
+                targetSparkScore: _minimumSparkScore,
                 onComplete: _complete,
                 onNewPicture: _newPicture,
+                onPlayNextGame: widget.onPlayNextGame,
               ),
               Expanded(
                 child: Padding(
@@ -220,6 +246,8 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                           top: 18,
                           child: _DrawingCompleteBanner(
                             isLastMission: _isLastMission,
+                            sparkScore: _sparkScore,
+                            nextGameTitle: widget.nextGameTitle,
                           ),
                         ),
                     ],
@@ -250,22 +278,35 @@ class _DrawingHeader extends StatelessWidget {
     required this.mission,
     required this.missionNumber,
     required this.totalMissions,
+    required this.isLastMission,
     required this.hasDrawing,
+    required this.readyToComplete,
     required this.isComplete,
+    required this.sparkScore,
+    required this.targetSparkScore,
     required this.onComplete,
     required this.onNewPicture,
+    this.onPlayNextGame,
   });
 
   final String mission;
   final int missionNumber;
   final int totalMissions;
+  final bool isLastMission;
   final bool hasDrawing;
+  final bool readyToComplete;
   final bool isComplete;
+  final int sparkScore;
+  final int targetSparkScore;
   final VoidCallback onComplete;
   final VoidCallback onNewPicture;
+  final VoidCallback? onPlayNextGame;
 
   @override
   Widget build(BuildContext context) {
+    final canPlayNextGame =
+        isComplete && isLastMission && onPlayNextGame != null;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       child: Row(
@@ -301,6 +342,33 @@ class _DrawingHeader extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    value: (sparkScore / targetSparkScore)
+                        .clamp(0, 1)
+                        .toDouble(),
+                    minHeight: 8,
+                    backgroundColor: const Color(0xFFE8E1F6),
+                    color: readyToComplete
+                        ? const Color(0xFF2DBE88)
+                        : const Color(0xFF7257E8),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  readyToComplete
+                      ? 'Spark meter full'
+                      : '$sparkScore/$targetSparkScore sparks',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF746A87),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
           ),
@@ -309,9 +377,11 @@ class _DrawingHeader extends StatelessWidget {
             height: 64,
             child: FilledButton.icon(
               key: const ValueKey<String>('drawing-done-button'),
-              onPressed: isComplete
+              onPressed: canPlayNextGame
+                  ? onPlayNextGame
+                  : isComplete
                   ? onNewPicture
-                  : hasDrawing
+                  : readyToComplete
                   ? onComplete
                   : null,
               style: FilledButton.styleFrom(
@@ -319,11 +389,21 @@ class _DrawingHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 18),
               ),
               icon: Icon(
-                isComplete ? Icons.add_rounded : Icons.check_rounded,
+                canPlayNextGame
+                    ? Icons.arrow_forward_rounded
+                    : isComplete
+                    ? Icons.add_rounded
+                    : Icons.check_rounded,
                 size: 27,
               ),
               label: Text(
-                isComplete ? 'Next' : 'Done',
+                canPlayNextGame
+                    ? 'Play Next'
+                    : isComplete
+                    ? 'Next'
+                    : hasDrawing
+                    ? 'Done'
+                    : 'Draw',
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -578,9 +658,15 @@ class _CanvasHint extends StatelessWidget {
 }
 
 class _DrawingCompleteBanner extends StatelessWidget {
-  const _DrawingCompleteBanner({required this.isLastMission});
+  const _DrawingCompleteBanner({
+    required this.isLastMission,
+    required this.sparkScore,
+    this.nextGameTitle,
+  });
 
   final bool isLastMission;
+  final int sparkScore;
+  final String? nextGameTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -615,8 +701,10 @@ class _DrawingCompleteBanner extends StatelessWidget {
                 Flexible(
                   child: Text(
                     isLastMission
-                        ? 'Wonderful drawing!'
-                        : 'Great! Try the next idea.',
+                        ? nextGameTitle == null
+                              ? 'Wonderful drawing! $sparkScore sparks'
+                              : 'Wonderful! Next: $nextGameTitle'
+                        : 'Great! $sparkScore sparks. Try the next idea.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,

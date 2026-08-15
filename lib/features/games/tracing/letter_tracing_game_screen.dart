@@ -13,6 +13,8 @@ class LetterTracingGameScreen extends StatelessWidget {
     required this.gameId,
     required this.analytics,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
     super.key,
   });
 
@@ -21,6 +23,8 @@ class LetterTracingGameScreen extends StatelessWidget {
   final String gameId;
   final GameAnalytics analytics;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static final List<TraceGameEntry> entries =
       List.unmodifiable(<TraceGameEntry>[
@@ -65,7 +69,10 @@ class LetterTracingGameScreen extends StatelessWidget {
       audioCue: audioCue,
       progressRepository: progressRepository,
       analytics: analytics,
+      difficultyTier: 'easy',
       onCompleted: onCompleted,
+      onPlayNextGame: onPlayNextGame,
+      nextGameTitle: nextGameTitle,
     );
   }
 

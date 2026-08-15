@@ -10,10 +10,14 @@ class CountingGameScreen extends StatefulWidget {
     required this.audioCue,
     super.key,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _CountingGameScreenState.contentCount;
 
@@ -83,6 +87,8 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
 
   int _roundIndex = 0;
   int? _selectedAnswer;
+  int _streak = 0;
+  int _mistakes = 0;
   bool _roundSolved = false;
   bool _completionSent = false;
 
@@ -100,6 +106,12 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
     setState(() {
       _selectedAnswer = answer;
       _roundSolved = solved;
+      if (solved) {
+        _streak += 1;
+      } else {
+        _streak = 0;
+        _mistakes += 1;
+      }
     });
 
     if (solved) {
@@ -123,6 +135,8 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
       setState(() {
         _roundIndex = 0;
         _selectedAnswer = null;
+        _streak = 0;
+        _mistakes = 0;
         _roundSolved = false;
         _completionSent = false;
       });
@@ -141,6 +155,8 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
     setState(() {
       _roundIndex = 0;
       _selectedAnswer = null;
+      _streak = 0;
+      _mistakes = 0;
       _roundSolved = false;
       _completionSent = false;
     });
@@ -158,6 +174,8 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
       accentColor: accent,
       round: _roundIndex + 1,
       totalRounds: _rounds.length,
+      statusLabel: 'Streak $_streak',
+      statusIcon: Icons.local_fire_department_rounded,
       onRestart: _restart,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -260,7 +278,7 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
           LogicFeedbackBanner(
             message: _roundSolved
                 ? _isLastRound
-                      ? 'Amazing! You counted every group!'
+                      ? 'Amazing! You counted every group with ${_starsForMistakes(_mistakes)} stars!'
                       : 'That’s right — ${_round.count}!'
                 : triedIncorrectly
                 ? 'Nice try! Touch each ${_round.name.substring(0, _round.name.length - (_round.name == 'fish' ? 0 : 1))} and count again.'
@@ -271,19 +289,37 @@ class _CountingGameScreenState extends State<CountingGameScreen> {
                 ? LogicFeedbackTone.encouragement
                 : LogicFeedbackTone.neutral,
           ),
+          if (_roundSolved && _isLastRound) ...[
+            const SizedBox(height: 12),
+            LogicRunSummary(
+              stars: _starsForMistakes(_mistakes),
+              title: 'Counting quest complete',
+              subtitle: _mistakes == 0
+                  ? 'Perfect run. Try to keep all three stars.'
+                  : 'Replay to improve your star run.',
+              color: accent,
+            ),
+          ],
           if (_roundSolved) ...[
             const SizedBox(height: 16),
-            LogicRoundButton(
-              label: _isLastRound ? 'Play again' : 'Next group',
+            LogicCompletionActions(
+              isLastRound: _isLastRound,
+              nextRoundLabel: 'Next group',
+              replayLabel: 'Play again',
               color: accent,
-              icon: _isLastRound
-                  ? Icons.replay_rounded
-                  : Icons.arrow_forward_rounded,
-              onPressed: _continue,
+              onContinue: _continue,
+              onPlayNextGame: widget.onPlayNextGame,
+              nextGameTitle: widget.nextGameTitle,
             ),
           ],
         ],
       ),
     );
+  }
+
+  int _starsForMistakes(int mistakes) {
+    if (mistakes == 0) return 3;
+    if (mistakes <= 2) return 2;
+    return 1;
   }
 }

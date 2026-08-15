@@ -11,11 +11,15 @@ class MemoryMatchGameScreen extends StatefulWidget {
   const MemoryMatchGameScreen({
     required this.audioCue,
     this.onCompleted,
+    this.onPlayNextGame,
+    this.nextGameTitle,
     super.key,
   });
 
   final LetterAudioCue audioCue;
   final VoidCallback? onCompleted;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   static int get contentCount => _MemoryMatchGameScreenState.contentCount;
 
@@ -126,6 +130,7 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
   _MemoryBoard get _board => _boards[_boardIndex];
   List<_MemoryCardData> get _cards => _board.cards;
   int get _pairCount => _cards.length ~/ 2;
+  int get _stars => _starsForMoves(_moves, _pairCount);
   bool get _isLastBoard => _boardIndex == _boards.length - 1;
   bool _isFaceUp(int index) =>
       _matched.contains(index) || _firstIndex == index || _secondIndex == index;
@@ -222,6 +227,16 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
     });
   }
 
+  int _starsForMoves(int moves, int pairCount) {
+    if (moves <= pairCount + 2) {
+      return 3;
+    }
+    if (moves <= pairCount + 5) {
+      return 2;
+    }
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -308,8 +323,11 @@ class _MemoryMatchGameScreenState extends State<MemoryMatchGameScreen> {
                 child: _isComplete
                     ? _MemoryCompletePanel(
                         moves: _moves,
+                        stars: _stars,
                         isLastBoard: _isLastBoard,
                         onContinue: _continueAfterComplete,
+                        onPlayNextGame: widget.onPlayNextGame,
+                        nextGameTitle: widget.nextGameTitle,
                       )
                     : const SizedBox.shrink(),
               ),
@@ -597,19 +615,30 @@ class _MemoryCard extends StatelessWidget {
 class _MemoryCompletePanel extends StatelessWidget {
   const _MemoryCompletePanel({
     required this.moves,
+    required this.stars,
     required this.isLastBoard,
     required this.onContinue,
+    this.onPlayNextGame,
+    this.nextGameTitle,
   });
 
   final int moves;
+  final int stars;
   final bool isLastBoard;
   final VoidCallback onContinue;
+  final VoidCallback? onPlayNextGame;
+  final String? nextGameTitle;
 
   @override
   Widget build(BuildContext context) {
+    final title = isLastBoard ? 'Board set complete' : 'Board cleared';
+    final buttonLabel = isLastBoard ? 'Play again' : 'Next board';
+    final canPlayNextGame =
+        isLastBoard && onPlayNextGame != null && nextGameTitle != null;
+
     return Semantics(
       liveRegion: true,
-      label: 'All pairs found in $moves moves',
+      label: 'All pairs found in $moves moves with $stars stars',
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: KidConfettiOverlay(
@@ -627,46 +656,126 @@ class _MemoryCompletePanel extends StatelessWidget {
                 BoxShadow(color: Color(0x332DBE88), blurRadius: 15),
               ],
             ),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.emoji_events_rounded,
-                  color: Colors.white,
-                  size: 38,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'You found them all!\n$moves moves',
-                    style: const TextStyle(
+                Row(
+                  children: <Widget>[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.emoji_events_rounded,
                       color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
+                      size: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ...List.generate(3, (index) {
+                                return Icon(
+                                  index < stars
+                                      ? Icons.star_rounded
+                                      : Icons.star_border_rounded,
+                                  color: const Color(0xFFFFD86B),
+                                  size: 22,
+                                );
+                              }),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '$moves moves',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (canPlayNextGame) ...[
+                  SizedBox(
+                    height: 58,
+                    child: FilledButton.icon(
+                      key: const ValueKey('memory-next-game-button'),
+                      onPressed: onPlayNextGame,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF17835F),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      iconAlignment: IconAlignment.end,
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 27),
+                      label: Text(
+                        'Play next: $nextGameTitle',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: 64,
-                  child: FilledButton.icon(
-                    onPressed: onContinue,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF17835F),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    icon: Icon(
-                      isLastBoard
-                          ? Icons.replay_rounded
-                          : Icons.arrow_forward_rounded,
-                      size: 27,
-                    ),
-                    label: Text(
-                      isLastBoard ? 'Play again' : 'Next',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: onContinue,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white, width: 2),
+                      ),
+                      icon: const Icon(Icons.replay_rounded),
+                      label: const Text(
+                        'Play again',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
                     ),
                   ),
-                ),
+                ] else
+                  SizedBox(
+                    height: 58,
+                    child: FilledButton.icon(
+                      onPressed: onContinue,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF17835F),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      icon: Icon(
+                        isLastBoard
+                            ? Icons.replay_rounded
+                            : Icons.arrow_forward_rounded,
+                        size: 27,
+                      ),
+                      label: Text(
+                        buttonLabel,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
