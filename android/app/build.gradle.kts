@@ -33,6 +33,10 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
@@ -45,4 +49,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // WorkManager 2.7.0 pulled in by google_mobile_ads can crash on startup on some Android setups.
+    implementation("androidx.work:work-runtime:2.6.0")
+    implementation("androidx.work:work-runtime-ktx:2.6.0")
 }
