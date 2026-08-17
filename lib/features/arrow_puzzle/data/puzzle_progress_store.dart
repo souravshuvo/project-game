@@ -15,10 +15,12 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
   static const _unlockedLevelKey = 'arrow_puzzle.unlocked_level_index';
   static const _completedLevelsKey = 'arrow_puzzle.completed_level_ids';
   static const _bestMovesKey = 'arrow_puzzle.best_moves_by_level';
+  static const _bestScoreKey = 'arrow_puzzle.best_score_by_level';
   static const _streakDaysKey = 'arrow_puzzle.streak_days';
   static const _hintCountKey = 'arrow_puzzle.hint_count';
   static const _soundEnabledKey = 'arrow_puzzle.sound_enabled';
   static const _hapticsEnabledKey = 'arrow_puzzle.haptics_enabled';
+  static const _hasSeenTutorialKey = 'arrow_puzzle.has_seen_tutorial';
   static const _lastCompletionDateKey = 'arrow_puzzle.last_completion_date';
   static const _lastHintClaimDateKey = 'arrow_puzzle.last_hint_claim_date';
 
@@ -27,6 +29,7 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
     try {
       final preferences = await SharedPreferences.getInstance();
       final bestMovesJson = preferences.getString(_bestMovesKey);
+      final bestScoreJson = preferences.getString(_bestScoreKey);
 
       return PlayerProgress(
         currentLevelIndex: preferences.getInt(_currentLevelKey) ?? 0,
@@ -38,11 +41,13 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
                 .nonNulls
                 .toSet() ??
             const {},
-        bestMovesByLevel: _decodeBestMoves(bestMovesJson),
+        bestMovesByLevel: _decodeIntMap(bestMovesJson),
+        bestScoreByLevel: _decodeIntMap(bestScoreJson),
         streakDays: preferences.getInt(_streakDaysKey) ?? 0,
         hintCount: preferences.getInt(_hintCountKey) ?? 1,
         soundEnabled: preferences.getBool(_soundEnabledKey) ?? true,
         hapticsEnabled: preferences.getBool(_hapticsEnabledKey) ?? true,
+        hasSeenTutorial: preferences.getBool(_hasSeenTutorialKey) ?? false,
         lastCompletionDate: preferences.getString(_lastCompletionDateKey),
         lastHintClaimDate: preferences.getString(_lastHintClaimDateKey),
       );
@@ -64,12 +69,17 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
       );
       await preferences.setString(
         _bestMovesKey,
-        jsonEncode(_encodeBestMoves(progress.bestMovesByLevel)),
+        jsonEncode(_encodeIntMap(progress.bestMovesByLevel)),
+      );
+      await preferences.setString(
+        _bestScoreKey,
+        jsonEncode(_encodeIntMap(progress.bestScoreByLevel)),
       );
       await preferences.setInt(_streakDaysKey, progress.streakDays);
       await preferences.setInt(_hintCountKey, progress.hintCount);
       await preferences.setBool(_soundEnabledKey, progress.soundEnabled);
       await preferences.setBool(_hapticsEnabledKey, progress.hapticsEnabled);
+      await preferences.setBool(_hasSeenTutorialKey, progress.hasSeenTutorial);
 
       final lastCompletionDate = progress.lastCompletionDate;
       if (lastCompletionDate == null) {
@@ -89,7 +99,7 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
     }
   }
 
-  Map<int, int> _decodeBestMoves(String? value) {
+  Map<int, int> _decodeIntMap(String? value) {
     if (value == null || value.isEmpty) {
       return const {};
     }
@@ -104,9 +114,7 @@ class SharedPreferencesPuzzleProgressStore implements PuzzleProgressStore {
     });
   }
 
-  Map<String, int> _encodeBestMoves(Map<int, int> bestMovesByLevel) {
-    return bestMovesByLevel.map((key, value) {
-      return MapEntry('$key', value);
-    });
+  Map<String, int> _encodeIntMap(Map<int, int> values) {
+    return values.map((key, value) => MapEntry('$key', value));
   }
 }

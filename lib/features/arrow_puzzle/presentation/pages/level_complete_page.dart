@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/game_ads.dart';
 import '../../application/puzzle_controller.dart';
+import '../../data/campaign_playbook.dart';
 import '../theme/arrow_puzzle_theme.dart';
 import '../widgets/arrow_puzzle_ad_banner.dart';
 
@@ -27,7 +28,27 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
     final ads = widget.ads;
     final colorScheme = Theme.of(context).colorScheme;
     final isFinalLevel = controller.isLastLevel;
+    final currentWave = controller.currentCampaignWave;
+    final nextWave = controller.nextCampaignWave;
     final allLevelsClear = isFinalLevel && controller.hasCompletedAllLevels;
+    final isNewRecord = controller.lastCompletionWasNewRecord;
+    final moveDelta = controller.lastCompletionMoveDelta;
+    final bestMoves = controller.currentLevelBestMoves;
+    final lastRunScore = controller.lastCompletionRunScore;
+    final lastCombo = controller.lastCompletionMaxCombo;
+    final bestScore = controller.bestRunScoreForCurrentLevel;
+    final isScoreRecord = controller.lastCompletionWasScoreRecord;
+    final hasNextMissionInWave =
+        currentWave != null && controller.currentLevelNumber < currentWave.endLevel;
+    final hasNextWave = nextWave != null;
+    final completedInWave = controller.completedLevelsInWaveCount(currentWave);
+    late String nextWaveObjective;
+    if (nextWave == null) {
+      nextWaveObjective = 'Wave complete. Replay now to chase score and combo.';
+    } else {
+      nextWaveObjective =
+          'Wave complete. Next objective: Wave ${nextWave.index} · ${nextWave.title}.';
+    }
 
     return Scaffold(
       body: GameBackdrop(
@@ -66,9 +87,12 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          allLevelsClear
-                              ? 'Every board in this pack is complete.'
-                              : 'Completed in ${controller.moveCount} moves',
+                          _completionSubtitle(
+                            isNewRecord: isNewRecord,
+                            moveCount: controller.moveCount,
+                            bestMoves: bestMoves,
+                            moveDelta: moveDelta,
+                          ),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
@@ -77,7 +101,37 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
                               ),
                         ),
                         SizedBox(height: compact ? 16 : 20),
-                        _CompletionStats(controller: controller),
+                        _CompletionStats(
+                          controller: controller,
+                          isNewRecord: isNewRecord,
+                          moveDelta: moveDelta,
+                          runScore: lastRunScore,
+                          combo: lastCombo,
+                          bestScore: bestScore,
+                        ),
+                        if (currentWave != null) ...[
+                          const SizedBox(height: 12),
+                          _CampaignProgressCard(
+                            controller: controller,
+                            currentWave: currentWave,
+                            completedInWave: completedInWave,
+                            nextWaveObjective: nextWaveObjective,
+                          ),
+                        ],
+                        if (isNewRecord) ...[
+                          const SizedBox(height: 12),
+                          _NewRecordBadge(
+                            isNewRecord: isNewRecord,
+                            moveDelta: moveDelta,
+                          ),
+                        ],
+                        if (isScoreRecord) ...[
+                          const SizedBox(height: 12),
+                          _ScoreRecordBadge(
+                            runScore: lastRunScore,
+                            bestScore: bestScore,
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         AnimatedBuilder(
                           animation: ads,
@@ -99,27 +153,40 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
                               ? null
                               : () => _continueAfterOptionalAd(
                                   isFinalLevel: isFinalLevel,
+                                  currentWave: currentWave,
+                                  hasNextMissionInWave: hasNextMissionInWave,
+                                  hasNextWave: hasNextWave,
                                 ),
                           icon: Icon(
-                            isFinalLevel
-                                ? Icons.home_rounded
-                                : Icons.arrow_forward_rounded,
+                            _nextFlowIcon(
+                              isFinalLevel: isFinalLevel,
+                              currentWave: currentWave,
+                              hasNextMissionInWave: hasNextMissionInWave,
+                              hasNextWave: hasNextWave,
+                            ),
                           ),
                           label: Text(
-                            isFinalLevel ? 'Back Home' : 'Next Level',
+                            _nextFlowLabel(
+                              isFinalLevel: isFinalLevel,
+                              currentWave: currentWave,
+                              hasNextMissionInWave: hasNextMissionInWave,
+                              hasNextWave: hasNextWave,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         OutlinedButton.icon(
                           onPressed: controller.retryLevel,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Replay Level'),
+                          label: const Text('Replay Mission'),
                         ),
                         const SizedBox(height: 12),
                         TextButton.icon(
-                          onPressed: controller.showLevelSelect,
+                          onPressed: currentWave == null
+                              ? controller.showLevelSelect
+                              : controller.startNextCampaignWaveOrCurrent,
                           icon: const Icon(Icons.grid_view_rounded),
-                          label: const Text('Level Select'),
+                          label: Text(currentWave == null ? 'Campaign' : 'Missions'),
                         ),
                         SizedBox(height: compact ? 8 : 20),
                       ],
@@ -134,7 +201,33 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
     );
   }
 
-  Future<void> _continueAfterOptionalAd({required bool isFinalLevel}) async {
+  String _completionSubtitle({
+    required bool isNewRecord,
+    required int moveCount,
+    required int? bestMoves,
+    required int? moveDelta,
+  }) {
+    final safeMoveDelta = moveDelta ?? 0;
+    final targetDelta = safeMoveDelta <= 0 ? 1 : safeMoveDelta;
+
+    if (isNewRecord && moveDelta == null) {
+      return 'First clear with $moveCount moves. New high score set.';
+    }
+    if (isNewRecord) {
+      return '$moveCount moves. New best by $moveDelta move(s)!';
+    }
+    if (bestMoves == null) {
+      return 'Completed in $moveCount moves.';
+    }
+    return 'Completed in $moveCount moves. Best is $bestMoves. Try $targetDelta fewer to beat it.';
+  }
+
+  Future<void> _continueAfterOptionalAd({
+    required bool isFinalLevel,
+    required CampaignWave? currentWave,
+    required bool hasNextMissionInWave,
+    required bool hasNextWave,
+  }) async {
     if (_continuing) {
       return;
     }
@@ -142,7 +235,12 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
     setState(() => _continuing = true);
     try {
       await widget.ads.maybeShowInterstitial(
-        placement: isFinalLevel ? 'level_complete_home' : 'level_complete_next',
+        placement: _nextFlowPlacement(
+          isFinalLevel: isFinalLevel,
+          currentWave: currentWave,
+          hasNextMissionInWave: hasNextMissionInWave,
+          hasNextWave: hasNextWave,
+        ),
         levelNumber: widget.controller.currentLevelNumber,
       );
     } on Object catch (error) {
@@ -155,6 +253,10 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
 
     if (isFinalLevel) {
       widget.controller.backHome();
+    } else if (hasNextMissionInWave) {
+      widget.controller.nextLevel();
+    } else if (currentWave != null && hasNextWave) {
+      widget.controller.startCampaignWave(currentWave.index + 1);
     } else {
       widget.controller.nextLevel();
     }
@@ -162,6 +264,60 @@ class _LevelCompletePageState extends State<LevelCompletePage> {
     if (mounted) {
       setState(() => _continuing = false);
     }
+  }
+
+  String _nextFlowLabel({
+    required bool isFinalLevel,
+    required CampaignWave? currentWave,
+    required bool hasNextMissionInWave,
+    required bool hasNextWave,
+  }) {
+    if (isFinalLevel) {
+      return 'Back Home';
+    }
+    if (hasNextMissionInWave) {
+      return 'Next Mission';
+    }
+    if (currentWave != null && hasNextWave) {
+      return 'Next Wave';
+    }
+    return 'Next Level';
+  }
+
+  String _nextFlowPlacement({
+    required bool isFinalLevel,
+    required CampaignWave? currentWave,
+    required bool hasNextMissionInWave,
+    required bool hasNextWave,
+  }) {
+    if (isFinalLevel) {
+      return 'level_complete_home';
+    }
+    if (hasNextMissionInWave) {
+      return 'level_complete_next_mission';
+    }
+    if (currentWave != null && hasNextWave) {
+      return 'level_complete_next_wave';
+    }
+    return 'level_complete_next';
+  }
+
+  IconData _nextFlowIcon({
+    required bool isFinalLevel,
+    required CampaignWave? currentWave,
+    required bool hasNextMissionInWave,
+    required bool hasNextWave,
+  }) {
+    if (isFinalLevel) {
+      return Icons.home_rounded;
+    }
+    if (hasNextMissionInWave) {
+      return Icons.keyboard_arrow_right_rounded;
+    }
+    if (currentWave != null && hasNextWave) {
+      return Icons.alt_route_rounded;
+    }
+    return Icons.arrow_forward_rounded;
   }
 }
 
@@ -240,33 +396,229 @@ class _CelebrationBurstPainter extends CustomPainter {
 }
 
 class _CompletionStats extends StatelessWidget {
-  const _CompletionStats({required this.controller});
+  const _CompletionStats({
+    required this.controller,
+    required this.isNewRecord,
+    required this.moveDelta,
+    required this.runScore,
+    required this.combo,
+    required this.bestScore,
+  });
 
   final PuzzleController controller;
+  final bool isNewRecord;
+  final int? moveDelta;
+  final int? runScore;
+  final int? combo;
+  final int? bestScore;
 
   @override
   Widget build(BuildContext context) {
     final bestMoves = controller.currentLevelBestMoves;
+    final safeMoveDelta = moveDelta ?? 0;
+    final targetDelta = safeMoveDelta <= 0 ? 1 : safeMoveDelta;
 
     return ArrowPuzzleCard(
       shadow: true,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 12,
+        runSpacing: 12,
         children: [
+          _StatItem(
+            icon: Icons.stars_rounded,
+            label: 'Score',
+            value: runScore == null ? '-' : '$runScore',
+          ),
+          _StatItem(
+            icon: Icons.keyboard_double_arrow_up_rounded,
+            label: 'This',
+            value: '${controller.moveCount}',
+          ),
           _StatItem(
             icon: Icons.military_tech_rounded,
             label: 'Best',
-            value: bestMoves == null ? '${controller.moveCount}' : '$bestMoves',
+            value: bestMoves == null ? '-' : '$bestMoves',
+          ),
+          _StatItem(
+            icon: Icons.stacked_line_chart_rounded,
+            label: isNewRecord ? 'Lead' : 'Target',
+            value: moveDelta == null
+                ? '-'
+                : isNewRecord
+                ? '-$moveDelta'
+                : '+$targetDelta',
           ),
           _StatItem(
             icon: Icons.local_fire_department_rounded,
             label: 'Streak',
             value: '${controller.streakDays}',
           ),
-          _StatItem(
-            icon: Icons.lock_open_rounded,
-            label: 'Unlocked',
-            value: '${controller.unlockedLevelCount}',
+          if (combo != null)
+            _StatItem(
+              icon: Icons.flash_on_rounded,
+              label: 'Top Combo',
+              value: '$combo',
+            ),
+          if (bestScore != null)
+            _StatItem(
+              icon: Icons.emoji_events_rounded,
+              label: isNewRecord ? 'Best Score' : 'Best Score',
+              value: '$bestScore',
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CampaignProgressCard extends StatelessWidget {
+  const _CampaignProgressCard({
+    required this.controller,
+    required this.currentWave,
+    required this.completedInWave,
+    required this.nextWaveObjective,
+  });
+
+  final PuzzleController controller;
+  final CampaignWave currentWave;
+  final int completedInWave;
+  final String nextWaveObjective;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasNextInWave = controller.currentLevelNumber < currentWave.endLevel;
+    final nextWaveHint = hasNextInWave ? 'Keep momentum: finish Mission ${controller.currentLevelNumber + 1} in this wave.' : nextWaveObjective;
+    final nextFlowHint = hasNextInWave
+        ? 'Keep momentum: finish Mission ${controller.currentLevelNumber + 1} in this wave.'
+        : nextWaveHint;
+    final targetScore = controller.bestRunScoreForCurrentLevel;
+    final scoreHint = targetScore == null
+        ? 'Score chase unlocked for this mission on next attempt.'
+        : 'Try for one cleaner replay to beat your best score of $targetScore.';
+
+    return ArrowPuzzleCard(
+      borderColor: const Color(0xFFD5F0FF),
+      color: const Color(0xFFF2F9FF),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.alt_route_rounded, color: ArrowPuzzleColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Wave ${currentWave.index}: ${currentWave.title}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            currentWave.objective,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Wave progress: $completedInWave / ${currentWave.levelCount}',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: ArrowPuzzleColors.primaryDark,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            nextFlowHint,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Reward cue: ${currentWave.reward}',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: ArrowPuzzleColors.mutedInk,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            scoreHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreRecordBadge extends StatelessWidget {
+  const _ScoreRecordBadge({required this.runScore, required this.bestScore});
+
+  final int? runScore;
+  final int? bestScore;
+
+  @override
+  Widget build(BuildContext context) {
+    if (runScore == null || bestScore == null) {
+      return const SizedBox.shrink();
+    }
+
+    return ArrowPuzzleCard(
+      color: const Color(0xFFFFF3CC),
+      borderColor: const Color(0xFFFFD15C),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD88A00)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Score record set at $runScore! Replay in one clean, faster run.',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: ArrowPuzzleColors.primaryDark,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NewRecordBadge extends StatelessWidget {
+  const _NewRecordBadge({required this.isNewRecord, required this.moveDelta});
+
+  final bool isNewRecord;
+  final int? moveDelta;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isNewRecord) {
+      return const SizedBox.shrink();
+    }
+
+    final safeMoveDelta = moveDelta ?? 1;
+    final challengeText = moveDelta == null
+        ? 'Clean baseline set'
+        : 'Improve next run by staying closer than ${math.max(safeMoveDelta, 1)} moves';
+
+    return ArrowPuzzleCard(
+      color: ArrowPuzzleColors.mintSoft,
+      borderColor: const Color(0xFF9DDDBD),
+      child: Row(
+        children: [
+          const Icon(Icons.emoji_events_rounded, color: ArrowPuzzleColors.mint),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              challengeText,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: ArrowPuzzleColors.primaryDark,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -297,7 +649,7 @@ class _PostClearBoostCard extends StatelessWidget {
           Expanded(
             child: Text(
               canClaim
-                  ? 'Claim daily hint'
+                  ? 'Claim your daily hint'
                   : canWatchRewardedAd
                   ? 'Watch ad for one hint'
                   : '${controller.hintCount} hints ready',
@@ -352,19 +704,22 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
-      ],
+    return SizedBox(
+      width: 140,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+        ],
+      ),
     );
   }
 }

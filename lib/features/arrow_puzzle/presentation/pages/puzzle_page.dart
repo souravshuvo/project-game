@@ -16,6 +16,7 @@ class PuzzlePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final level = controller.currentLevel;
+    final isStuck = controller.isBoardStuck;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,17 +37,12 @@ class PuzzlePage extends StatelessWidget {
               label: Text('${controller.hintCount}'),
               child: const Icon(Icons.lightbulb_rounded),
             ),
-            tooltip: 'Hint',
+            tooltip: 'Use hint',
           ),
           IconButton(
             onPressed: controller.retryLevel,
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Retry',
-          ),
-          IconButton(
-            onPressed: () => _showPauseMenu(context),
-            icon: const Icon(Icons.menu_rounded),
-            tooltip: 'Menu',
+            tooltip: 'Restart',
           ),
         ],
       ),
@@ -77,7 +73,15 @@ class PuzzlePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                if (isStuck) ...[
+                  _StuckStateCard(controller: controller),
+                  const SizedBox(height: 12),
+                ],
+                if (controller.currentCampaignWave != null) ...[
+                  _MissionMissionStrip(controller: controller),
+                  const SizedBox(height: 12),
+                ],
                 Expanded(
                   child: Center(
                     child: PuzzleBoardWidget(controller: controller),
@@ -87,7 +91,9 @@ class PuzzlePage extends StatelessWidget {
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   child: _MoveStatus(
-                    key: ValueKey(controller.moveCount),
+                    key: ValueKey(
+                      '${controller.moveCount}-${controller.lastInvalidTap?.row ?? ""}-${controller.lastInvalidTap?.col ?? ""}',
+                    ),
                     controller: controller,
                   ),
                 ),
@@ -108,6 +114,61 @@ class PuzzlePage extends StatelessWidget {
       builder: (_) {
         return _PauseMenu(controller: controller);
       },
+    );
+  }
+}
+
+class _StuckStateCard extends StatelessWidget {
+  const _StuckStateCard({required this.controller});
+
+  final PuzzleController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArrowPuzzleCard(
+      color: const Color(0xFFFFF0ED),
+      borderColor: const Color(0xFFFFC9BE),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'No moves left',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: ArrowPuzzleColors.primaryDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'The board is blocked, so clear flow has ended. Try again for a cleaner run.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: ArrowPuzzleColors.mutedInk),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ElevatedButton.icon(
+                onPressed: controller.retryLevel,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+              OutlinedButton.icon(
+                onPressed: controller.showLevelSelect,
+                icon: const Icon(Icons.route_rounded),
+                label: const Text('Campaign'),
+              ),
+              TextButton.icon(
+                onPressed: controller.backHome,
+                icon: const Icon(Icons.home_rounded),
+                label: const Text('Home'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -171,7 +232,7 @@ class _PauseMenu extends StatelessWidget {
                   Expanded(
                     child: _PauseAction(
                       icon: Icons.grid_view_rounded,
-                      label: 'Levels',
+                      label: 'Campaign',
                       onTap: () => closeAndRun(controller.showLevelSelect),
                     ),
                   ),
@@ -279,6 +340,11 @@ class _MoveStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bestMoves = controller.currentLevelBestMoves;
+    final hasValidMoves = controller.validMoves.isNotEmpty;
+    final bestScore = controller.bestRunScoreForCurrentLevel;
+    final runScore = controller.runScore;
+    final combo = controller.comboStreak;
+    final maxCombo = controller.maxComboStreak;
 
     return Wrap(
       alignment: WrapAlignment.center,
@@ -289,13 +355,97 @@ class _MoveStatus extends StatelessWidget {
           icon: Icons.touch_app_rounded,
           label: 'Moves',
           value: '${controller.moveCount}',
+          accent: true,
+        ),
+        _StatusChip(
+          icon: Icons.stars_rounded,
+          label: 'Score',
+          value: '$runScore',
+        ),
+        _StatusChip(
+          icon: Icons.flash_on_rounded,
+          label: 'Combo',
+          value: maxCombo > 0 ? '$maxCombo (${combo}x)' : '$maxCombo',
         ),
         _StatusChip(
           icon: Icons.military_tech_rounded,
           label: 'Best',
           value: bestMoves == null ? '-' : '$bestMoves',
         ),
+        _StatusChip(
+          icon: Icons.grid_view_rounded,
+          label: 'Arrows',
+          value: '${controller.remainingArrows}',
+        ),
+        _StatusChip(
+          icon: Icons.lightbulb_rounded,
+          label: 'Hint',
+          value: '${controller.hintCount}',
+        ),
+        if (bestScore != null)
+          _StatusChip(
+            icon: Icons.trending_up_rounded,
+            label: 'Best Score',
+            value: '$bestScore',
+          ),
+        if (!hasValidMoves)
+          _StatusChip(
+            icon: Icons.warning_amber_rounded,
+            label: 'State',
+            value: 'No valid move',
+          ),
       ],
+    );
+  }
+}
+
+class _MissionMissionStrip extends StatelessWidget {
+  const _MissionMissionStrip({required this.controller});
+
+  final PuzzleController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final wave = controller.currentCampaignWave;
+    final missionTitle = wave?.title ?? 'Campaign Mission';
+    final objective = controller.campaignMissionObjective;
+    final reward = controller.campaignMissionReward;
+
+    return ArrowPuzzleCard(
+      borderColor: const Color(0xFFD5F0FF),
+      color: const Color(0xFFF2F9FF),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.alt_route_rounded, color: ArrowPuzzleColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  wave == null ? 'Campaign Mission' : 'Wave ${wave.index}: $missionTitle',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            objective,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 4),
+          if (reward.trim().isNotEmpty)
+            Text(
+              'Reward cue: $reward',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: ArrowPuzzleColors.mutedInk,
+                  ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -305,17 +455,21 @@ class _StatusChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.accent = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: accent
+            ? ArrowPuzzleColors.primary.withValues(alpha: 0.08)
+            : Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
@@ -361,7 +515,7 @@ class PuzzleBoardWidget extends StatelessWidget {
               ? constraints.maxHeight
               : MediaQuery.sizeOf(context).height - 220;
           final maxSide = math.min(availableWidth, availableHeight);
-          final boardSide = maxSide.clamp(180.0, 520.0).toDouble();
+          final boardSide = maxSide.clamp(180.0, 560.0).toDouble();
           final denseBoard = math.max(board.rowCount, board.colCount) >= 7;
           final gridGap = denseBoard ? 5.0 : 8.0;
           final boardPadding = denseBoard ? 8.0 : 12.0;
@@ -485,37 +639,42 @@ class _ArrowTileState extends State<ArrowTile> with TickerProviderStateMixin {
     return Semantics(
       button: widget.cell.isArrow,
       label: widget.cell.isArrow ? '${widget.cell.name} arrow' : 'Empty space',
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_shakeController, _slideController]),
-          builder: (context, child) {
-            final shake = widget.isInvalid
-                ? _shakeOffset(_shakeController.value)
-                : Offset.zero;
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashFactory: InkRipple.splashFactory,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_shakeController, _slideController]),
+            builder: (context, child) {
+              final shake = widget.isInvalid
+                  ? _shakeOffset(_shakeController.value)
+                  : Offset.zero;
 
-            if (removedCell != null) {
-              final end = exitAlignment(widget.position, removedCell);
-              final progress = Curves.easeOutCubic.transform(
-                _slideController.value,
-              );
-              return Transform.translate(
-                offset:
-                    shake +
-                    Offset(end.x * 48 * progress, end.y * 48 * progress),
-                child: Transform.scale(
-                  scale: 1 + 0.08 * (1 - progress),
-                  child: Opacity(
-                    opacity: 1 - progress,
-                    child: _TileFace(cell: removedCell),
+              if (removedCell != null) {
+                final end = exitAlignment(widget.position, removedCell);
+                final progress = Curves.easeOutCubic.transform(
+                  _slideController.value,
+                );
+                return Transform.translate(
+                  offset:
+                      shake +
+                      Offset(end.x * 48 * progress, end.y * 48 * progress),
+                  child: Transform.scale(
+                    scale: 1 + 0.08 * (1 - progress),
+                    child: Opacity(
+                      opacity: 1 - progress,
+                      child: _TileFace(cell: removedCell),
+                    ),
                   ),
-                ),
-              );
-            }
+                );
+              }
 
-            return Transform.translate(offset: shake, child: child);
-          },
-          child: _TileFace(cell: widget.cell, isHinted: widget.isHinted),
+              return Transform.translate(offset: shake, child: child);
+            },
+            child: _TileFace(cell: widget.cell, isHinted: widget.isHinted),
+          ),
         ),
       ),
     );

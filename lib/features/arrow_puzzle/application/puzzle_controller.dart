@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../data/puzzle_progress_store.dart';
+import '../data/campaign_playbook.dart';
 import '../domain/board_position.dart';
 import '../domain/player_progress.dart';
 import '../domain/puzzle_board.dart';
@@ -54,11 +55,19 @@ class PuzzleController extends ChangeNotifier {
   BoardPosition? _lastRemovedPosition;
   BoardPosition? _hintedPosition;
   PuzzleCell? _lastRemovedCell;
+  var _lastCompletionWasNewRecord = false;
+  int? _lastCompletionMoveDelta;
   late DateTime _levelStartedAt;
   var _currentLevelArrowCount = 0;
   var _moveCount = 0;
   var _invalidTapCount = 0;
   var _hintUseCount = 0;
+  var _runScore = 0;
+  var _comboStreak = 0;
+  var _maxComboStreak = 0;
+  int? _lastCompletionRunScore;
+  int? _lastCompletionMaxCombo;
+  bool _lastCompletionWasScoreRecord = false;
 
   PuzzleScreen get screen => _screen;
 
@@ -80,6 +89,50 @@ class PuzzleController extends ChangeNotifier {
 
   int get unlockedLevelCount => _progress.unlockedLevelIndex + 1;
 
+  List<CampaignWave> get campaignWaves =>
+      buildCampaignWaves(totalLevels: totalLevels);
+
+  CampaignWave? get currentCampaignWave =>
+      campaignWaveForLevel(levelNumber: currentLevelNumber, totalLevels: totalLevels);
+
+  CampaignWave? get nextCampaignWave {
+    final current = currentCampaignWave;
+    if (current == null) {
+      return null;
+    }
+    return campaignWaveForLevel(
+      levelNumber: current.endLevel + 1,
+      totalLevels: totalLevels,
+    );
+  }
+
+  int completedLevelsInWaveCount(CampaignWave? wave) {
+    if (wave == null) {
+      return 0;
+    }
+    return completedLevelCountInWave(wave, _progress.completedLevelIds);
+  }
+
+  bool isWaveComplete(CampaignWave? wave) {
+    if (wave == null) {
+      return false;
+    }
+    return completedLevelsInWaveCount(wave) >= wave.levelCount;
+  }
+
+  String get campaignMissionTitle {
+    return currentCampaignWave?.title ?? 'Campaign';
+  }
+
+  String get campaignMissionObjective {
+    return currentCampaignWave?.objective ?? 'Keep replaying and improving clear quality.';
+  }
+
+  String get campaignMissionReward {
+    return currentCampaignWave?.reward ??
+        'Replay levels to unlock full wave momentum.';
+  }
+
   int get streakDays => _progress.streakDays;
 
   int get hintCount => _progress.hintCount;
@@ -88,11 +141,38 @@ class PuzzleController extends ChangeNotifier {
 
   bool get hapticsEnabled => _progress.hapticsEnabled;
 
+  bool get shouldShowTutorial => !_progress.hasSeenTutorial;
+
   bool get canClaimDailyHint => _progress.lastHintClaimDate != _todayKey();
 
   bool get canUseHint => hintCount > 0 && validMoves.isNotEmpty;
 
+  int get runScore => _runScore;
+
+  int get comboStreak => _comboStreak;
+
+  int get maxComboStreak => _maxComboStreak;
+
+  int? get lastCompletionRunScore => _lastCompletionRunScore;
+
+  int? get lastCompletionMaxCombo => _lastCompletionMaxCombo;
+
+  bool get lastCompletionWasScoreRecord => _lastCompletionWasScoreRecord;
+
+  int? get bestRunScoreForCurrentLevel => bestRunScoreForLevel(currentLevel.id);
+
   int? get currentLevelBestMoves => bestMovesForLevel(currentLevel.id);
+
+  int? bestRunScoreForLevel(int levelId) => _progress.bestScoreByLevel[levelId];
+
+  bool get isBoardStuck => engine.isStuck(_board);
+
+  int get remainingArrows =>
+      _board.cells.expand((row) => row).where((cell) => cell.isArrow).length;
+
+  bool get lastCompletionWasNewRecord => _lastCompletionWasNewRecord;
+
+  int? get lastCompletionMoveDelta => _lastCompletionMoveDelta;
 
   int get dailyChallengeLevelIndex {
     final unlockedCount = max(1, unlockedLevelCount);
@@ -187,6 +267,16 @@ class PuzzleController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void markTutorialSeen() {
+    if (_progress.hasSeenTutorial) {
+      return;
+    }
+
+    _progress = _progress.copyWith(hasSeenTutorial: true);
+    _saveProgress();
+    notifyListeners();
+  }
+
   void claimDailyHint() {
     if (!canClaimDailyHint) {
       return;
@@ -196,7 +286,7 @@ class PuzzleController extends ChangeNotifier {
       hintCount: min(_progress.hintCount + 1, 99),
       lastHintClaimDate: _todayKey(),
     );
-    _playValidFeedback();
+    _playRewardFeedback();
     telemetry.track(
       GameTelemetryEvents.hintClaim(hintBalance: _progress.hintCount),
     );
@@ -213,7 +303,9 @@ class PuzzleController extends ChangeNotifier {
     _hintedPosition = validMoves.first;
     _progress = _progress.copyWith(hintCount: _progress.hintCount - 1);
     _hintUseCount++;
-    _playValidFeedback();
+    _runScore = max(0, _runScore - 45);
+    _comboStreak = 0;
+    _playRewardFeedback();
     telemetry.track(
       GameTelemetryEvents.hintUse(
         levelId: currentLevel.id,
@@ -227,7 +319,7 @@ class PuzzleController extends ChangeNotifier {
 
   void grantRewardedHint({required String placement}) {
     _progress = _progress.copyWith(hintCount: min(_progress.hintCount + 1, 99));
-    _playValidFeedback();
+    _playRewardFeedback();
     telemetry.track(
       GameTelemetryEvents.rewardedHintGrant(
         levelNumber: currentLevelNumber,
@@ -254,6 +346,7 @@ class PuzzleController extends ChangeNotifier {
     _screen = PuzzleScreen.playing;
     _trackLevelStart(source: 'retry');
     _trackScreenView();
+    _playActionFeedback();
     notifyListeners();
   }
 
@@ -271,6 +364,42 @@ class PuzzleController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void startCampaignWave(int waveIndex) {
+    if (campaignWaves.isEmpty) {
+      return;
+    }
+    final targetIndex = waveIndex.clamp(1, campaignWaves.length);
+    final wave = campaignWaves[targetIndex - 1];
+
+    for (var levelNumber = wave.startLevel; levelNumber <= wave.endLevel; levelNumber++) {
+      final index = levelNumber - 1;
+      if (index < 0 || index >= totalLevels) {
+        continue;
+      }
+      if (!isLevelComplete(levels[index].id) && isLevelUnlocked(index)) {
+        selectLevel(index, source: 'campaign_wave');
+        return;
+      }
+    }
+
+    final fallbackIndex = (wave.startLevel - 1).clamp(0, totalLevels - 1);
+    if (isLevelUnlocked(fallbackIndex)) {
+      selectLevel(fallbackIndex, source: 'campaign_wave');
+    }
+  }
+
+  void startNextCampaignWaveOrCurrent() {
+    final nextWave = nextCampaignWave;
+    if (nextWave == null || !isWaveComplete(currentCampaignWave)) {
+      if (currentCampaignWave != null) {
+        startCampaignWave(currentCampaignWave!.index);
+        return;
+      }
+      return;
+    }
+    startCampaignWave(nextWave.index);
+  }
+
   void tap(BoardPosition position) {
     _lastInvalidTap = null;
     _lastRemovedPosition = null;
@@ -279,6 +408,8 @@ class PuzzleController extends ChangeNotifier {
     if (!engine.canRemove(_board, position)) {
       _lastInvalidTap = position;
       _invalidTapCount++;
+      _comboStreak = 0;
+      _runScore = max(0, _runScore - 36);
       _playInvalidFeedback();
       telemetry.track(
         GameTelemetryEvents.levelInvalidTap(
@@ -299,11 +430,20 @@ class PuzzleController extends ChangeNotifier {
     _hintedPosition = null;
     _board = engine.remove(_board, position);
     _moveCount++;
+    _comboStreak++;
+    if (_comboStreak > _maxComboStreak) {
+      _maxComboStreak = _comboStreak;
+    }
+    _runScore += 72 + (_comboStreak * 10);
 
     if (_board.isCleared) {
       _recordCompletion();
       _screen = PuzzleScreen.complete;
       _trackScreenView();
+      _playWinFeedback();
+    } else if (engine.isStuck(_board)) {
+      _trackBoardStuck();
+      _playFailureFeedback();
     }
 
     notifyListeners();
@@ -316,17 +456,43 @@ class PuzzleController extends ChangeNotifier {
     _lastRemovedPosition = null;
     _hintedPosition = null;
     _lastRemovedCell = null;
+    _runScore = _baseRunScore(_currentLevelArrowCount);
+    _comboStreak = 0;
+    _maxComboStreak = 0;
     _levelStartedAt = _now();
     _moveCount = 0;
     _invalidTapCount = 0;
     _hintUseCount = 0;
+    _lastCompletionWasNewRecord = false;
+    _lastCompletionMoveDelta = null;
+    _lastCompletionRunScore = null;
+    _lastCompletionMaxCombo = null;
+    _lastCompletionWasScoreRecord = false;
   }
 
   void _recordCompletion() {
     final levelId = currentLevel.id;
     final completedLevelIds = {..._progress.completedLevelIds, levelId};
     final bestMovesByLevel = Map<int, int>.of(_progress.bestMovesByLevel);
+    final bestScoreByLevel = Map<int, int>.of(_progress.bestScoreByLevel);
     final bestMoves = bestMovesByLevel[levelId];
+    final bestRunScore = bestScoreByLevel[levelId];
+    _lastCompletionRunScore = _runScore;
+    _lastCompletionMaxCombo = _maxComboStreak;
+
+    final moveClearBonus = max(0, 120 - _movePenalty());
+    final timeBonus = max(0, 90 - (_levelDurationSeconds * 2));
+    _runScore += moveClearBonus + timeBonus;
+    _lastCompletionRunScore = _runScore;
+    _lastCompletionWasScoreRecord = bestRunScore == null || _runScore > bestRunScore;
+    if (_lastCompletionWasScoreRecord) {
+      bestScoreByLevel[levelId] = _runScore;
+    }
+
+    _lastCompletionWasNewRecord = bestMoves == null || _moveCount < bestMoves;
+    _lastCompletionMoveDelta = bestMoves == null
+        ? null
+        : bestMoves - _moveCount;
     if (bestMoves == null || _moveCount < bestMoves) {
       bestMovesByLevel[levelId] = _moveCount;
     }
@@ -342,6 +508,7 @@ class PuzzleController extends ChangeNotifier {
       bestMovesByLevel: bestMovesByLevel,
       streakDays: _updatedStreak(today),
       lastCompletionDate: today,
+      bestScoreByLevel: bestScoreByLevel,
     );
 
     _saveProgress();
@@ -362,6 +529,21 @@ class PuzzleController extends ChangeNotifier {
     );
   }
 
+  void _trackBoardStuck() {
+    telemetry.track(
+      GameTelemetryEvents.levelStuck(
+        levelId: currentLevel.id,
+        levelNumber: currentLevelNumber,
+        boardRows: currentLevel.rows.length,
+        boardCols: currentLevel.rows.first.length,
+        arrowCount: _currentLevelArrowCount,
+        moveCount: _moveCount,
+        invalidTapCount: _invalidTapCount,
+        hintUseCount: _hintUseCount,
+      ),
+    );
+  }
+
   int get _levelDurationSeconds {
     return max(0, _now().difference(_levelStartedAt).inSeconds);
   }
@@ -372,6 +554,10 @@ class PuzzleController extends ChangeNotifier {
         .where((cell) => cell.isArrow)
         .length;
   }
+
+  int _baseRunScore(int arrowCount) => 75 + (arrowCount * 22);
+
+  int _movePenalty() => (_invalidTapCount * 14) + (_hintUseCount * 22);
 
   int _updatedStreak(String today) {
     final lastCompletionDate = _progress.lastCompletionDate;
@@ -410,6 +596,19 @@ class PuzzleController extends ChangeNotifier {
     );
   }
 
+  void _playActionFeedback() {
+    if (!enableFeedback) {
+      return;
+    }
+
+    if (_progress.hapticsEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+    if (_progress.soundEnabled) {
+      unawaited(SystemSound.play(SystemSoundType.click));
+    }
+  }
+
   void _playValidFeedback() {
     if (!enableFeedback) {
       return;
@@ -430,6 +629,45 @@ class PuzzleController extends ChangeNotifier {
 
     if (_progress.hapticsEnabled) {
       unawaited(HapticFeedback.mediumImpact());
+    }
+    if (_progress.soundEnabled) {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
+  void _playRewardFeedback() {
+    if (!enableFeedback) {
+      return;
+    }
+
+    if (_progress.hapticsEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+    if (_progress.soundEnabled) {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
+  void _playWinFeedback() {
+    if (!enableFeedback) {
+      return;
+    }
+
+    if (_progress.hapticsEnabled) {
+      unawaited(HapticFeedback.mediumImpact());
+    }
+    if (_progress.soundEnabled) {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
+  void _playFailureFeedback() {
+    if (!enableFeedback) {
+      return;
+    }
+
+    if (_progress.hapticsEnabled) {
+      unawaited(HapticFeedback.heavyImpact());
     }
     if (_progress.soundEnabled) {
       unawaited(SystemSound.play(SystemSoundType.click));

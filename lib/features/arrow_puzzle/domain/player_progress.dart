@@ -4,14 +4,17 @@ class PlayerProgress {
     required this.unlockedLevelIndex,
     required Set<int> completedLevelIds,
     required Map<int, int> bestMovesByLevel,
+    required Map<int, int> bestScoreByLevel,
     required this.streakDays,
     required this.hintCount,
     required this.soundEnabled,
     required this.hapticsEnabled,
+    this.hasSeenTutorial = false,
     this.lastCompletionDate,
     this.lastHintClaimDate,
   }) : completedLevelIds = Set.unmodifiable(completedLevelIds),
-       bestMovesByLevel = Map.unmodifiable(bestMovesByLevel);
+       bestMovesByLevel = Map.unmodifiable(bestMovesByLevel),
+       bestScoreByLevel = Map.unmodifiable(bestScoreByLevel);
 
   factory PlayerProgress.initial() {
     return PlayerProgress(
@@ -19,6 +22,7 @@ class PlayerProgress {
       unlockedLevelIndex: 0,
       completedLevelIds: const {},
       bestMovesByLevel: const {},
+      bestScoreByLevel: const {},
       streakDays: 0,
       hintCount: 1,
       soundEnabled: true,
@@ -34,6 +38,8 @@ class PlayerProgress {
   final int hintCount;
   final bool soundEnabled;
   final bool hapticsEnabled;
+  final Map<int, int> bestScoreByLevel;
+  final bool hasSeenTutorial;
   final String? lastCompletionDate;
   final String? lastHintClaimDate;
 
@@ -46,6 +52,8 @@ class PlayerProgress {
     int? hintCount,
     bool? soundEnabled,
     bool? hapticsEnabled,
+    bool? hasSeenTutorial,
+    Map<int, int>? bestScoreByLevel,
     String? lastCompletionDate,
     String? lastHintClaimDate,
   }) {
@@ -54,10 +62,12 @@ class PlayerProgress {
       unlockedLevelIndex: unlockedLevelIndex ?? this.unlockedLevelIndex,
       completedLevelIds: completedLevelIds ?? this.completedLevelIds,
       bestMovesByLevel: bestMovesByLevel ?? this.bestMovesByLevel,
+      bestScoreByLevel: bestScoreByLevel ?? this.bestScoreByLevel,
       streakDays: streakDays ?? this.streakDays,
       hintCount: hintCount ?? this.hintCount,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      hasSeenTutorial: hasSeenTutorial ?? this.hasSeenTutorial,
       lastCompletionDate: lastCompletionDate ?? this.lastCompletionDate,
       lastHintClaimDate: lastHintClaimDate ?? this.lastHintClaimDate,
     );

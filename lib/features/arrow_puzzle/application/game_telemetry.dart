@@ -122,6 +122,28 @@ final class GameTelemetryEvents {
     });
   }
 
+  static GameTelemetryEvent levelStuck({
+    required int levelId,
+    required int levelNumber,
+    required int boardRows,
+    required int boardCols,
+    required int arrowCount,
+    required int moveCount,
+    required int invalidTapCount,
+    required int hintUseCount,
+  }) {
+    return GameTelemetryEvent('level_stuck', {
+      'level_id': levelId,
+      'level_number': levelNumber,
+      'board_rows': boardRows,
+      'board_cols': boardCols,
+      'arrow_count': arrowCount,
+      'move_count': moveCount,
+      'invalid_tap_count': invalidTapCount,
+      'hint_use_count': hintUseCount,
+    });
+  }
+
   static GameTelemetryEvent hintClaim({required int hintBalance}) {
     return GameTelemetryEvent('hint_claim', {'hint_balance': hintBalance});
   }

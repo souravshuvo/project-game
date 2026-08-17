@@ -1,4 +1,5 @@
 import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/data/local_level_pack.dart';
+import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/data/campaign_playbook.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/board_position.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_board.dart';
 import 'package:arrow_puzzle_tap_puzzle_games/features/arrow_puzzle/domain/puzzle_engine.dart';
@@ -80,6 +81,67 @@ void main() {
 
   test('production level pack reaches the v1 content target', () {
     expect(localLevelPack.length, 60);
+  });
+
+  test('campaign playbook partitions every level into ordered waves', () {
+    final waves = buildCampaignWaves(totalLevels: localLevelPack.length);
+    final allWaveLevels = <int>{};
+    var expectedStart = 1;
+
+    expect(waves.isNotEmpty, isTrue);
+    for (final wave in waves) {
+      final seenInWave = <int>{};
+
+      expect(wave.startLevel, expectedStart);
+      expect(wave.endLevel, greaterThanOrEqualTo(wave.startLevel));
+      expect(wave.title.trim(), isNotEmpty);
+      expect(wave.objective.trim(), isNotEmpty);
+      expect(wave.reward.trim(), isNotEmpty);
+      expect(wave.levelCount, wave.endLevel - wave.startLevel + 1);
+      for (var level = wave.startLevel; level <= wave.endLevel; level++) {
+        expect(wave.containsLevel(level), isTrue);
+        expect(seenInWave.add(level), isTrue);
+        expect(allWaveLevels.add(level), isTrue);
+      }
+      expectedStart = wave.endLevel + 1;
+    }
+    expect(allWaveLevels.length, localLevelPack.length);
+    expect(expectedStart, localLevelPack.length + 1);
+    expect(allWaveLevels, equals(List.generate(localLevelPack.length, (i) => i + 1).toSet()));
+  });
+
+  test('campaign wave helper counts completed levels only inside the wave', () {
+    final firstWave = campaignWaveForLevel(levelNumber: 1, totalLevels: 18);
+    expect(firstWave, isNotNull);
+    expect(
+      completedLevelCountInWave(
+        firstWave!,
+        {1, 2, 5, 7, 8, 10, 13, 17},
+      ),
+      5,
+    );
+
+    final secondWave = campaignWaveForLevel(levelNumber: 7, totalLevels: 18);
+    expect(secondWave, isNotNull);
+    expect(
+      completedLevelCountInWave(
+        secondWave!,
+        {1, 2, 5, 7, 8, 10, 13, 17},
+      ),
+      2,
+    );
+  });
+
+  test('mission metadata exists for every campaign wave', () {
+    final waves = buildCampaignWaves(totalLevels: localLevelPack.length);
+
+    for (final wave in waves) {
+      expect(wave.title.trim().isNotEmpty, isTrue);
+      expect(wave.objective.trim().isNotEmpty, isTrue);
+      expect(wave.reward.trim().isNotEmpty, isTrue);
+      expect(wave.startLevel <= wave.endLevel, isTrue);
+      expect(wave.endLevel <= localLevelPack.length, isTrue);
+    }
   });
 
   test('sample levels use unique ids', () {
