@@ -4,20 +4,20 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../analytics/game_analytics.dart';
+import 'ad_frequency_cap.dart';
 import 'ad_mob_config.dart';
 import 'game_ad_service.dart';
 
 class AdMobGameAdService implements GameAdService {
-  AdMobGameAdService({required GameAnalytics analytics})
-    : _analytics = analytics;
-
-  static const _minLevelEndsBetweenInterstitials = 3;
-  static const _minInterstitialInterval = Duration(minutes: 3);
+  AdMobGameAdService({
+    required GameAnalytics analytics,
+    AdFrequencyCap? frequencyCap,
+  }) : _analytics = analytics,
+       _frequencyCap = frequencyCap ?? AdFrequencyCap();
 
   final GameAnalytics _analytics;
+  final AdFrequencyCap _frequencyCap;
   InterstitialAd? _interstitialAd;
-  DateTime? _lastInterstitialShownAt;
-  int _levelEndsSinceInterstitial = 0;
   bool _isLoadingInterstitial = false;
   bool _isShowingInterstitial = false;
 
@@ -33,10 +33,11 @@ class AdMobGameAdService implements GameAdService {
         RequestConfiguration(
           maxAdContentRating: MaxAdContentRating.g,
           tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
+          tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.yes,
         ),
       );
-      unawaited(MobileAds.instance.initialize());
-      _loadInterstitial();
+      await MobileAds.instance.initialize();
+      _loadInterstitial('warm_up');
     } on Object catch (error) {
       debugPrint('AdMob warm-up failed: $error');
       _logAdLoadFailed('startup', error.toString());
@@ -45,8 +46,9 @@ class AdMobGameAdService implements GameAdService {
 
   @override
   void recordLevelEnd({required bool won}) {
-    _levelEndsSinceInterstitial++;
-    _loadInterstitial();
+    _frequencyCap.recordLevelEnd(won: won);
+    _logAdGateState(won ? 'level_end_won' : 'level_end_lost');
+    _loadInterstitial('level_end');
   }
 
   @override
@@ -64,9 +66,10 @@ class AdMobGameAdService implements GameAdService {
       _logAdSkipped(placement, 'already_showing');
       return false;
     }
-    if (!_passesFrequencyCap) {
-      _logAdSkipped(placement, 'frequency_cap');
-      _loadInterstitial();
+    final gateDecision = _frequencyCap.evaluate(DateTime.now());
+    if (!gateDecision.canShow) {
+      _logAdSkipped(placement, gateDecision.reason ?? 'frequency_cap');
+      _loadInterstitial('frequency_cap_skip');
       return false;
     }
 
@@ -76,7 +79,7 @@ class AdMobGameAdService implements GameAdService {
         placement,
         _isLoadingInterstitial ? 'loading' : 'not_ready',
       );
-      _loadInterstitial();
+      _loadInterstitial('not_ready');
       return false;
     }
 
@@ -97,43 +100,32 @@ class AdMobGameAdService implements GameAdService {
       onAdDismissedFullScreenContent: (ad) {
         unawaited(ad.dispose());
         _isShowingInterstitial = false;
-        _lastInterstitialShownAt = DateTime.now();
-        _levelEndsSinceInterstitial = 0;
+        _frequencyCap.recordInterstitialShown(DateTime.now());
         _logAdDismissed(placement);
-        _loadInterstitial();
+        _loadInterstitial('dismissed');
         complete(true);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         unawaited(ad.dispose());
         _isShowingInterstitial = false;
         _logAdShowFailed(placement, error.toString());
-        _loadInterstitial();
+        _loadInterstitial('show_failed');
         complete(false);
       },
     );
 
-    unawaited(ad.show());
-    return completer.future.timeout(
-      const Duration(seconds: 8),
-      onTimeout: () {
-        _isShowingInterstitial = false;
-        return true;
-      },
-    );
+    try {
+      await ad.show().timeout(const Duration(seconds: 2));
+    } on Object catch (error) {
+      _isShowingInterstitial = false;
+      _logAdShowFailed(placement, error.toString());
+      _loadInterstitial('show_throw');
+      complete(false);
+    }
+    return completer.future;
   }
 
-  bool get _passesFrequencyCap {
-    if (_levelEndsSinceInterstitial < _minLevelEndsBetweenInterstitials) {
-      return false;
-    }
-    final lastShownAt = _lastInterstitialShownAt;
-    if (lastShownAt == null) {
-      return true;
-    }
-    return DateTime.now().difference(lastShownAt) >= _minInterstitialInterval;
-  }
-
-  void _loadInterstitial() {
+  void _loadInterstitial(String placement) {
     final unitId = AdMobConfig.interstitialUnitId;
     if (!AdMobConfig.adsEnabled || unitId.isEmpty) {
       return;
@@ -145,7 +137,7 @@ class AdMobGameAdService implements GameAdService {
     }
 
     _isLoadingInterstitial = true;
-    _logAdLoadStart('level_end');
+    _logAdLoadStart(placement);
     InterstitialAd.load(
       adUnitId: unitId,
       request: const AdRequest(nonPersonalizedAds: true),
@@ -153,12 +145,12 @@ class AdMobGameAdService implements GameAdService {
         onAdLoaded: (ad) {
           _isLoadingInterstitial = false;
           _interstitialAd = ad;
-          _logAdLoadSuccess('level_end');
+          _logAdLoadSuccess(placement);
         },
         onAdFailedToLoad: (error) {
           _isLoadingInterstitial = false;
           _interstitialAd = null;
-          _logAdLoadFailed('level_end', error.toString());
+          _logAdLoadFailed(placement, error.toString());
         },
       ),
     );
@@ -175,6 +167,7 @@ class AdMobGameAdService implements GameAdService {
       _analytics.logEvent(GameAnalyticsEvents.adLoadStart, {
         'ad_format': 'interstitial',
         'placement': placement,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -185,6 +178,7 @@ class AdMobGameAdService implements GameAdService {
       _analytics.logEvent(GameAnalyticsEvents.adLoadSuccess, {
         'ad_format': 'interstitial',
         'placement': placement,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -196,6 +190,7 @@ class AdMobGameAdService implements GameAdService {
         'ad_format': 'interstitial',
         'placement': placement,
         'reason': _shortReason(reason),
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -206,7 +201,15 @@ class AdMobGameAdService implements GameAdService {
       _analytics.logEvent(GameAnalyticsEvents.adShowAttempt, {
         'ad_format': 'interstitial',
         'placement': placement,
-        'level_ends_since_ad': _levelEndsSinceInterstitial,
+        'level_ends_since_ad': _frequencyCap.levelEndsSinceInterstitial,
+        'seconds_since_last_ad': _frequencyCap.secondsSinceLastInterstitial(
+          DateTime.now(),
+        ),
+        'min_level_ends_between_ads':
+            _frequencyCap.minLevelEndsBetweenInterstitials,
+        'min_seconds_between_ads':
+            _frequencyCap.minInterstitialInterval.inSeconds,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -217,6 +220,7 @@ class AdMobGameAdService implements GameAdService {
       _analytics.logEvent(GameAnalyticsEvents.adShow, {
         'ad_format': 'interstitial',
         'placement': placement,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -228,6 +232,7 @@ class AdMobGameAdService implements GameAdService {
         'ad_format': 'interstitial',
         'placement': placement,
         'reason': _shortReason(reason),
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -238,6 +243,7 @@ class AdMobGameAdService implements GameAdService {
       _analytics.logEvent(GameAnalyticsEvents.adDismissed, {
         'ad_format': 'interstitial',
         'placement': placement,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );
@@ -249,7 +255,35 @@ class AdMobGameAdService implements GameAdService {
         'ad_format': 'interstitial',
         'placement': placement,
         'reason': reason,
-        'level_ends_since_ad': _levelEndsSinceInterstitial,
+        'level_ends_since_ad': _frequencyCap.levelEndsSinceInterstitial,
+        'seconds_since_last_ad': _frequencyCap.secondsSinceLastInterstitial(
+          DateTime.now(),
+        ),
+        'min_level_ends_between_ads':
+            _frequencyCap.minLevelEndsBetweenInterstitials,
+        'min_seconds_between_ads':
+            _frequencyCap.minInterstitialInterval.inSeconds,
+        'ad_mode': AdMobConfig.runtimeMode,
+        'using_test_ads': AdMobConfig.useTestAds,
+      }),
+    );
+  }
+
+  void _logAdGateState(String placement) {
+    final decision = _frequencyCap.evaluate(DateTime.now());
+    unawaited(
+      _analytics.logEvent(GameAnalyticsEvents.adGateState, {
+        'ad_format': 'interstitial',
+        'placement': placement,
+        'can_show': decision.canShow,
+        'reason': decision.reason ?? 'eligible',
+        'level_ends_since_ad': decision.levelEndsSinceInterstitial,
+        'seconds_since_last_ad': decision.secondsSinceLastInterstitial,
+        'min_level_ends_between_ads':
+            _frequencyCap.minLevelEndsBetweenInterstitials,
+        'min_seconds_between_ads':
+            _frequencyCap.minInterstitialInterval.inSeconds,
+        'ad_mode': AdMobConfig.runtimeMode,
         'using_test_ads': AdMobConfig.useTestAds,
       }),
     );

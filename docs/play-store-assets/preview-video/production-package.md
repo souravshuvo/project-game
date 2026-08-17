@@ -26,24 +26,87 @@ Place final captured clips in `docs/play-store-assets/preview-video/captures/` b
 | Clip ID | Expected filename | Required real content | Status |
 | --- | --- | --- | --- |
 | C01 | `c01-home-open.mp4` | Home screen opening Dew Bubble Garden. | Needed |
-| C02 | `c02-level-select.mp4` | Level select with real unlocked/locked levels and saved stars. | Needed |
+| C02 | `c02-garden-route.mp4` | Garden Route with real unlocked/locked stages and saved stars. | Needed |
 | C03 | `c03-aim-bounce.mp4` | Gameplay aiming with wall-bounce guide visible. | Needed |
 | C04 | `c04-shot-match-drop.mp4` | Shot attaching, match popping, floating bubbles dropping. | Needed |
-| C05 | `c05-win-result.mp4` | Real win result with stars, score, Next and Levels/Restart actions. | Needed |
+| C05 | `c05-win-result.mp4` | Real win result with stars, score, Next Stage, Replay Stage, Route, and Home actions. | Needed |
 | C06 | `c06-pause-help-settings.mp4` | Pause/help/settings sheet with sound and haptic toggles. | Needed |
 
-Important: C01 is currently blocked by the Home screen text `Offline / Ad-free` unless production ads are disabled. If ads remain enabled, fix that copy before capture or replace C01 with a level-select/gameplay opening.
+Important: C01 should be captured only after confirming the Home screen has no ad-free or offline-only claim unless production ads and analytics are disabled.
+
+### Exact capture commands (real-footage only)
+
+When capture is permitted, use these minimal ADB steps and pull each clip to the project.
+
+```sh
+adb devices
+adb shell mkdir -p /sdcard/dewbubble/captures
+adb shell screenrecord /sdcard/dewbubble/captures/c01-home-open.mp4
+adb pull /sdcard/dewbubble/captures/c01-home-open.mp4 docs/play-store-assets/preview-video/captures/c01-home-open.mp4
+adb shell rm /sdcard/dewbubble/captures/c01-home-open.mp4
+
+adb shell screenrecord /sdcard/dewbubble/captures/c02-garden-route.mp4
+adb pull /sdcard/dewbubble/captures/c02-garden-route.mp4 docs/play-store-assets/preview-video/captures/c02-garden-route.mp4
+adb shell rm /sdcard/dewbubble/captures/c02-garden-route.mp4
+
+adb shell screenrecord /sdcard/dewbubble/captures/c03-aim-bounce.mp4
+adb pull /sdcard/dewbubble/captures/c03-aim-bounce.mp4 docs/play-store-assets/preview-video/captures/c03-aim-bounce.mp4
+adb shell rm /sdcard/dewbubble/captures/c03-aim-bounce.mp4
+
+adb shell screenrecord /sdcard/dewbubble/captures/c04-shot-match-drop.mp4
+adb pull /sdcard/dewbubble/captures/c04-shot-match-drop.mp4 docs/play-store-assets/preview-video/captures/c04-shot-match-drop.mp4
+adb shell rm /sdcard/dewbubble/captures/c04-shot-match-drop.mp4
+
+adb shell screenrecord /sdcard/dewbubble/captures/c05-win-result.mp4
+adb pull /sdcard/dewbubble/captures/c05-win-result.mp4 docs/play-store-assets/preview-video/captures/c05-win-result.mp4
+adb shell rm /sdcard/dewbubble/captures/c05-win-result.mp4
+
+adb shell screenrecord /sdcard/dewbubble/captures/c06-pause-help-settings.mp4
+adb pull /sdcard/dewbubble/captures/c06-pause-help-settings.mp4 docs/play-store-assets/preview-video/captures/c06-pause-help-settings.mp4
+adb shell rm /sdcard/dewbubble/captures/c06-pause-help-settings.mp4
+```
 
 ## Timeline
 
 | Time | Source | Visual | On-screen text | Voiceover |
 | --- | --- | --- | --- | --- |
 | 0.0-2.5s | C01 | Home screen transitions into the game. | Dew Bubble Garden | Step into a calm bubble garden. |
-| 2.5-5.5s | C02 | Level select, choose an unlocked level. | Pick a puzzle | Choose a short garden level. |
+| 2.5-5.5s | C02 | Garden Route, choose an unlocked stage. | Pick a puzzle | Choose a short garden stage. |
 | 5.5-11.5s | C03 | Aim line and wall bounce preview. | Line up the bounce | Aim, bounce, and plan the clear. |
 | 11.5-18.0s | C04 | Shot lands, match pops, floating bubbles drop. | Match 3 and clear | Match three dew bubbles and drop loose clusters. |
 | 18.0-23.0s | C05 | Win result with score and stars. | Win stars | Clear the board before shots run out. |
 | 23.0-28.0s | C06 | Pause/help/settings or next-level glimpse. | Quick retries | Replay, adjust feedback, or keep going. |
+
+### Optional render workflow (finalized clips present)
+
+1. Verify all six clips exist and are captured at or above 1080x1920 with no overlays covering game UI.
+2. Normalize duration and trim in your editor, matching the timeline table above.
+3. Render as one 28-second MP4 with readable captions/subtitles.
+4. Export with h.264, AAC, and `yuv420p` for broad playback.
+
+Command template (if using FFmpeg locally):
+
+```powershell
+mkdir docs\play-store-assets\preview-video\render
+@(
+  "file 'captures/c01-home-open.mp4'",
+  "file 'captures/c02-garden-route.mp4'",
+  "file 'captures/c03-aim-bounce.mp4'",
+  "file 'captures/c04-shot-match-drop.mp4'",
+  "file 'captures/c05-win-result.mp4'",
+  "file 'captures/c06-pause-help-settings.mp4'"
+) | Set-Content docs/play-store-assets/preview-video/render/preview-list.txt
+
+ffmpeg -f concat -safe 0 -i docs/play-store-assets/preview-video/render/preview-list.txt `
+  -vf "fps=30,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2" `
+  -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -c:a aac -b:a 160k `
+  docs/play-store-assets/preview-video/render/dew-bubble-garden-preview.mp4
+
+ffmpeg -i docs/play-store-assets/preview-video/render/dew-bubble-garden-preview.mp4 `
+  -vf "subtitles=docs/play-store-assets/preview-video/captions-en.srt:force_style='Fontsize=36,Alignment=2'" `
+  -c:a copy `
+  docs/play-store-assets/preview-video/render/dew-bubble-garden-preview-captioned.mp4
+```
 
 ## Editing Notes
 
@@ -63,7 +126,7 @@ Use voiceover only if it sounds natural and does not fight the app sounds. If a 
 Final voiceover script:
 
 1. Step into a calm bubble garden.
-2. Choose a short garden level.
+2. Choose a short garden stage.
 3. Aim, bounce, and plan the clear.
 4. Match three dew bubbles and drop loose clusters.
 5. Clear the board before shots run out.
@@ -100,7 +163,7 @@ No generated UI or fake gameplay support assets are approved for this video.
 ## Capture Steps
 
 1. Use a clean release-like or internal-test build.
-2. Fix or remove the `Offline / Ad-free` claim if ads remain enabled.
+2. Confirm no ad-free or offline-only claim is visible unless ads and analytics are disabled.
 3. Disable debug banners and screen-recording touch indicators.
 4. Start with fresh progress for C01, then play naturally to create real progress for C02 and C05.
 5. Record C03 with a clearly visible upward aim and wall-bounce line.
@@ -144,14 +207,14 @@ No generated UI or fake gameplay support assets are approved for this video.
 - [ ] Subtitles/captions are synchronized.
 - [ ] Audio is present or intentionally caption-only.
 - [ ] Audio is not clipped or too loud.
-- [ ] The Home shot does not show an inaccurate `Ad-free` claim.
+- [ ] The Home shot does not show an inaccurate ad-free or offline-only claim.
 - [ ] No debug UI, emulator chrome, notifications, or personal data are visible.
 - [ ] YouTube settings match Google Play preview video requirements.
 
 ## Remaining Risks
 
 - No final video can be rendered until real capture clips exist.
-- The Home screen `Offline / Ad-free` copy is a capture blocker if ads are enabled in the shipped app.
+- Final Home footage still needs a real capture pass after production ads and analytics settings are finalized.
 - Real capture may reveal layout, contrast, or animation issues that are not visible from static code inspection.
 - YouTube upload settings and copyright/monetization status cannot be verified until upload.
 

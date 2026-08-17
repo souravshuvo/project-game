@@ -32,6 +32,9 @@ class FirebaseGameAnalytics implements GameAnalytics {
 
   @override
   Future<void> logEvent(String name, Map<String, Object> parameters) {
-    return _analytics.logEvent(name: name, parameters: parameters);
+    return _analytics.logEvent(
+      name: sanitizeGameAnalyticsName(name),
+      parameters: sanitizeGameAnalyticsParameters(parameters),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../games/dew_bubble/data/dew_levels.dart';
+import '../../games/dew_bubble/data/dew_progression.dart';
 import '../../games/game_catalog.dart';
 import '../../games/shared/kid_celebration.dart';
 import '../../parent/presentation/parent_corner_screen.dart';
@@ -34,21 +35,38 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final progress = dewBubbleProgressSnapshot(widget.progressRepository);
     unawaited(
       widget.analytics.logEvent(GameAnalyticsEvents.homeViewed, {
         'game_id': _game.id,
         'total_levels': dewBubbleLevels.length,
+        ...dewBubbleProgressAnalyticsParams(progress),
+      }),
+    );
+    unawaited(
+      widget.analytics.logEvent(GameAnalyticsEvents.progressSnapshot, {
+        'game_id': _game.id,
+        'source': 'home_view',
+        ...dewBubbleProgressAnalyticsParams(progress),
       }),
     );
   }
 
-  Future<void> _openGame() async {
+  Future<void> _openGame({
+    required int levelIndex,
+    required bool showLevelSelect,
+    required String source,
+  }) async {
     final game = _game;
+    final progress = dewBubbleProgressSnapshot(widget.progressRepository);
     var completionRequested = false;
     unawaited(
       widget.analytics.logEvent(GameAnalyticsEvents.gameOpened, {
         'game_id': game.id,
-        'source': 'home_card',
+        'source': source,
+        'level_number': levelIndex + 1,
+        'show_level_select': showLevelSelect,
+        ...dewBubbleProgressAnalyticsParams(progress),
       }),
     );
 
@@ -69,6 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
           widget.progressRepository,
           widget.analytics,
           widget.adService,
+          GameLaunchOptions(
+            initialLevelIndex: levelIndex,
+            showLevelSelectOnStart: showLevelSelect,
+            source: source,
+          ),
         ),
       ),
     );
@@ -102,26 +125,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final game = _game;
-    final totalLevels = dewBubbleLevels.length;
+    final progress = dewBubbleProgressSnapshot(widget.progressRepository);
+    final totalLevels = progress.totalStages;
     final highestUnlocked = widget
         .progressRepository
         .dewBubbleHighestUnlockedLevelIndex
         .clamp(0, math.max(0, totalLevels - 1))
         .toInt();
-    final unlockedLevels = totalLevels == 0 ? 0 : highestUnlocked + 1;
-    final savedStars = dewBubbleLevels.fold<int>(
-      0,
-      (total, level) =>
-          total + widget.progressRepository.dewBubbleBestStars(level.id),
-    );
-    final bestScore = dewBubbleLevels.fold<int>(
-      0,
-      (best, level) => math.max(
-        best,
-        widget.progressRepository.dewBubbleBestScore(level.id),
-      ),
-    );
     final completed = widget.progressRepository.isGameComplete(game.id);
+    final nextLevelIndex = highestUnlocked;
+    final nextLevel = dewBubbleLevels[nextLevelIndex];
+    final nextBestScore = widget.progressRepository.dewBubbleBestScore(
+      nextLevel.id,
+    );
+    final nextBestStars = widget.progressRepository.dewBubbleBestStars(
+      nextLevel.id,
+    );
+    final nextTargetScore = dewBubbleTargetScore(nextLevel);
+    final nextMission = dewBubbleStageMission(nextLevelIndex);
+    final nextChapter = dewCampaignChapterForLevelIndex(nextLevelIndex);
+    final unlockedAchievements = dewBubbleUnlockedAchievements(progress);
+    final nextAchievement = dewBubbleNextAchievement(progress);
+    final primaryLabel = nextLevelIndex == 0 && nextBestScore == 0
+        ? 'Start Stage 1'
+        : 'Continue Stage ${nextLevelIndex + 1}';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7FBF7),
@@ -130,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFE6FAF5), Color(0xFFFFF8E8), Color(0xFFF8F0FF)],
+            colors: [Color(0xFFF5F8FA), Color(0xFFE9F8F3), Color(0xFFFFF7E3)],
           ),
         ),
         child: SafeArea(
@@ -147,49 +174,59 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _HomeHeader(onParentCorner: _openParentCorner),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+                          _NextGardenPanel(
+                            gameTitle: game.title,
+                            gameSubtitle: game.subtitle,
+                            levelNumber: nextLevelIndex + 1,
+                            levelTitle: nextLevel.title,
+                            chapterTitle: nextChapter.title,
+                            mission: nextMission,
+                            targetScore: nextTargetScore,
+                            bestScore: nextBestScore,
+                            bestStars: nextBestStars,
+                            label: completed
+                                ? 'Play Final Stage'
+                                : primaryLabel,
+                            onPlay: () => _openGame(
+                              levelIndex: nextLevelIndex,
+                              showLevelSelect: false,
+                              source: 'home_continue',
+                            ),
+                            onCampaign: () => _openGame(
+                              levelIndex: nextLevelIndex,
+                              showLevelSelect: true,
+                              source: 'home_garden_map',
+                            ),
+                          ),
+                          const SizedBox(height: 18),
                           _BubbleGardenPreview(completed: completed),
-                          const SizedBox(height: 18),
-                          Text(
-                            game.title,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.displaySmall
-                                ?.copyWith(
-                                  color: const Color(0xFF243C4A),
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            game.subtitle,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: const Color(0xFF5F6F74),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0,
-                                ),
-                          ),
-                          const SizedBox(height: 22),
-                          _PlayButton(
-                            completed: completed,
-                            onPressed: _openGame,
-                          ),
-                          const SizedBox(height: 18),
-                          _ProgressSummary(
-                            unlockedLevels: unlockedLevels,
-                            totalLevels: totalLevels,
-                            savedStars: savedStars,
-                            maxStars: totalLevels * 3,
-                            bestScore: bestScore,
+                          const SizedBox(height: 14),
+                          _RunGoalsStrip(
+                            stageNumber: nextLevelIndex + 1,
+                            totalStages: totalLevels,
+                            targetScore: nextTargetScore,
+                            nextBestScore: nextBestScore,
+                            threeStarClears: progress.threeStarClears,
+                            achievementCount: unlockedAchievements.length,
+                            achievementTotal: dewBubbleAchievements.length,
                           ),
                           const SizedBox(height: 14),
-                          const _OfflineNote(),
+                          _ProgressSummary(
+                            unlockedLevels: progress.unlockedStages,
+                            totalLevels: totalLevels,
+                            savedStars: progress.savedStars,
+                            maxStars: progress.totalStars,
+                            bestScore: progress.bestScore,
+                          ),
+                          const SizedBox(height: 14),
+                          _AchievementShelf(
+                            unlockedCount: unlockedAchievements.length,
+                            totalCount: dewBubbleAchievements.length,
+                            nextAchievement: nextAchievement,
+                          ),
+                          const SizedBox(height: 14),
+                          const _LocalPlayNote(),
                         ],
                       ),
                     ),
@@ -244,7 +281,6 @@ class _BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
@@ -261,7 +297,7 @@ class _BrandMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Flexible(
+        Expanded(
           child: Text(
             'Dew Bubble',
             maxLines: 1,
@@ -286,7 +322,7 @@ class _BubbleGardenPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Dew Bubble Garden preview',
+      label: 'Dew Bubble preview',
       image: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -353,7 +389,7 @@ class _BubbleGardenPreview extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  completed ? 'Cleared' : 'Ready',
+                                  completed ? 'Complete' : 'Next Run',
                                   style: const TextStyle(
                                     color: Color(0xFF34415F),
                                     fontWeight: FontWeight.w900,
@@ -376,19 +412,298 @@ class _BubbleGardenPreview extends StatelessWidget {
   }
 }
 
-class _PlayButton extends StatelessWidget {
-  const _PlayButton({required this.completed, required this.onPressed});
+class _NextGardenPanel extends StatelessWidget {
+  const _NextGardenPanel({
+    required this.gameTitle,
+    required this.gameSubtitle,
+    required this.levelNumber,
+    required this.levelTitle,
+    required this.chapterTitle,
+    required this.mission,
+    required this.targetScore,
+    required this.bestScore,
+    required this.bestStars,
+    required this.label,
+    required this.onPlay,
+    required this.onCampaign,
+  });
 
-  final bool completed;
+  final String gameTitle;
+  final String gameSubtitle;
+  final int levelNumber;
+  final String levelTitle;
+  final String chapterTitle;
+  final String mission;
+  final int targetScore;
+  final int bestScore;
+  final int bestStars;
+  final String label;
+  final VoidCallback onPlay;
+  final VoidCallback onCampaign;
+
+  @override
+  Widget build(BuildContext context) {
+    final progressText = bestScore == 0
+        ? 'Target $targetScore pts'
+        : 'Best $bestScore / $bestStars stars';
+    final targetProgress = targetScore <= 0
+        ? 0.0
+        : (bestScore / targetScore).clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF172C37),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x20243C4A),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            gameTitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            gameSubtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFFBFD0D7),
+              fontWeight: FontWeight.w800,
+              height: 1.12,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: _HubStatusBadge(),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2CB9A0).withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.flag_rounded,
+                      color: Color(0xFF67E0C9),
+                      size: 28,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$chapterTitle - Stage $levelNumber',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFBFD0D7),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        levelTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        mission,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFDDEBE7),
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _HubMetric(
+            icon: Icons.emoji_events_rounded,
+            label: 'Score goal',
+            value: progressText,
+            color: const Color(0xFFFFD15C),
+          ),
+          const SizedBox(height: 8),
+          _HubMetric(
+            icon: Icons.star_rounded,
+            label: 'Star chase',
+            value: bestStars == 0 ? 'Save shots' : '$bestStars/3 stars',
+            color: const Color(0xFF67B8F7),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: targetProgress,
+              minHeight: 7,
+              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              color: bestScore >= targetScore
+                  ? const Color(0xFF2CB9A0)
+                  : const Color(0xFFFFD15C),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _PlayButton(label: label, onPressed: onPlay),
+          const SizedBox(height: 10),
+          _ChooseGardenButton(onPressed: onCampaign),
+        ],
+      ),
+    );
+  }
+}
+
+class _HubStatusBadge extends StatelessWidget {
+  const _HubStatusBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFD15C).withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFFFD15C).withValues(alpha: 0.3),
+        ),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.bolt_rounded, color: Color(0xFFFFD15C), size: 18),
+              SizedBox(width: 4),
+              Text(
+                'Active Run',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HubMetric extends StatelessWidget {
+  const _HubMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFFBFD0D7),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({required this.label, required this.onPressed});
+
+  final String label;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.icon(
+    return FilledButton(
       key: const ValueKey('game-card-dew-bubble'),
       onPressed: onPressed,
-      icon: const Icon(Icons.play_arrow_rounded, size: 32),
-      label: Text(completed ? 'Play Again' : 'Play'),
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(64),
         backgroundColor: const Color(0xFF2CB9A0),
@@ -399,6 +714,291 @@ class _PlayButton extends StatelessWidget {
           letterSpacing: 0,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.play_arrow_rounded, size: 32),
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, maxLines: 1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChooseGardenButton extends StatelessWidget {
+  const _ChooseGardenButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      key: const ValueKey('choose-garden-button'),
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(54),
+        foregroundColor: Colors.white,
+        side: const BorderSide(color: Color(0x80FFFFFF)),
+        textStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.route_rounded),
+          SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Campaign Route', maxLines: 1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RunGoalsStrip extends StatelessWidget {
+  const _RunGoalsStrip({
+    required this.stageNumber,
+    required this.totalStages,
+    required this.targetScore,
+    required this.nextBestScore,
+    required this.threeStarClears,
+    required this.achievementCount,
+    required this.achievementTotal,
+  });
+
+  final int stageNumber;
+  final int totalStages;
+  final int targetScore;
+  final int nextBestScore;
+  final int threeStarClears;
+  final int achievementCount;
+  final int achievementTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final scoreGoal = nextBestScore >= targetScore
+        ? 'Beat $nextBestScore'
+        : '$targetScore pts';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF243C4A),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18243C4A),
+            blurRadius: 18,
+            offset: Offset(0, 9),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Run goals',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _GoalPill(
+                icon: Icons.flag_rounded,
+                label: 'Current',
+                value: '$stageNumber/$totalStages',
+                color: const Color(0xFF67B8F7),
+              ),
+              _GoalPill(
+                icon: Icons.emoji_events_rounded,
+                label: 'Score',
+                value: scoreGoal,
+                color: const Color(0xFFFFD15C),
+              ),
+              _GoalPill(
+                icon: Icons.star_rounded,
+                label: 'Mastery',
+                value: '$threeStarClears/$totalStages',
+                color: const Color(0xFF2CB9A0),
+              ),
+              _GoalPill(
+                icon: Icons.workspace_premium_rounded,
+                label: 'Badges',
+                value: '$achievementCount/$achievementTotal',
+                color: const Color(0xFFBFA7FF),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoalPill extends StatelessWidget {
+  const _GoalPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 124, maxWidth: 156),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFBFD0D7),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AchievementShelf extends StatelessWidget {
+  const _AchievementShelf({
+    required this.unlockedCount,
+    required this.totalCount,
+    required this.nextAchievement,
+  });
+
+  final int unlockedCount;
+  final int totalCount;
+  final DewBubbleAchievement? nextAchievement;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = nextAchievement;
+    final title = next == null ? 'All badges earned' : next.title;
+    final detail = next == null ? 'Route mastery complete.' : next.description;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white),
+      ),
+      child: Row(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF4CE),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(10),
+              child: Icon(
+                Icons.workspace_premium_rounded,
+                color: Color(0xFFD98700),
+                size: 28,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Badges $unlockedCount/$totalCount',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: const Color(0xFF243C4A),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF2E6E65),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  detail,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF68758B),
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -431,7 +1031,7 @@ class _ProgressSummary extends StatelessWidget {
             Expanded(
               child: _StatTile(
                 icon: Icons.lock_open_rounded,
-                label: 'Open',
+                label: 'Stages',
                 value: '$unlockedLevels/$totalLevels',
                 color: const Color(0xFF3F8FEF),
               ),
@@ -449,7 +1049,7 @@ class _ProgressSummary extends StatelessWidget {
             Expanded(
               child: _StatTile(
                 icon: Icons.emoji_events_rounded,
-                label: 'Best',
+                label: 'High',
                 value: '$bestScore',
                 color: const Color(0xFF7257E8),
               ),
@@ -525,8 +1125,8 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-class _OfflineNote extends StatelessWidget {
-  const _OfflineNote();
+class _LocalPlayNote extends StatelessWidget {
+  const _LocalPlayNote();
 
   @override
   Widget build(BuildContext context) {
@@ -537,7 +1137,7 @@ class _OfflineNote extends StatelessWidget {
         SizedBox(width: 6),
         Flexible(
           child: Text(
-            'Offline / Ad-free',
+            'Offline save / No account required',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

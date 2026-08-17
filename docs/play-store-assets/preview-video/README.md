@@ -13,5 +13,5 @@ Files:
 Required before rendering:
 
 1. Capture real app clips into `captures/`.
-2. Remove or fix any misleading `Offline / Ad-free` text if production ads remain enabled.
+2. Confirm no misleading ad-free or offline-only text is visible unless production ads and analytics are disabled.
 3. Render the final video from real captured footage only.

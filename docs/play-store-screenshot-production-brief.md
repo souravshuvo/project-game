@@ -1,6 +1,7 @@
 # Play Store Screenshot Production Brief
 
-S2B output for Dew Bubble Garden. Final screenshot image files were not created in this pass because there are no existing real app screenshots in the repository and emulator/device capture was not approved. Do not generate or draw fake gameplay to fill these slots.
+S2B output for Dew Bubble Garden. Final screenshot image files were not created in this pass because no real app screenshots or gameplay recordings are available in this repository.
+Final screenshot production is blocked until a real emulator/device session can capture live gameplay UI.
 
 ## Current Status
 
@@ -10,7 +11,8 @@ S2B output for Dew Bubble Garden. Final screenshot image files were not created 
 | Approved screenshot count | 6 phone screenshots | Portrait-first game listing. |
 | Recommended export size | 1080x1920 | 9:16 portrait, Play-compatible. |
 | Required format | JPEG or 24-bit PNG, no alpha | Flatten any overlay/background before export. |
-| Home screenshot readiness | Blocked | Current Home UI says `Offline / Ad-free`, but AdMob is wired in the repo. Fix before capture or do not use that frame. |
+| Source template | Ready | `docs/play-store-assets/screenshots/manifest.csv` |
+| Home screenshot readiness | Capture needed | Current Home UI no longer claims `Ad-free`; capture from a real release-like run after final ad/Data safety settings are chosen. |
 | Gameplay screenshots readiness | Capture needed | Must be captured from the running app or real gameplay recording frames. |
 
 ## Approved Screenshot Set
@@ -18,11 +20,11 @@ S2B output for Dew Bubble Garden. Final screenshot image files were not created 
 | # | Target filename | Real screen or moment | Overlay text | Alt text |
 | --- | --- | --- | --- | --- |
 | 1 | `01-home-start-in-garden.png` | Home screen with Dew Bubble card, progress, and Play button. | Start in the garden | Dew Bubble home screen with play button, level progress, stars, and best score. |
-| 2 | `02-level-select-pick-a-puzzle.png` | Level select with unlocked levels, locked levels, saved stars, and scores. | Pick a puzzle | Dew Bubble Garden level select with unlocked levels, locked levels, stars, and scores. |
+| 2 | `02-garden-route-choose-stage.png` | Garden Route with unlocked stages, locked future stages, saved stars, and scores. | Choose a stage | Dew Bubble Garden route screen with unlocked stages, locked stages, stars, and scores. |
 | 3 | `03-gameplay-line-up-bounce.png` | Gameplay board while aiming with the wall-bounce guide visible. | Line up the bounce | Gameplay screen showing the shooter, aim guide, wall bounce path, shots, score, and next bubble. |
-| 4 | `04-match-three-clear.png` | Real shot resolving into a match, pop, and floating bubble drop. | Match 3 and clear | A dew bubble match pops on the board while unsupported bubbles drop from the garden grid. |
-| 5 | `05-win-stars.png` | Real win result screen with stars, score, Next, Restart/Levels actions. | Win stars | Level complete screen showing earned stars, score, next level, restart, and level select actions. |
-| 6 | `06-quick-retry-controls.png` | Pause/help/settings sheet with sound and haptic toggles. | Quick retry controls | Pause sheet with help, restart, sound feedback, and haptic feedback controls. |
+| 4 | `04-match-three-drop-clusters.png` | Real shot resolving into a match, pop, and floating bubble drop. | Match 3, drop clusters | A dew bubble match pops on the board while unsupported bubbles drop from the garden grid. |
+| 5 | `05-win-stars.png` | Real win result screen with stars, score, Next Stage, Replay Stage, Route, and Home actions. | Clear for stars | Stage complete screen showing earned stars, score, next stage, replay, route, and home actions. |
+| 6 | `06-quick-retry-controls.png` | Pause/help/settings sheet with sound and haptic toggles. | Quick retries | Pause sheet with help, restart, sound feedback, and haptic feedback controls. |
 
 ## Capture Requirements
 
@@ -31,14 +33,14 @@ S2B output for Dew Bubble Garden. Final screenshot image files were not created 
 - Do not show ads, rewarded ads, boosters, shops, map progression, characters, rankings, reviews, awards, or download claims.
 - Do not show touch indicators, fingers, notifications, personal account information, debug banners, or service-provider status text.
 - If overlay text is added, keep it short, localized later, and outside the active gameplay board/HUD.
-- Do not capture the Home screen while it says `Offline / Ad-free` unless production ads are truly disabled and store disclosures match.
+- Do not include any ad-free/offline-only claim unless production ads and analytics are disabled and store disclosures match.
 
 ## Manual Capture Steps
 
 1. Prepare a clean release-like build or internal test build.
-2. Fix or remove the misleading `Offline / Ad-free` Home copy before capturing screenshot 1, unless ads are intentionally disabled for the shipped app.
+2. Confirm the Home screen still has no ad-free/offline-only claim before capturing screenshot 1, unless ads and analytics are intentionally disabled for the shipped app.
 3. Start from a clean install and capture the Home screen.
-4. Play enough levels normally to create real progress/stars for the level select screenshot.
+4. Play enough stages normally to create real progress/stars for the Garden Route screenshot.
 5. Open an unlocked level and hold an upward aim that shows the wall-bounce guide.
 6. Record or repeatedly capture during a real match that pops bubbles and drops unsupported bubbles.
 7. Complete a level and capture the real result panel.
@@ -72,7 +74,7 @@ S2B output for Dew Bubble Garden. Final screenshot image files were not created 
 - [ ] Each screenshot comes from the actual running app or a real gameplay recording frame.
 - [ ] First three screenshots prioritize real app UI/gameplay.
 - [ ] No unavailable features are visible.
-- [ ] No misleading `Ad-free` claim is visible unless ads are removed/disabled for production.
+- [ ] No misleading ad-free or offline-only claim is visible unless ads and analytics are removed/disabled for production.
 - [ ] Text overlays are readable on a phone screen.
 - [ ] Overlay text does not cover active gameplay, HUD, buttons, or dialogs.
 - [ ] Images are not blurry, stretched, compressed, sideways, or pixelated.
@@ -82,10 +84,10 @@ S2B output for Dew Bubble Garden. Final screenshot image files were not created 
 
 ## Remaining Risks
 
-- The current Home UI contains `Offline / Ad-free`, which conflicts with AdMob-enabled code and should not appear in store assets.
-- Final screenshots still require real capture; this brief is not an uploadable asset set.
+- Final screenshots still require real capture after deciding whether production ads and analytics are enabled.
+- Widget-test captures from `.dart_tool` are not Play-ready because they are test-rendered, static, and do not prove real device gameplay/result moments.
 - Small-screen text overlap and exact visual quality cannot be verified until screenshots are captured.
-- Play Console upload readiness still depends on final icon, feature graphic, privacy/Data safety, and release build validation.
+- Play Console upload readiness still depends on privacy/Data safety, production IDs/config, and release build validation.
 
 ## Source Checked
 

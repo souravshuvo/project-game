@@ -1,6 +1,6 @@
 shot_id,start,end,duration,required_capture,visual,on_screen_text,voiceover,notes
-C01,00:00.000,00:02.500,2.5,c01-home-open.mp4,Home screen opens Dew Bubble Garden,Dew Bubble Garden,Step into a calm bubble garden.,Blocked until the Home ad-free claim is removed or ads are disabled.
-C02,00:02.500,00:05.500,3.0,c02-level-select.mp4,Level select chooses an unlocked level,Pick a puzzle,Choose a short garden level.,Show real unlock/stars state only.
+C01,00:00.000,00:02.500,2.5,c01-home-open.mp4,Home screen opens Dew Bubble Garden,Dew Bubble Garden,Step into a calm bubble garden.,Capture from real release-like build after final ad and analytics settings are chosen.
+C02,00:02.500,00:05.500,3.0,c02-garden-route.mp4,Garden Route chooses an unlocked stage,Pick a puzzle,Choose a short garden stage.,Show real unlock/stars state only.
 C03,00:05.500,00:11.500,6.0,c03-aim-bounce.mp4,Gameplay aiming with wall-bounce guide,Line up the bounce,"Aim, bounce, and plan the clear.",Show shooter HUD next bubble and bounce line.
 C04,00:11.500,00:18.000,6.5,c04-shot-match-drop.mp4,Shot attaches match pops floating bubbles drop,Match 3 and clear,Match three dew bubbles and drop loose clusters.,Must be a real game event.
 C05,00:18.000,00:23.000,5.0,c05-win-result.mp4,Win result with stars and score,Win stars,Clear the board before shots run out.,Use real score and stars.

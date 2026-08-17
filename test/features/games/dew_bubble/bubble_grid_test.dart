@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rapid_jump/features/games/dew_bubble/data/dew_levels.dart';
+import 'package:rapid_jump/features/games/dew_bubble/data/dew_progression.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/attach_solver.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_color.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_grid.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/bubble_level.dart';
 import 'package:rapid_jump/features/games/dew_bubble/domain/grid_position.dart';
+import 'package:rapid_jump/features/tracing/data/progress_repository.dart';
 
 void main() {
   group('BubbleGrid', () {
@@ -257,7 +259,151 @@ void main() {
         isTrue,
       );
     });
+
+    test('production content has missions, chapters, and target scores', () {
+      expect(dewBubbleStageMissions, hasLength(dewBubbleLevels.length));
+      expect(dewCampaignChapters, hasLength(4));
+      expect(dewBubbleAchievements, hasLength(10));
+
+      for (var index = 0; index < dewBubbleLevels.length; index++) {
+        expect(dewBubbleStageMission(index).trim(), isNotEmpty);
+        expect(dewBubbleTargetScore(dewBubbleLevels[index]), greaterThan(0));
+      }
+
+      for (var index = 0; index < dewBubbleLevels.length; index++) {
+        final matchingChapters = dewCampaignChapters.where(
+          (chapter) => chapter.containsLevelIndex(index),
+        );
+        expect(matchingChapters, hasLength(1), reason: 'stage ${index + 1}');
+      }
+
+      expect(
+        dewBubbleTargetScore(dewBubbleLevels.last),
+        greaterThan(dewBubbleTargetScore(dewBubbleLevels.first)),
+      );
+    });
+
+    test('each stage has a queue-supported deterministic clear route', () {
+      for (final level in dewBubbleLevels) {
+        expect(_canClearWithQueue(level), isTrue, reason: level.id);
+      }
+    });
+
+    test('achievements are derived from saved local progress', () {
+      final bestScores = <String, int>{
+        for (final level in dewBubbleLevels.take(15))
+          level.id: dewBubbleTargetScore(level),
+      };
+      final bestStars = <String, int>{
+        for (final level in dewBubbleLevels.take(12)) level.id: 3,
+      };
+      final repository = MemoryProgressRepository(
+        dewBubbleHighestUnlockedLevelIndex: 19,
+        dewBubbleBestScores: bestScores,
+        dewBubbleBestStars: bestStars,
+      );
+
+      final snapshot = dewBubbleProgressSnapshot(repository);
+      final unlockedIds = dewBubbleUnlockedAchievements(
+        snapshot,
+      ).map((achievement) => achievement.id).toSet();
+
+      expect(snapshot.unlockedStages, 20);
+      expect(snapshot.targetScoreClears, 15);
+      expect(snapshot.savedStars, 36);
+      expect(snapshot.threeStarClears, 12);
+      expect(unlockedIds, contains('first-clear'));
+      expect(unlockedIds, contains('route-runner'));
+      expect(unlockedIds, contains('canopy-reader'));
+      expect(unlockedIds, contains('star-collector'));
+      expect(unlockedIds, contains('clean-dozen'));
+      expect(unlockedIds, contains('target-chaser'));
+      expect(unlockedIds, isNot(contains('star-garden')));
+      expect(unlockedIds, isNot(contains('target-master')));
+      expect(unlockedIds, isNot(contains('route-master')));
+    });
   });
+}
+
+bool _canClearWithQueue(BubbleLevel level) {
+  final grid = level.createGrid();
+
+  for (final color in level.bubbleQueue) {
+    if (grid.isCleared) {
+      return true;
+    }
+
+    final attach = _bestClearRouteAttach(grid, color);
+    if (attach == null) {
+      continue;
+    }
+
+    grid.setColor(attach, color);
+    final match = grid.connectedSameColor(attach);
+    if (match.length >= 3) {
+      grid.removeAll(match);
+      grid.removeAll(grid.floatingPositions());
+    }
+  }
+
+  return grid.isCleared;
+}
+
+GridPosition? _bestClearRouteAttach(BubbleGrid grid, DewBubbleColor color) {
+  final occupied = grid
+      .occupiedPositions()
+      .where((position) => grid.colorAt(position) == color)
+      .toList();
+  if (occupied.isEmpty) {
+    return null;
+  }
+
+  final seenGroups = <String>{};
+  final candidates = <({GridPosition attach, int groupSize, int row})>[];
+
+  for (final position in occupied) {
+    final group = grid.connectedSameColor(position);
+    final groupKey = _groupKey(group);
+    if (!seenGroups.add(groupKey)) {
+      continue;
+    }
+
+    for (final neighbor in group.expand(grid.neighbors)) {
+      if (!grid.isEmpty(neighbor)) {
+        continue;
+      }
+      candidates.add((
+        attach: neighbor,
+        groupSize: group.length,
+        row: neighbor.row,
+      ));
+    }
+  }
+
+  candidates.sort((a, b) {
+    final byGroup = b.groupSize.compareTo(a.groupSize);
+    if (byGroup != 0) {
+      return byGroup;
+    }
+    final byRow = a.row.compareTo(b.row);
+    if (byRow != 0) {
+      return byRow;
+    }
+    return a.attach.column.compareTo(b.attach.column);
+  });
+
+  return candidates.isEmpty ? null : candidates.first.attach;
+}
+
+String _groupKey(Set<GridPosition> group) {
+  final cells = group.toList()
+    ..sort((a, b) {
+      final byRow = a.row.compareTo(b.row);
+      return byRow != 0 ? byRow : a.column.compareTo(b.column);
+    });
+  return cells
+      .map((position) => '${position.row}:${position.column}')
+      .join('|');
 }
 
 int _activeRows(BubbleLevel level) {

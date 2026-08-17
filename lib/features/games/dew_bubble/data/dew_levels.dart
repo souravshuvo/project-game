@@ -5,10 +5,10 @@ final List<BubbleLevel> dewBubbleLevels = List<BubbleLevel>.unmodifiable([
   const BubbleLevel(
     id: 'dew-1',
     title: 'Sprout Steps',
-    shots: 8,
+    shots: 10,
     layout: [
       ['B', 'B', null, 'P', 'P', null, 'Y', 'Y'],
-      [null, null, null, null, null, null, null, null],
+      [null, 'Y', null, 'B', null, 'P', null, 'B'],
       [null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null],
@@ -23,6 +23,8 @@ final List<BubbleLevel> dewBubbleLevels = List<BubbleLevel>.unmodifiable([
       DewBubbleColor.yellow,
       DewBubbleColor.blue,
       DewBubbleColor.pink,
+      DewBubbleColor.yellow,
+      DewBubbleColor.blue,
     ],
   ),
   const BubbleLevel(

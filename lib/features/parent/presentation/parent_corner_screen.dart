@@ -139,10 +139,11 @@ class _ParentCornerScreenState extends State<ParentCornerScreen> {
               child: Text(
                 'Dew Bubble has no account, login, location, camera, '
                 'microphone, or child profile. Progress stays in local Hive '
-                'storage. Level-end ads use child-directed, non-personalized '
-                'requests, and Firebase Analytics records aggregate gameplay '
-                'events only. Android cloud backup and device transfer are '
-                'disabled for app data.',
+                'storage. If ads are enabled, they are limited to level-result '
+                'transitions and use child-directed, non-personalized '
+                'requests. Firebase Analytics records aggregate gameplay, '
+                'progress, and ad lifecycle events only. Android cloud backup '
+                'and device transfer are disabled for app data.',
               ),
             ),
             const SizedBox(height: 16),
